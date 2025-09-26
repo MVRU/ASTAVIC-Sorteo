@@ -416,3 +416,16 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+# React application artifacts
+sorteos-astavic/node_modules/
+sorteos-astavic/.pnp
+sorteos-astavic/.pnp.js
+sorteos-astavic/build/
+sorteos-astavic/coverage/
+sorteos-astavic/.env.local
+sorteos-astavic/.env.development.local
+sorteos-astavic/.env.test.local
+sorteos-astavic/.env.production.local
+sorteos-astavic/npm-debug.log*
+sorteos-astavic/yarn-debug.log*
+sorteos-astavic/yarn-error.log*
