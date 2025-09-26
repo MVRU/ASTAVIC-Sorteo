@@ -10,7 +10,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "prop-types": "^15.8.1"
   },
   "scripts": {
     "dev": "react-scripts start",
@@ -38,5 +39,3 @@
     ]
   }
 }
-
-

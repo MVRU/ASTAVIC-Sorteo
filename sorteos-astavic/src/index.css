@@ -1,13 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  --brand-50: #e8f2fb;
+  --brand-100: #d9ecfb;
+  --brand-200: #b3d8f6;
+  --brand-300: #8cc4f2;
+  --brand-400: #4ea4ea;
+  --brand-500: #1e88e5;
+  --brand-600: #1565c0;
+  --brand-700: #0d47a1;
+  --brand-800: #0a3a85;
+  --brand-900: #072b63;
+  --surface: #f7fafc;
+  --surface-elevated: #ffffff;
+  --border: #d6e0ef;
+  --text-primary: #16213c;
+  --text-secondary: #5b6475;
+  --success: #1aa368;
+  --danger: #cc3a3a;
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, monospace;
+  font-size: 0.95em;
+}
+
+#root {
+  min-height: 100vh;
 }
