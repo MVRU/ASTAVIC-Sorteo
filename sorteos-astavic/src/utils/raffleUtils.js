@@ -1,5 +1,4 @@
 /* eslint-env es2020, browser, node */
-/* global globalThis */
 
 // src/utils/raffleUtils.js
 // Utilidades robustas para sorteos (JS puro, sin TypeScript).

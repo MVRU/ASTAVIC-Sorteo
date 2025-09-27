@@ -8,8 +8,8 @@ import initialRaffles from "./data/initialRaffles";
 import { isFinished, pickWinners } from "./utils/raffleUtils";
 import "./App.css";
 
-const ADMIN_EMAIL = "astavic@gmail.com";
-const ADMIN_PASSWORD = "Colon 3115";
+const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "astavic@gmail.com";
+const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Colon 3115";
 const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
 const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
 
@@ -30,8 +30,6 @@ const buildInitialRaffles = () =>
 const App = () => {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
   const [raffles, setRaffles] = useState(buildInitialRaffles);
-  const [filter, setFilter] = useState("activos");
-  const lastPublicFilterRef = useRef("activos");
   const [isAdmin, setIsAdmin] = useState(
     () => sessionStorage.getItem("adminAuth") === "1"
   );
@@ -72,23 +70,6 @@ const App = () => {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  useEffect(() => {
-    if (route === "finished") {
-      setFilter("finalizados");
-    } else if (route === "public") {
-      setFilter(lastPublicFilterRef.current || "activos");
-    }
-  }, [route]);
-
-  const handleFilterChange = useCallback(
-    (value) => {
-      setFilter(value);
-      if (route !== "finished") {
-        lastPublicFilterRef.current = value;
-      }
-    },
-    [route]
-  );
 
   const handleMarkFinished = useCallback((raffleId) => {
     setRaffles((prev) =>
@@ -186,15 +167,13 @@ const App = () => {
       finished: raffle.finished || isFinished(raffle),
     };
     setRaffles((prev) => [...prev, prepared]);
-    setFilter("activos");
-    lastPublicFilterRef.current = "activos";
     return {
       ok: true,
       message: "Sorteo creado (demo). Ya es visible en la vista publica.",
     };
-  }, [lastPublicFilterRef]);
+  }, []);
 
-  const filteredRaffles = useMemo(() => {
+  const { activeRaffles, finishedRaffles } = useMemo(() => {
     const now = new Date();
     const active = [];
     const finished = [];
@@ -211,10 +190,8 @@ const App = () => {
     });
     active.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
     finished.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    if (filter === "activos") return active;
-    if (filter === "finalizados") return finished;
-    return [...active, ...finished];
-  }, [raffles, filter]);
+    return { activeRaffles: active, finishedRaffles: finished };
+  }, [raffles]);
 
   return (
     <div className="app-shell">
@@ -232,9 +209,8 @@ const App = () => {
           />
         ) : (
           <PublicView
-            raffles={filteredRaffles}
-            filter={filter}
-            onFilterChange={handleFilterChange}
+            activeRaffles={activeRaffles}
+            finishedRaffles={finishedRaffles}
             onStartLive={handleStartLive}
             onMarkFinished={handleMarkFinished}
             onRegisterSubscriber={handleRegisterSubscriber}

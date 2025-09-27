@@ -1,3 +1,8 @@
+/**
+ * TODOS:
+ * - [ ] Centrar los números de las métricas: Sorteos totales; Activos; Finalizados. Y mejorar su diseño.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
@@ -26,25 +31,55 @@ const Chip = ({ children }) => (
 Chip.propTypes = { children: PropTypes.node.isRequired };
 
 // Tarjeta compacta de metricas
+// Tarjeta compacta de métricas — centrada y con mejor diseño
 const StatCard = ({ label, value, icon }) => (
   <div
     className="card"
     role="status"
     aria-live="polite"
     style={{
-      padding: "1rem 1.25rem",
+      padding: "1.25rem",
       display: "flex",
+      flexDirection: "column",
       alignItems: "center",
-      gap: "0.75rem",
-      boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+      justifyContent: "center",
+      textAlign: "center",
+      gap: "0.5rem",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      borderRadius: "0.75rem",
+      background: "var(--surface-1, #ffffff)",
+      border: "1px solid var(--line-1, #e6e6ea)",
     }}
   >
-    <div style={{ fontSize: "1.25rem" }} aria-hidden>
-      {icon}
-    </div>
-    <div style={{ lineHeight: 1.2 }}>
-      <div style={{ fontSize: "0.8rem", color: "var(--text-3,#666)" }}>{label}</div>
-      <div style={{ fontSize: "1.4rem", fontWeight: 700 }}>{value}</div>
+    {icon && (
+      <div
+        style={{ fontSize: "1.5rem", color: "var(--text-1, #222)" }}
+        aria-hidden="true"
+      >
+        {icon}
+      </div>
+    )}
+    <div>
+      <div
+        style={{
+          fontSize: "0.85rem",
+          fontWeight: 500,
+          color: "var(--text-3, #666)",
+          marginBottom: "0.25rem",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "1.75rem",
+          fontWeight: 700,
+          color: "var(--text-1, #222)",
+          lineHeight: 1.2,
+        }}
+      >
+        {value}
+      </div>
     </div>
   </div>
 );
@@ -76,7 +111,10 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
 
   const handleChange = (event) => {
     if (disabled) return;
-    const nextFile = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+    const nextFile =
+      event.target.files && event.target.files[0]
+        ? event.target.files[0]
+        : null;
     onFile(nextFile);
   };
 
@@ -127,7 +165,9 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
           📎
         </span>
         <div>
-          <div style={{ fontWeight: 600 }}>Solta tu archivo (.csv, .tsv, .txt)</div>
+          <div style={{ fontWeight: 600 }}>
+            Solta tu archivo (.csv, .tsv, .txt)
+          </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-3,#666)" }}>
             Tambien podes hacer clic o presionar Enter para buscarlo.
           </div>
@@ -161,8 +201,14 @@ FileDropzone.defaultProps = {
   fileToken: "",
 };
 
-const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount }) => {
-  const previewDefaultMessage = "Subi un archivo o pega participantes para ver un resumen aca.";
+const AdminDashboard = ({
+  onLogout,
+  onCreateRaffle,
+  raffles,
+  subscribersCount,
+}) => {
+  const previewDefaultMessage =
+    "Subi un archivo o pega participantes para ver un resumen aca.";
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -170,7 +216,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     winners: "1",
     manual: "",
   });
-  const [prizes, setPrizes] = useState([{ name: "", description: "" }]);
+  const [prizes, setPrizes] = useState([{ title: "" }]);
   const [file, setFile] = useState(null);
   const [previewMessage, setPreviewMessage] = useState(previewDefaultMessage);
   const [previewParticipants, setPreviewParticipants] = useState([]);
@@ -185,11 +231,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
 
   const sanitizedPrizes = useMemo(() => {
     return prizes.map((prize, index) => {
-      const nameValue = prize && prize.name ? prize.name.trim() : "";
-      const descriptionValue = prize && prize.description ? prize.description.trim() : "";
+      const titleValue = prize && prize.title ? prize.title.trim() : "";
       return {
-        name: nameValue || `Premio ${index + 1}`,
-        description: descriptionValue,
+        title: titleValue || "Premio " + (index + 1),
       };
     });
   }, [prizes]);
@@ -197,7 +241,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
   const previewRaffle = useMemo(() => {
     const fallbackDate = new Date(Date.now() + 86400000).toISOString();
     const participantsList =
-      previewParticipants.length > 0 ? previewParticipants : ["Participante demo"];
+      previewParticipants.length > 0
+        ? previewParticipants
+        : ["Participante demo"];
     const winnersFallback =
       sanitizedPrizes.length > 0
         ? sanitizedPrizes.length
@@ -212,7 +258,14 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
       prizes: sanitizedPrizes,
       finished: false,
     };
-  }, [form.title, form.description, form.datetime, form.winners, sanitizedPrizes, previewParticipants]);
+  }, [
+    form.title,
+    form.description,
+    form.datetime,
+    form.winners,
+    sanitizedPrizes,
+    previewParticipants,
+  ]);
 
   const buildPreviewState = useCallback(async (currentFile, manualText) => {
     const fileText = currentFile ? await currentFile.text() : "";
@@ -220,7 +273,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     if (participants.length === 0) {
       return {
         participants: [],
-        message: "No se detectaron participantes. Asegurate del formato o pega uno por linea.",
+        message:
+          "No se detectaron participantes. Asegurate del formato o pega uno por linea.",
       };
     }
     const sampleList = participants.slice(0, 5).join(", ");
@@ -247,7 +301,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
       } catch (error) {
         if (cancelled) return;
         setPreviewParticipants([]);
-        setPreviewMessage("No se pudo leer el archivo para la vista previa. Intenta nuevamente.");
+        setPreviewMessage(
+          "No se pudo leer el archivo para la vista previa. Intenta nuevamente."
+        );
       }
     })();
     return () => {
@@ -260,10 +316,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     setPrizes((prev) => {
       if (safeCount === prev.length) return prev;
       if (safeCount > prev.length) {
-        const additions = Array.from({ length: safeCount - prev.length }, () => ({
-          name: "",
-          description: "",
-        }));
+        const additions = Array.from(
+          { length: safeCount - prev.length },
+          () => ({
+            title: "",
+          })
+        );
         return [...prev, ...additions];
       }
       return prev.slice(0, safeCount);
@@ -288,10 +346,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     setStatus(null);
   };
 
-  const handlePrizeChange = (index, field, value) => {
+  const handlePrizeChange = (index, value) => {
     setPrizes((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
+      next[index] = { title: value };
       return next;
     });
     setStatus(null);
@@ -299,7 +357,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
 
   const addPrize = () => {
     setPrizes((prev) => {
-      const next = [...prev, { name: "", description: "" }];
+      const next = [...prev, { title: "" }];
       setForm((prevForm) => ({ ...prevForm, winners: String(next.length) }));
       return next;
     });
@@ -309,15 +367,24 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     setPrizes((prev) => {
       if (prev.length === 1) return prev;
       const next = prev.filter((_, idx) => idx !== index);
-      const safeNext = next.length > 0 ? next : [{ name: "", description: "" }];
-      setForm((prevForm) => ({ ...prevForm, winners: String(safeNext.length) }));
+      const safeNext = next.length > 0 ? next : [{ title: "" }];
+      setForm((prevForm) => ({
+        ...prevForm,
+        winners: String(safeNext.length),
+      }));
       return safeNext;
     });
   };
 
   const resetForm = () => {
-    setForm({ title: "", description: "", datetime: "", winners: "1", manual: "" });
-    setPrizes([{ name: "", description: "" }]);
+    setForm({
+      title: "",
+      description: "",
+      datetime: "",
+      winners: "1",
+      manual: "",
+    });
+    setPrizes([{ title: "" }]);
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
@@ -330,7 +397,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
     setLoading(true);
     try {
       if (!form.title.trim() || !form.datetime) {
-        setStatus({ ok: false, message: "Completa el titulo y la fecha del sorteo." });
+        setStatus({
+          ok: false,
+          message: "Completa el titulo y la fecha del sorteo.",
+        });
         setLoading(false);
         return;
       }
@@ -338,13 +408,18 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
       const fileText = file ? await file.text() : "";
       const participants = parseParticipants(fileText, form.manual);
       if (participants.length === 0) {
-        setStatus({ ok: false, message: "No se detectaron participantes. Revisa el archivo o el texto." });
+        setStatus({
+          ok: false,
+          message:
+            "No se detectaron participantes. Revisa el archivo o el texto.",
+        });
         setLoading(false);
         return;
       }
 
       const normalizedPrizes = sanitizedPrizes.map((prize) => ({ ...prize }));
-      const winnersCount = normalizedPrizes.length > 0 ? normalizedPrizes.length : winnersNum;
+      const winnersCount =
+        normalizedPrizes.length > 0 ? normalizedPrizes.length : winnersNum;
 
       const newRaffle = {
         id: ensureId(),
@@ -363,7 +438,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
         resetForm();
       }
     } catch (error) {
-      setStatus({ ok: false, message: "Ocurrio un problema al leer el archivo. Intenta nuevamente." });
+      setStatus({
+        ok: false,
+        message: "Ocurrio un problema al leer el archivo. Intenta nuevamente.",
+      });
     } finally {
       setLoading(false);
     }
@@ -378,7 +456,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
       <div className="container" style={{ display: "grid", gap: "1.25rem" }}>
         <div
           className="controls-row"
-          style={{ alignItems: "center", justifyContent: "space-between", gap: "1rem" }}
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
         >
           <div>
             <h1
@@ -386,13 +468,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
               className="section-title"
               style={{ fontSize: "1.8rem", marginBottom: "0.25rem" }}
             >
-              Administracion
+              Administración
             </h1>
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
               <Chip>Visibles: {metrics.total}</Chip>
               <Chip>Activos: {metrics.active}</Chip>
               <Chip>Finalizados: {metrics.finished}</Chip>
-              <Chip>Suscriptores: {subscribersCount}</Chip>
             </div>
           </div>
 
@@ -400,8 +481,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
             type="button"
             className="button button--ghost"
             onClick={onLogout}
-            aria-label="Cerrar sesion de administracion"
-            title="Cerrar sesion"
+            aria-label="Cerrar sesion de administración"
+            title="Cerrar sesión"
           >
             Cerrar sesion
           </button>
@@ -416,7 +497,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
           }}
         >
           <form className="card" onSubmit={handleSubmit} noValidate>
-            <fieldset className="form-card" disabled={loading} style={{ border: 0, padding: 0, margin: 0 }}>
+            <fieldset
+              className="form-card"
+              disabled={loading}
+              style={{ border: 0, padding: 0, margin: 0 }}
+            >
               <legend className="visually-hidden">Crear sorteo</legend>
 
               <div className="form-group">
@@ -438,7 +523,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
               </div>
 
               <div className="form-group">
-                <label htmlFor="raffle-description">Descripcion (opcional)</label>
+                <label htmlFor="raffle-description">
+                  Descripcion (opcional)
+                </label>
                 <textarea
                   id="raffle-description"
                   className="textarea"
@@ -448,12 +535,18 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
                   onChange={handleChange}
                   rows={3}
                 />
-                <span className="legend">Inclui condiciones o mensajes importantes.</span>
+                <span className="legend">
+                  Inclui condiciones o mensajes importantes.
+                </span>
               </div>
 
               <div
                 className="form-grid split"
-                style={{ display: "grid", gap: "1rem", gridTemplateColumns: "1fr 180px" }}
+                style={{
+                  display: "grid",
+                  gap: "1rem",
+                  gridTemplateColumns: "1fr 180px",
+                }}
               >
                 <div className="form-group">
                   <label htmlFor="raffle-datetime">Fecha y hora</label>
@@ -492,7 +585,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
               <div className="form-group">
                 <label>Premios</label>
                 <p className="legend" style={{ marginBottom: "0.5rem" }}>
-                  Define un nombre y una descripcion para cada premio.
+                  Define un titulo por premio. El orden determina el puesto.
                 </p>
                 {prizes.map((prize, index) => (
                   <div
@@ -505,33 +598,21 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
                       background: "var(--surface-2,#f8f9fb)",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: "0.75rem",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                      }}
-                    >
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label htmlFor={`prize-name-${index}`}>Titulo</label>
-                        <input
-                          id={`prize-name-${index}`}
-                          className="input"
-                          placeholder={`Premio ${index + 1}`}
-                          value={prize.name}
-                          onChange={(event) => handlePrizeChange(index, "name", event.target.value)}
-                        />
-                      </div>
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label htmlFor={`prize-description-${index}`}>Descripcion</label>
-                        <input
-                          id={`prize-description-${index}`}
-                          className="input"
-                          placeholder="Ej.: Orden de compra"
-                          value={prize.description}
-                          onChange={(event) => handlePrizeChange(index, "description", event.target.value)}
-                        />
-                      </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label htmlFor={`prize-title-${index}`}>Titulo</label>
+                      <input
+                        id={`prize-title-${index}`}
+                        className="input"
+                        placeholder={`Premio ${index + 1}`}
+                        value={prize.title}
+                        onChange={(event) =>
+                          handlePrizeChange(index, event.target.value)
+                        }
+                      />
+                      <span className="legend">
+                        Puesto {index + 1} ={" "}
+                        {prize.title ? prize.title : `Premio ${index + 1}`}
+                      </span>
                     </div>
                     {prizes.length > 1 && (
                       <div style={{ marginTop: "0.5rem", textAlign: "right" }}>
@@ -558,11 +639,17 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
 
               <div className="form-group">
                 <label>Participantes</label>
-                <FileDropzone onFile={handleFile} disabled={loading} fileToken={fileToken} />
+                <FileDropzone
+                  onFile={handleFile}
+                  disabled={loading}
+                  fileToken={fileToken}
+                />
               </div>
 
               <div className="form-group">
-                <label htmlFor="raffle-manual">O pegalo manualmente (uno por linea)</label>
+                <label htmlFor="raffle-manual">
+                  O pegalo manualmente (uno por linea)
+                </label>
                 <textarea
                   id="raffle-manual"
                   className="textarea"
@@ -587,7 +674,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
                   flexWrap: "wrap",
                 }}
               >
-                <button type="submit" className="button button--primary" aria-live="polite">
+                <button
+                  type="submit"
+                  className="button button--primary"
+                  aria-live="polite"
+                >
                   {loading ? "Creando..." : "Crear sorteo"}
                 </button>
                 <button
@@ -616,24 +707,45 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
 
           <div style={{ display: "grid", gap: "1rem", alignContent: "start" }}>
             <div className="card">
-              <h2 className="raffle-card__title" style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>
+              <h2
+                className="raffle-card__title"
+                style={{ fontSize: "1rem", marginBottom: "0.5rem" }}
+              >
                 Como crear un sorteo
               </h2>
-              <ol className="helper-list" style={{ margin: 0, paddingInlineStart: "1.25rem" }}>
-                <li>Subi o pega la lista de participantes (CSV, TSV o texto).</li>
+              <ol
+                className="helper-list"
+                style={{ margin: 0, paddingInlineStart: "1.25rem" }}
+              >
+                <li>
+                  Subi o pega la lista de participantes (CSV, TSV o texto).
+                </li>
                 <li>Defini fecha, hora, titulo y cantidad de ganadores.</li>
-                <li>Publica: el publico vera el contador y la experiencia en vivo.</li>
+                <li>
+                  Publica: el publico vera el contador y la experiencia en vivo.
+                </li>
               </ol>
             </div>
 
             <div style={{ display: "grid", gap: "0.75rem" }}>
-              <StatCard label="Sorteos totales" value={metrics.total} icon="📂" />
+              <StatCard
+                label="Sorteos totales"
+                value={metrics.total}
+                icon="📂"
+              />
               <StatCard label="Activos" value={metrics.active} icon="⏳" />
-              <StatCard label="Finalizados" value={metrics.finished} icon="✅" />
+              <StatCard
+                label="Finalizados"
+                value={metrics.finished}
+                icon="✅"
+              />
             </div>
 
             <div className="card" aria-live="polite">
-              <h2 className="raffle-card__title" style={{ fontSize: "1rem", marginBottom: "0.25rem" }}>
+              <h2
+                className="raffle-card__title"
+                style={{ fontSize: "1rem", marginBottom: "0.25rem" }}
+              >
                 Vista previa del sorteo
               </h2>
               <div
@@ -664,7 +776,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles, subscribersCount })
                   {previewParticipants.slice(0, 5).map((participant) => (
                     <li key={participant}>{participant}</li>
                   ))}
-                  {previewParticipants.length > 5 && <li key="preview-more">...</li>}
+                  {previewParticipants.length > 5 && (
+                    <li key="preview-more">...</li>
+                  )}
                 </ul>
               )}
             </div>
@@ -688,4 +802,3 @@ AdminDashboard.propTypes = {
 };
 
 export default AdminDashboard;
-

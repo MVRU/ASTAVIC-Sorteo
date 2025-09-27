@@ -7,7 +7,7 @@ const Footer = () => {
           <strong className="brand__name">Sorteos de ASTAVIC</strong>
           <p className="subtitle-small">Demostración del sistema.</p>
         </div>
-        <div>&copy; {year} &middot; Todos los derechos reservados.</div>
+        <div>&copy; {year} ASTAVIC &middot; Todos los derechos reservados.</div>
       </div>
     </footer>
   );

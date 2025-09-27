@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import PropTypes from 'prop-types';
+import { useEffect } from "react";
+import PropTypes from "prop-types";
 
 const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
   useEffect(() => {
@@ -7,13 +7,13 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
       return undefined;
     }
     const handleKey = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKey);
+    window.addEventListener("keydown", handleKey);
     return () => {
-      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener("keydown", handleKey);
     };
   }, [open, onClose]);
 
@@ -45,16 +45,13 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
         <ul className="live-winners">
           {winners.map((winner, index) => {
             const prize = Array.isArray(raffle.prizes) ? raffle.prizes[index] : null;
-            const prizeHasContent = prize && (prize.name || prize.description);
-            const prizeLabel = prize && prize.name ? prize.name : `Premio ${index + 1}`;
-            const prizeDetail = prize && prize.description ? ` - ${prize.description}` : "";
+            const prizeTitle = prize && prize.title ? prize.title : null;
             return (
               <li key={`${winner}-${index}`}>
                 Ganador {index + 1}: {winner}
-                {prizeHasContent && (
+                {prizeTitle && (
                   <span className="winner-prize">
-                    {prizeLabel}
-                    {prizeDetail}
+                    Puesto {index + 1} - {prizeTitle}
                   </span>
                 )}
               </li>
@@ -80,8 +77,7 @@ LiveDrawModal.propTypes = {
     participants: PropTypes.arrayOf(PropTypes.string),
     prizes: PropTypes.arrayOf(
       PropTypes.shape({
-        name: PropTypes.string,
-        description: PropTypes.string,
+        title: PropTypes.string,
       })
     ),
   }),
@@ -92,7 +88,7 @@ LiveDrawModal.propTypes = {
 
 LiveDrawModal.defaultProps = {
   raffle: null,
-  message: '',
+  message: "",
   winners: [],
 };
 

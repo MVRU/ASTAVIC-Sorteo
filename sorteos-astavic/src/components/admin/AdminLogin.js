@@ -1,3 +1,8 @@
+/**
+ * TODOS:
+ * - [ ] Admin, luego de iniciar sesión, debe tener dos vistas: crear un nuevo sorteo y gestionar los sorteos existentes (editar o borrar).
+ */
+
 import { useState } from "react";
 import PropTypes from "prop-types";
 

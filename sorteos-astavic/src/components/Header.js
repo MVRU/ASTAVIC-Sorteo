@@ -1,241 +1,169 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
-const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
-  const [open, setOpen] = useState(false);
-  const navRef = useRef(null);
+const NAV_ITEMS = [
+  { target: "public", href: "#/", label: "Inicio" },
+  { target: "finished", href: "#/finalizados", label: "Sorteos finalizados" },
+  { target: "admin", href: "#/admin", label: "Administración" }, // se mantiene acá
+];
 
-  const navigate = (target) => (e) => {
-    e.preventDefault();
-    setOpen(false);
+const MOBILE_QUERY = "(max-width: 768px)";
+
+const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia(MOBILE_QUERY).matches
+      : false
+  );
+  const menuId = "primary-menu";
+
+  const DESKTOP_ITEMS = NAV_ITEMS.filter((i) => i.target !== "admin"); // ⟵ clave
+
+  const handleNavigate = (target) => (event) => {
+    event.preventDefault();
+    setMenuOpen(false);
     onNavigate(target);
   };
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    if (!menuOpen) return;
+    const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  useEffect(() => setMenuOpen(false), [currentRoute]);
+
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e) => {
+      setIsMobile(e.matches);
+      if (!e.matches) setMenuOpen(false);
+    };
+    mql.addEventListener
+      ? mql.addEventListener("change", onChange)
+      : mql.addListener(onChange);
+    setIsMobile(mql.matches);
+    return () => {
+      mql.removeEventListener
+        ? mql.removeEventListener("change", onChange)
+        : mql.removeListener(onChange);
+    };
   }, []);
 
   return (
-    <header
-      className="app-header"
-      role="banner"
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        background: "#031735",
-        color: "#EAF4FF",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-      }}
-    >
-      {/* ✅ Estilos locales para hover rojo sin fondo ni bordes */}
-      <style>{`
-        .nav-link {
-          color: #EAF4FF;
-          text-decoration: none;
-          font-weight: 600;
-          padding: .4rem .6rem; /* mantiene click-area cómoda sin fondo */
-          border-radius: 0;     /* sin bordes redondeados para que no haya "píldora" */
-          transition: color .15s ease;
-        }
-        .nav-link:hover,
-        .nav-link:focus-visible {
-          color: #e64747; /* rojo ASTAVIC-like */
-          text-decoration: none;
-          outline: none; /* si prefieres foco visible, agrega text-decoration: underline; */
-        }
-        .nav-link[aria-current="page"] {
-          /* estado actual: mismo color normal (sin resaltar) */
-          color: #EAF4FF;
-        }
-      `}</style>
-
-      <div
-        className="container app-header__content"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "auto 1fr auto",
-          alignItems: "center",
-          gap: "1rem",
-          minHeight: 72,
-          paddingTop: 6,
-          paddingBottom: 6,
-        }}
-      >
-        {/* Brand */}
+    <header className="app-header app-header--brand" role="banner">
+      <div className="container app-header__content">
         <a
           href="#/"
           aria-label="Inicio"
-          onClick={navigate("public")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            textDecoration: "none",
-            color: "inherit",
-          }}
+          className="app-header__brand"
+          onClick={handleNavigate("public")}
         >
-          <img
-            src={logoSrc}
-            alt="ASTAVIC"
-            height={48}
-            width={48}
-            style={{
-              display: "block",
-              height: 48,
-              width: 48,
-              objectFit: "contain",
-            }}
-            onError={(e) => {
-              e.currentTarget.replaceWith(
-                Object.assign(document.createElement("span"), {
-                  textContent: "ASTAVIC",
-                  style:
-                    "font-size:14px;font-weight:800;letter-spacing:.5px;color:#EAF4FF;",
-                })
-              );
-            }}
-          />
-          <span style={{ lineHeight: 1 }}>
-            <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-              Sorteos de ASTAVIC
+          {logoError ? (
+            <span className="app-header__logo-placeholder" aria-hidden="true">
+              ASTAVIC
             </span>
-          </span>
+          ) : (
+            <img
+              src={logoSrc}
+              alt="ASTAVIC"
+              height={48}
+              width={48}
+              onError={() => setLogoError(true)}
+            />
+          )}
+          {!isMobile && (
+            <span className="app-header__brand-text">
+              <span className="app-header__brand-title">
+                Sorteos de ASTAVIC
+              </span>
+              <span className="app-header__brand-subtitle">
+                Experiencias en vivo y resultados confiables
+              </span>
+            </span>
+          )}
         </a>
 
-        {/* Navegación */}
-        <nav
-          className="app-nav"
-          aria-label="Navegación principal"
-          ref={navRef}
-          style={{
-            justifySelf: "center",
-            display: "flex",
-            alignItems: "center",
-            gap: "1.25rem",
-          }}
-        >
-          <a
-            href="#/"
-            className="nav-link"
-            aria-current={currentRoute === "public" ? "page" : undefined}
-            onClick={navigate("public")}
+        {/* Desktop: sin "Administración" en el nav */}
+        {!isMobile && (
+          <nav
+            className="app-header__nav app-nav"
+            aria-label="Navegación principal"
           >
-            Inicio
-          </a>
-          <a
-            href="#/finalizados"
-            className="nav-link"
-            aria-current={currentRoute === "finished" ? "page" : undefined}
-            onClick={navigate("finished")}
-          >
-            Sorteos finalizados
-          </a>
-        </nav>
+            {DESKTOP_ITEMS.map(({ target, href, label }) => (
+              <a
+                key={target}
+                href={href}
+                className={`nav-link${
+                  currentRoute === target ? " is-active" : ""
+                }`}
+                aria-current={currentRoute === target ? "page" : undefined}
+                onClick={handleNavigate(target)}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        )}
 
-        {/* Acciones: botón Administración */}
-        <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
-          <a
-            href="#/admin"
-            onClick={navigate("admin")}
-            aria-current={currentRoute === "admin" ? "page" : undefined}
-            title="Ir a Administración"
-            style={adminBtnStyle}
-          >
-            Administración
-          </a>
-
-          {/* Hamburguesa opcional para mobile (actívala con media query) */}
-          <button
-            type="button"
-            aria-label="Abrir menú"
-            aria-expanded={open}
-            aria-controls="primary-menu"
-            onClick={() => setOpen((v) => !v)}
-            style={{ ...iconBtnStyle, display: "none" }}
-          >
-            <BurgerIcon open={open} />
-          </button>
-        </div>
-      </div>
-
-      {/* Menú móvil */}
-      <div
-        id="primary-menu"
-        hidden={!open}
-        style={{
-          display: open ? "block" : "none",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          background: "#031735",
-        }}
-      >
-        <div className="container" style={{ padding: "0.5rem 0 0.75rem" }}>
-          <div style={{ display: "grid", gap: ".35rem", fontSize: "0.95rem" }}>
-            <a href="#/" onClick={navigate("public")} style={mobileLinkStyle}>
-              Inicio
-            </a>
-            <a
-              href="#/finalizados"
-              onClick={navigate("finished")}
-              style={mobileLinkStyle}
-            >
-              Sorteos finalizados
-            </a>
+        <div className="app-header__actions">
+          {/* Desktop: botón de Administración aparte */}
+          {!isMobile && (
             <a
               href="#/admin"
-              onClick={navigate("admin")}
-              style={mobileLinkStyle}
+              className={`button button--ghost app-header__admin-link${
+                currentRoute === "admin" ? " is-active" : ""
+              }`}
+              aria-current={currentRoute === "admin" ? "page" : undefined}
+              onClick={handleNavigate("admin")}
             >
               Administración
             </a>
-          </div>
+          )}
+
+          {/* Mobile: hamburguesa */}
+          {isMobile && (
+            <button
+              type="button"
+              className="app-header__burger button button--icon"
+              aria-label="Abrir menú"
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              onClick={() => setMenuOpen((p) => !p)}
+            >
+              <BurgerIcon open={menuOpen} />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mobile: el menú incluye TODOS los items, incluida Administración */}
+      {isMobile && (
+        <div
+          id={menuId}
+          className={`app-header__mobile${menuOpen ? " is-open" : ""}`}
+          hidden={!menuOpen}
+        >
+          <nav aria-label="Navegación móvil" className="app-header__mobile-nav">
+            {NAV_ITEMS.map(({ target, href, label }) => (
+              <a
+                key={`mobile-${target}`}
+                href={href}
+                className="app-header__mobile-link"
+                aria-current={currentRoute === target ? "page" : undefined}
+                onClick={handleNavigate(target)}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
-};
-
-/* ---------- estilos helpers ---------- */
-
-const adminBtnStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: ".4rem",
-  padding: ".45rem .75rem",
-  borderRadius: 8,
-  border: "1px solid rgba(255,255,255,0.22)",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
-  color: "#EAF4FF",
-  textDecoration: "none",
-  fontWeight: 600,
-  letterSpacing: ".2px",
-  transition: "background .2s ease, transform .15s ease, color .2s ease",
-};
-
-const iconBtnStyle = {
-  width: 36,
-  height: 36,
-  display: "grid",
-  placeItems: "center",
-  borderRadius: 8,
-  border: "1px solid rgba(255,255,255,0.15)",
-  background: "transparent",
-  color: "#EAF4FF",
-  cursor: "pointer",
-  transition: "background .2s ease, transform .15s ease",
-};
-
-const mobileLinkStyle = {
-  display: "block",
-  padding: ".55rem 0",
-  color: "#EAF4FF",
-  textDecoration: "none",
-  borderRadius: 6,
 };
 
 const BurgerIcon = ({ open }) => (
@@ -263,6 +191,7 @@ const BurgerIcon = ({ open }) => (
     )}
   </svg>
 );
+
 BurgerIcon.propTypes = { open: PropTypes.bool };
 BurgerIcon.defaultProps = { open: false };
 
