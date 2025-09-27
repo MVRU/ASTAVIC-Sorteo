@@ -81,7 +81,7 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
                 Sorteos de ASTAVIC
               </span>
               <span className="app-header__brand-subtitle">
-                Experiencias en vivo y resultados confiables
+                Premiamos tu esfuerzo, reconocemos tu apoyo
               </span>
             </span>
           )}

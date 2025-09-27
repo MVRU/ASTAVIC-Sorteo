@@ -3,7 +3,7 @@ const initialRaffles = [
     id: "bienvenida-primavera-2025",
     title: "Bienvenida Primavera 2025",
     description:
-      "Celebramos la nueva estacion con premios para socios que acompanan todo el ano.",
+      "Celebramos la nueva estación con premios para socios que acompanan todo el año.",
     datetime: "2025-09-21T18:00:00-03:00",
     winnersCount: 3,
     prizes: [
@@ -24,7 +24,7 @@ const initialRaffles = [
       "Joaquin Pereyra",
     ],
     finished: true,
-    // Ganadores resueltos por backend (ordenados según premios 1°, 2°, 3°)
+    // Ganadores de prueba resueltos por backend (ordenados según premios 1°, 2°, 3°)
     winners: ["Elena Torres", "Bruno Diaz", "Iara Gomez"],
   },
   {

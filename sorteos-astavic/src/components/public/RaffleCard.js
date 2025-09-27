@@ -1,7 +1,8 @@
+// src/components/public/RaffleCard.js
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
-import { formatDateEs, getTimeParts } from "../../utils/raffleUtils"; // sin generación de ganadores
+import { formatDateEs, getTimeParts } from "../../utils/raffleUtils";
 
 const emojiSet = ["\u{1F389}", "\u{1F38A}", "\u{2728}", "\u{1F388}"];
 
@@ -118,26 +119,26 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
         }}
       >
         <button
-          ref={openBtnRef}
           type="button"
           className="button button--ghost"
-          style={{ width: "100%" }}
-          onClick={() => setModalOpen(true)}
-          title="Ver información del sorteo"
-          aria-label={`Ver detalles del sorteo ${raffle.title}`}
-        >
-          Ver sorteo
-        </button>
-
-        <button
-          type="button"
-          className="button button--primary"
           style={{ width: "100%" }}
           onClick={() => onRequestReminder(raffle)}
           title="Abrir formulario para recibir recordatorios por correo"
           aria-label={`Recibir recordatorio por email del sorteo ${raffle.title}`}
         >
           Avisarme por email
+        </button>
+
+        <button
+          ref={openBtnRef}
+          type="button"
+          className="button button--primary "
+          style={{ width: "100%" }}
+          onClick={() => setModalOpen(true)}
+          title="Ver información del sorteo"
+          aria-label={`Ver detalles del sorteo ${raffle.title}`}
+        >
+          Ver sorteo
         </button>
       </div>
 
@@ -223,11 +224,12 @@ function RaffleDetailsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 👈 vacío para no re-ejecutar al re-renderizar
 
+  // ¿Finalizado?
+  const isFinal = raffle.finished || isFinished;
+
   // Ganadores desde backend (solo mostrar si finalizado y hay winners)
   const hasWinners =
-    (raffle.finished || isFinished) &&
-    Array.isArray(raffle.winners) &&
-    raffle.winners.length > 0;
+    isFinal && Array.isArray(raffle.winners) && raffle.winners.length > 0;
 
   // Filtro de participantes (case-insensitive, trim)
   const filteredParticipants = useMemo(() => {
@@ -360,11 +362,9 @@ function RaffleDetailsModal({
             <div style={modalHeaderInfoStyle}>
               <span
                 aria-hidden="true"
-                style={stateBadgeStyle(
-                  raffle.finished || isFinished ? "ok" : "info"
-                )}
+                style={stateBadgeStyle(isFinal ? "ok" : "info")}
               >
-                {raffle.finished || isFinished ? "Finalizado" : "Activo"}
+                {isFinal ? "Finalizado" : "Activo"}
               </span>
               <span
                 className="legend"
@@ -405,6 +405,15 @@ function RaffleDetailsModal({
           id={descId}
           style={{ ...bodyGridStyle, ...modalScrollAreaStyle }}
         >
+          {/* Descripción SIEMPRE primero */}
+          <section className="modal__section">
+            <h4 style={{ marginTop: 0 }}>Descripción</h4>
+            <p className="modal__text">
+              {raffle.description || "Sin descripción disponible."}
+            </p>
+          </section>
+
+          {/* SOLO si está finalizado: Ganadores DEBAJO de Descripción */}
           {hasWinners && (
             <section className="modal__section">
               <h4 style={{ marginTop: 0 }}>Ganadores</h4>
@@ -439,30 +448,27 @@ function RaffleDetailsModal({
             </section>
           )}
 
-          <section className="modal__section">
-            <h4 style={{ marginTop: 0 }}>Descripción</h4>
-            <p className="modal__text">
-              {raffle.description || "Sin descripción disponible."}
-            </p>
-          </section>
+          {/* SOLO si NO está finalizado: Premios */}
+          {!isFinal && (
+            <section className="modal__section">
+              <h4 style={{ marginTop: 0 }}>Premios</h4>
+              {Array.isArray(raffle.prizes) && raffle.prizes.length > 0 ? (
+                <ol className="modal__list">
+                  {raffle.prizes.map((prize, index) => (
+                    <li key={(prize && prize.title) || index}>
+                      {prize?.title || `Premio ${index + 1}`}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="modal__text modal__text--muted">
+                  No hay premios cargados.
+                </p>
+              )}
+            </section>
+          )}
 
-          <section className="modal__section">
-            <h4 style={{ marginTop: 0 }}>Premios</h4>
-            {Array.isArray(raffle.prizes) && raffle.prizes.length > 0 ? (
-              <ol className="modal__list">
-                {raffle.prizes.map((prize, index) => (
-                  <li key={(prize && prize.title) || index}>
-                    {prize?.title || `Premio ${index + 1}`}
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="modal__text modal__text--muted">
-                No hay premios cargados.
-              </p>
-            )}
-          </section>
-
+          {/* Participantes (siempre) */}
           <section className="modal__section">
             <div
               style={{

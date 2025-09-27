@@ -1,14 +1,32 @@
-/**
- * TODOS:
- * - [ ] Centrar los números de las métricas: Sorteos totales; Activos; Finalizados. Y mejorar su diseño.
- */
-
+// src/components/admin/AdminDashboard.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import RaffleCard from "../public/RaffleCard";
 
-// Chip util para mostrar contadores y tags
+/* =========================
+   Hook simple de media query
+   ========================= */
+function useMediaQuery(query) {
+  const getMatch = () =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false;
+  const [matches, setMatches] = useState(getMatch);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const handler = (e) => setMatches(e.matches);
+    mql.addEventListener?.("change", handler);
+    // fallback Safari/iOS
+    mql.addListener?.(handler);
+    setMatches(mql.matches);
+    return () => {
+      mql.removeEventListener?.("change", handler);
+      mql.removeListener?.(handler);
+    };
+  }, [query]);
+  return matches;
+}
+
+// Chip util para mostrar contadores y tags (solo mobile)
 const Chip = ({ children }) => (
   <span
     className="tag"
@@ -17,7 +35,7 @@ const Chip = ({ children }) => (
       alignItems: "center",
       gap: "0.375rem",
       fontSize: "0.85rem",
-      padding: "0.25rem 0.5rem",
+      padding: "0.25rem 0.6rem",
       borderRadius: "999px",
       background: "var(--surface-2, #f4f4f6)",
       color: "var(--text-2, #444)",
@@ -30,15 +48,14 @@ const Chip = ({ children }) => (
 );
 Chip.propTypes = { children: PropTypes.node.isRequired };
 
-// Tarjeta compacta de metricas
-// Tarjeta compacta de métricas — centrada y con mejor diseño
+// Tarjeta compacta de métricas (solo desktop)
 const StatCard = ({ label, value, icon }) => (
   <div
     className="card"
     role="status"
     aria-live="polite"
     style={{
-      padding: "1.25rem",
+      padding: "1.1rem",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -53,7 +70,7 @@ const StatCard = ({ label, value, icon }) => (
   >
     {icon && (
       <div
-        style={{ fontSize: "1.5rem", color: "var(--text-1, #222)" }}
+        style={{ fontSize: "1.4rem", color: "var(--text-1, #222)" }}
         aria-hidden="true"
       >
         {icon}
@@ -72,7 +89,7 @@ const StatCard = ({ label, value, icon }) => (
       </div>
       <div
         style={{
-          fontSize: "1.75rem",
+          fontSize: "1.55rem",
           fontWeight: 700,
           color: "var(--text-1, #222)",
           lineHeight: 1.2,
@@ -90,15 +107,14 @@ StatCard.propTypes = {
 };
 StatCard.defaultProps = { icon: "📊" };
 
-// Dropzone accesible para subir o seleccionar archivos de participantes
+// Dropzone accesible
 const FileDropzone = ({ onFile, disabled, fileToken }) => {
   const zoneRef = useRef(null);
   const inputRef = useRef(null);
 
   const triggerPicker = () => {
     if (disabled) return;
-    const input = inputRef.current;
-    if (input) input.click();
+    inputRef.current?.click();
   };
 
   const handleKey = (event) => {
@@ -147,7 +163,7 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
       role="button"
       tabIndex={0}
       aria-disabled={disabled}
-      aria-label="Solta tu archivo de participantes o presiona Enter para seleccionarlo"
+      aria-label="Soltá tu archivo de participantes o presioná Enter para seleccionarlo"
       onKeyDown={handleKey}
       onClick={triggerPicker}
       onDragOver={handleDragOver}
@@ -166,10 +182,10 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
         </span>
         <div>
           <div style={{ fontWeight: 600 }}>
-            Solta tu archivo (.csv, .tsv, .txt)
+            Soltá tu archivo (.csv, .tsv, .txt)
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-3,#666)" }}>
-            Tambien podes hacer clic o presionar Enter para buscarlo.
+            También podés hacer clic o presionar Enter para buscarlo.
           </div>
         </div>
       </div>
@@ -201,14 +217,11 @@ FileDropzone.defaultProps = {
   fileToken: "",
 };
 
-const AdminDashboard = ({
-  onLogout,
-  onCreateRaffle,
-  raffles,
-  subscribersCount,
-}) => {
+const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
+  const isDesktop = useMediaQuery("(min-width: 960px)");
+
   const previewDefaultMessage =
-    "Subi un archivo o pega participantes para ver un resumen aca.";
+    "Subí un archivo o pegá participantes para ver un resumen acá.";
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -224,19 +237,18 @@ const AdminDashboard = ({
   const [loading, setLoading] = useState(false);
 
   const metrics = useMemo(() => {
-    const active = raffles.filter((raffle) => !raffle.finished).length;
+    const active = raffles.filter((r) => !r.finished).length;
     const finished = raffles.length - active;
     return { total: raffles.length, active, finished };
   }, [raffles]);
 
-  const sanitizedPrizes = useMemo(() => {
-    return prizes.map((prize, index) => {
-      const titleValue = prize && prize.title ? prize.title.trim() : "";
-      return {
-        title: titleValue || "Premio " + (index + 1),
-      };
-    });
-  }, [prizes]);
+  const sanitizedPrizes = useMemo(
+    () =>
+      prizes.map((prize, index) => ({
+        title: (prize?.title || "").trim() || `Premio ${index + 1}`,
+      })),
+    [prizes]
+  );
 
   const previewRaffle = useMemo(() => {
     const fallbackDate = new Date(Date.now() + 86400000).toISOString();
@@ -250,7 +262,7 @@ const AdminDashboard = ({
         : Math.max(1, Number(form.winners) || 1);
     return {
       id: "preview",
-      title: form.title.trim() || "Titulo del sorteo",
+      title: form.title.trim() || "Título del sorteo",
       description: form.description.trim(),
       datetime: form.datetime || fallbackDate,
       winnersCount: winnersFallback,
@@ -274,14 +286,14 @@ const AdminDashboard = ({
       return {
         participants: [],
         message:
-          "No se detectaron participantes. Asegurate del formato o pega uno por linea.",
+          "No se detectaron participantes. Asegurate del formato o pegá uno por línea.",
       };
     }
     const sampleList = participants.slice(0, 5).join(", ");
     const suffix = participants.length > 5 ? "..." : "";
     return {
       participants,
-      message: `${participants.length} participantes detectados - Ejemplos: ${sampleList}${suffix}`,
+      message: `${participants.length} participantes detectados — Ejemplos: ${sampleList}${suffix}`,
     };
   }, []);
 
@@ -298,11 +310,11 @@ const AdminDashboard = ({
         if (cancelled) return;
         setPreviewParticipants(nextPreview.participants);
         setPreviewMessage(nextPreview.message);
-      } catch (error) {
+      } catch {
         if (cancelled) return;
         setPreviewParticipants([]);
         setPreviewMessage(
-          "No se pudo leer el archivo para la vista previa. Intenta nuevamente."
+          "No se pudo leer el archivo para la vista previa. Intentá nuevamente."
         );
       }
     })();
@@ -318,9 +330,7 @@ const AdminDashboard = ({
       if (safeCount > prev.length) {
         const additions = Array.from(
           { length: safeCount - prev.length },
-          () => ({
-            title: "",
-          })
+          () => ({ title: "" })
         );
         return [...prev, ...additions];
       }
@@ -399,7 +409,7 @@ const AdminDashboard = ({
       if (!form.title.trim() || !form.datetime) {
         setStatus({
           ok: false,
-          message: "Completa el titulo y la fecha del sorteo.",
+          message: "Completá el título y la fecha del sorteo.",
         });
         setLoading(false);
         return;
@@ -411,13 +421,12 @@ const AdminDashboard = ({
         setStatus({
           ok: false,
           message:
-            "No se detectaron participantes. Revisa el archivo o el texto.",
+            "No se detectaron participantes. Revisá el archivo o el texto.",
         });
         setLoading(false);
         return;
       }
-
-      const normalizedPrizes = sanitizedPrizes.map((prize) => ({ ...prize }));
+      const normalizedPrizes = sanitizedPrizes.map((p) => ({ ...p }));
       const winnersCount =
         normalizedPrizes.length > 0 ? normalizedPrizes.length : winnersNum;
 
@@ -434,13 +443,11 @@ const AdminDashboard = ({
 
       const result = onCreateRaffle(newRaffle);
       setStatus(result);
-      if (result?.ok) {
-        resetForm();
-      }
-    } catch (error) {
+      if (result?.ok) resetForm();
+    } catch {
       setStatus({
         ok: false,
-        message: "Ocurrio un problema al leer el archivo. Intenta nuevamente.",
+        message: "Ocurrió un problema al leer el archivo. Intentá nuevamente.",
       });
     } finally {
       setLoading(false);
@@ -454,43 +461,50 @@ const AdminDashboard = ({
   return (
     <section className="section-gap" aria-labelledby="admin-panel">
       <div className="container" style={{ display: "grid", gap: "1.25rem" }}>
+        {/* Toolbar responsive */}
         <div
           className="controls-row"
           style={{
+            display: "flex",
+            flexWrap: "wrap",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: "1rem",
+            gap: "0.75rem",
           }}
         >
           <div>
             <h1
               id="admin-panel"
               className="section-title"
-              style={{ fontSize: "1.8rem", marginBottom: "0.25rem" }}
+              style={{ marginBottom: "0.25rem" }}
             >
               Administración
             </h1>
+
+            {/* Chips SOLO en mobile */}
+            {!isDesktop && (
+              <div className="tag-group">
+                <Chip>🗂️ Sorteos: {metrics.total}</Chip>
+                <Chip>⏳ Activos: {metrics.active}</Chip>
+                <Chip>✅ Finalizados: {metrics.finished}</Chip>
+              </div>
+            )}
           </div>
 
           <button
             type="button"
             className="button button--ghost"
             onClick={onLogout}
-            aria-label="Cerrar sesion de administración"
+            aria-label="Cerrar sesión de administración"
             title="Cerrar sesión"
           >
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
 
-        <div
-          className="admin-layout"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0,1fr) 360px",
-            gap: "1rem",
-          }}
-        >
+        {/* Layout: 1 col en mobile / 2 cols >= 960px (lo maneja App.css .admin-layout) */}
+        <div className="admin-layout">
+          {/* Columna principal: formulario */}
           <form className="card" onSubmit={handleSubmit} noValidate>
             <fieldset
               className="form-card"
@@ -500,7 +514,7 @@ const AdminDashboard = ({
               <legend className="visually-hidden">Crear sorteo</legend>
 
               <div className="form-group">
-                <label htmlFor="raffle-title">Titulo</label>
+                <label htmlFor="raffle-title">Título</label>
                 <input
                   id="raffle-title"
                   className="input"
@@ -513,13 +527,13 @@ const AdminDashboard = ({
                   aria-describedby="title-help"
                 />
                 <span id="title-help" className="legend">
-                  Usa un titulo claro y breve.
+                  Usá un título claro y breve.
                 </span>
               </div>
 
               <div className="form-group">
                 <label htmlFor="raffle-description">
-                  Descripcion (opcional)
+                  Descripción (opcional)
                 </label>
                 <textarea
                   id="raffle-description"
@@ -531,18 +545,12 @@ const AdminDashboard = ({
                   rows={3}
                 />
                 <span className="legend">
-                  Inclui condiciones o mensajes importantes.
+                  Incluí condiciones o mensajes importantes.
                 </span>
               </div>
 
-              <div
-                className="form-grid split"
-                style={{
-                  display: "grid",
-                  gap: "1rem",
-                  gridTemplateColumns: "1fr 180px",
-                }}
-              >
+              {/* .form-grid.split (App.css) hace responsive a 1/2 columnas */}
+              <div className="form-grid split">
                 <div className="form-group">
                   <label htmlFor="raffle-datetime">Fecha y hora</label>
                   <input
@@ -556,7 +564,7 @@ const AdminDashboard = ({
                     aria-describedby="datetime-help"
                   />
                   <span id="datetime-help" className="legend">
-                    Se mostrara en formato latino.
+                    Se mostrará en formato latino.
                   </span>
                 </div>
 
@@ -580,7 +588,7 @@ const AdminDashboard = ({
               <div className="form-group">
                 <label>Premios</label>
                 <p className="legend" style={{ marginBottom: "0.5rem" }}>
-                  Define un titulo por premio. El orden determina el puesto.
+                  Definí un título por premio. El orden determina el puesto.
                 </p>
                 {prizes.map((prize, index) => (
                   <div
@@ -594,14 +602,14 @@ const AdminDashboard = ({
                     }}
                   >
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor={`prize-title-${index}`}>Titulo</label>
+                      <label htmlFor={`prize-title-${index}`}>Título</label>
                       <input
                         id={`prize-title-${index}`}
                         className="input"
                         placeholder={`Premio ${index + 1}`}
                         value={prize.title}
-                        onChange={(event) =>
-                          handlePrizeChange(index, event.target.value)
+                        onChange={(e) =>
+                          handlePrizeChange(index, e.target.value)
                         }
                       />
                       <span className="legend">
@@ -643,7 +651,7 @@ const AdminDashboard = ({
 
               <div className="form-group">
                 <label htmlFor="raffle-manual">
-                  O pegalo manualmente (uno por linea)
+                  O pegalo manualmente (uno por línea)
                 </label>
                 <textarea
                   id="raffle-manual"
@@ -656,7 +664,7 @@ const AdminDashboard = ({
                   aria-describedby="manual-help"
                 />
                 <span id="manual-help" className="legend">
-                  Acepta email o nombre. Se eliminan duplicados automaticamente.
+                  Acepta email o nombre. Se eliminan duplicados automáticamente.
                 </span>
               </div>
 
@@ -685,7 +693,7 @@ const AdminDashboard = ({
                 >
                   Limpiar
                 </button>
-                <span className="legend">Previsualiza antes de publicar.</span>
+                <span className="legend">Previsualizá antes de publicar.</span>
               </div>
 
               {status && (
@@ -700,42 +708,117 @@ const AdminDashboard = ({
             </fieldset>
           </form>
 
-          <div style={{ display: "grid", gap: "1rem", alignContent: "start" }}>
-            <div className="card">
-              <h2
-                className="raffle-card__title"
-                style={{ fontSize: "1rem", marginBottom: "0.5rem" }}
+          {/* Columna lateral: tutorial / métricas (desktop) / preview */}
+          <aside
+            style={{ display: "grid", gap: "1rem", alignContent: "start" }}
+          >
+            {/* Tutorial mejorado */}
+            <div className="card" style={{ padding: "1.1rem 1rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.4rem",
+                }}
               >
-                Como crear un sorteo
-              </h2>
+                <h2
+                  className="raffle-card__title"
+                  style={{ fontSize: "1rem", margin: 0 }}
+                >
+                  Cómo crear un sorteo
+                </h2>
+              </div>
+
               <ol
-                className="helper-list"
-                style={{ margin: 0, paddingInlineStart: "1.25rem" }}
+                style={{
+                  listStyle: "none",
+                  margin: 0,
+                  padding: 0,
+                  display: "grid",
+                  gap: "0.6rem",
+                }}
               >
-                <li>
-                  Subi o pega la lista de participantes (CSV, TSV o texto).
-                </li>
-                <li>Defini fecha, hora, titulo y cantidad de ganadores.</li>
-                <li>
-                  Publica: el publico vera el contador y la experiencia en vivo.
-                </li>
+                {[
+                  {
+                    icon: "📥",
+                    title: "Cargá participantes",
+                    desc: "Subí un CSV/TSV o pegá la lista (uno por línea). Eliminamos duplicados automáticamente.",
+                  },
+                  {
+                    icon: "🗓️",
+                    title: "Configurá detalles",
+                    desc: "Definí título, fecha y cantidad de ganadores. Ordená los premios según el puesto.",
+                  },
+                  {
+                    icon: "🚀",
+                    title: "Publicá el sorteo",
+                    desc: "Se mostrará el contador y, al finalizar, todos verán los mismos ganadores.",
+                  },
+                ].map((step, i) => (
+                  <li
+                    key={step.title}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
+                      gap: "0.6rem",
+                      alignItems: "start",
+                      padding: "0.55rem 0.6rem",
+                      border: "1px solid var(--border)",
+                      borderRadius: "0.75rem",
+                      background: "var(--surface)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 10,
+                        display: "grid",
+                        placeItems: "center",
+                        border: "1px solid var(--border)",
+                        background: "var(--surface-elevated)",
+                        fontSize: "1rem",
+                      }}
+                      aria-hidden
+                    >
+                      {step.icon}
+                    </div>
+                    <div>
+                      <strong style={{ display: "block", marginBottom: 2 }}>
+                        {i + 1}. {step.title}
+                      </strong>
+                      <span className="legend">{step.desc}</span>
+                    </div>
+                  </li>
+                ))}
               </ol>
             </div>
 
-            <div style={{ display: "grid", gap: "0.75rem" }}>
-              <StatCard
-                label="Sorteos totales"
-                value={metrics.total}
-                icon="📂"
-              />
-              <StatCard label="Activos" value={metrics.active} icon="⏳" />
-              <StatCard
-                label="Finalizados"
-                value={metrics.finished}
-                icon="✅"
-              />
-            </div>
+            {/* Métricas: SOLO DESKTOP */}
+            {isDesktop && (
+              <div
+                style={{
+                  display: "grid",
+                  gap: "0.75rem",
+                  gridTemplateColumns: "repeat( auto-fit, minmax(160px, 1fr) )",
+                }}
+              >
+                <StatCard
+                  label="Sorteos totales"
+                  value={metrics.total}
+                  icon="📂"
+                />
+                <StatCard label="Activos" value={metrics.active} icon="⏳" />
+                <StatCard
+                  label="Finalizados"
+                  value={metrics.finished}
+                  icon="✅"
+                />
+              </div>
+            )}
 
+            {/* Vista previa (más chica en desktop) */}
             <div className="card" aria-live="polite">
               <h2
                 className="raffle-card__title"
@@ -747,6 +830,8 @@ const AdminDashboard = ({
                 style={{
                   pointerEvents: "none",
                   opacity: previewParticipants.length ? 1 : 0.6,
+                  // Anchura contenida en desktop
+                  maxWidth: isDesktop ? "360px" : "100%",
                 }}
               >
                 <RaffleCard
@@ -777,7 +862,7 @@ const AdminDashboard = ({
                 </ul>
               )}
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </section>
@@ -793,7 +878,6 @@ AdminDashboard.propTypes = {
       finished: PropTypes.bool,
     })
   ).isRequired,
-  subscribersCount: PropTypes.number.isRequired,
 };
 
 export default AdminDashboard;

@@ -1,3 +1,5 @@
+/* src/App.css */
+
 /* ============================
    SISTEMA DE TOKENS Y RESET
    ============================ */
@@ -1168,4 +1170,105 @@ footer {
 }
 .button--ghost:hover {
   background: var(--brand-50);
+}
+
+/* ============================
+   FOOTER (estilo brand)
+   ============================ */
+.app-footer {
+  margin-top: auto; /* empuja el footer al final si hay poca altura */
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-footer--brand {
+  background: #031735;
+  color: #eaf4ff;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.2);
+}
+
+.app-footer__content {
+  padding: 1.4rem 0;
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  place-items: center;
+}
+
+@media (min-width: 640px) {
+  .app-footer__content {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+/* Marca en footer */
+.app-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.app-footer__logo-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  width: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #eaf4ff;
+}
+.app-footer__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  gap: 0.2rem;
+}
+.app-footer__brand-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+.app-footer__brand-subtitle {
+  font-size: 0.8rem;
+  color: rgba(234, 244, 255, 0.75);
+}
+
+/* Meta y enlaces */
+.app-footer__meta {
+  display: grid;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+/* @media (min-width: 640px) {
+  .app-footer__meta {
+    text-align: right;
+    justify-items: end;
+  }
+} */
+
+.app-footer__copyright {
+  font-size: 0.9rem;
+  color: rgba(234, 244, 255, 0.85);
+}
+
+.app-footer__links {
+  display: inline-flex;
+  gap: 0.9rem;
+  font-size: 0.9rem;
+}
+.app-footer__links a {
+  color: rgba(234, 244, 255, 0.75);
+  text-decoration: none;
+  padding: 0.25rem 0.35rem;
+  border-radius: 8px;
+  transition: background-color var(--transition-fast),
+    color var(--transition-fast), transform var(--transition-fast);
+}
+.app-footer__links a:hover,
+.app-footer__links a:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
 }

@@ -175,8 +175,8 @@ const PublicView = ({
               </p>
             </div>
             <div className="public-toolbar__actions">
-              <span className="tag tag--neutral">
-                {visibleCount} {visibleCount === 1 ? "sorteo" : "sorteos"}
+              <span className="section-subtitle">
+                Hay {visibleCount} {visibleCount === 1 ? "sorteo" : "sorteos"}
               </span>
               <button
                 type="button"
