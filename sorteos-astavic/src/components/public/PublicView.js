@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import RaffleCard from "./RaffleCard";
 
@@ -18,15 +18,30 @@ const PublicView = ({
   onStartLive,
   onMarkFinished,
   onRegisterSubscriber,
+  route,
 }) => {
   const [email, setEmail] = useState("");
   const [toast, setToast] = useState(null); // { ok:boolean, message:string }
   const [submitting, setSubmitting] = useState(false);
+  const [reminder, setReminder] = useState({ open: false, raffle: null });
+  const emailFieldRef = useRef(null);
   const isEmailValid = emailRegex.test(email.trim());
   const toastTimerRef = useRef(null);
 
   // Contador visible según filtro (para micro-feedback)
   const visibleCount = raffles.length;
+  const isFinishedRoute = route === "finished";
+  const toolbarTitle = isFinishedRoute ? "Sorteos finalizados" : "Sorteos";
+
+  const handleCloseReminder = useCallback(() => {
+    setReminder({ open: false, raffle: null });
+    setToast(null);
+  }, []);
+
+  const handleReminder = useCallback((raffle) => {
+    setReminder({ open: true, raffle: raffle || null });
+    setToast(null);
+  }, []);
 
   // Limpia timers del toast al desmontar/cambiar
   useEffect(() => {
@@ -39,9 +54,34 @@ const PublicView = ({
     };
   }, [toast]);
 
-  const handleFilter = (event) => {
-    onFilterChange(event.target.value);
-  };
+  useEffect(() => {
+    if (!reminder.open) {
+      return undefined;
+    }
+    const handleKey = (event) => {
+      if (event.key === "Escape") {
+        handleCloseReminder();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [reminder.open, handleCloseReminder]);
+
+  useEffect(() => {
+    if (reminder.open) {
+      const input = emailFieldRef.current;
+      if (input) {
+        input.focus();
+      }
+    }
+  }, [reminder.open]);
+
+  const handleFilter = useCallback(
+    (event) => {
+      onFilterChange(event.target.value);
+    },
+    [onFilterChange]
+  );
 
   const showToast = (payload) => {
     setToast(payload);
@@ -55,7 +95,8 @@ const PublicView = ({
     }
     try {
       setSubmitting(true);
-      const result = await onRegisterSubscriber(email.trim());
+      const targetRaffle = reminder.raffle;
+      const result = await onRegisterSubscriber(email.trim(), targetRaffle);
       showToast(result);
       if (result?.ok && !result?.reuse) setEmail("");
     } finally {
@@ -63,23 +104,6 @@ const PublicView = ({
     }
   };
 
-  const handleReminder = async (raffle) => {
-    if (!isEmailValid) {
-      showToast({
-        ok: false,
-        message: "Completá un email válido para poder avisarte.",
-      });
-      return;
-    }
-    try {
-      setSubmitting(true);
-      const result = await onRegisterSubscriber(email.trim(), raffle);
-      showToast(result);
-      if (result?.ok && !result?.reuse) setEmail("");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   // Toolbar de filtros (sticky) + contador
   const FilterToolbar = useMemo(
@@ -103,7 +127,7 @@ const PublicView = ({
           style={{ display: "flex", alignItems: "baseline", gap: "0.75rem" }}
         >
           <h1 className="section-title" style={{ margin: 0 }}>
-            Sorteos
+            {toolbarTitle}
           </h1>
           <span
             className="tag"
@@ -133,6 +157,12 @@ const PublicView = ({
             value={filter}
             onChange={handleFilter}
             aria-label="Filtrar sorteos por estado"
+            disabled={isFinishedRoute}
+            title={
+              isFinishedRoute
+                ? "El filtro se encuentra fijado en finalizados"
+                : undefined
+            }
           >
             {filters.map((item) => (
               <option key={item.value} value={item.value}>
@@ -140,14 +170,24 @@ const PublicView = ({
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={() => handleReminder(null)}
+            style={{ whiteSpace: "nowrap" }}
+            aria-label="Abrir formulario de recordatorios por email"
+          >
+            Recordatorios por email
+          </button>
         </div>
       </div>
     ),
-    [filter, visibleCount]
+    [filter, visibleCount, handleFilter, handleReminder, isFinishedRoute, toolbarTitle]
   );
 
   return (
-    <section className="section-gap" aria-labelledby="sorteos-title">
+    <>
+      <section className="section-gap" aria-labelledby="sorteos-title">
       <div className="container" id="sorteos-title">
         {FilterToolbar}
 
@@ -190,34 +230,67 @@ const PublicView = ({
                   raffle={raffle}
                   onLive={onStartLive}
                   onMarkFinished={onMarkFinished}
-                  subscriberEmail={email.trim()}
                   onRequestReminder={handleReminder}
                 />
               </div>
             ))}
           </div>
         )}
-
-        {/* Suscripción */}
-        <section className="section-gap" aria-labelledby="subscription-title">
-          <div className="section-header">
-            <h2
-              id="subscription-title"
-              className="section-title"
-              style={{ fontSize: "1.45rem" }}
+      </div>
+    </section>
+    {reminder.open && (
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reminder-title"
+      >
+        <div className="modal__overlay" onClick={handleCloseReminder} />
+        <div className="modal__content">
+          <div className="modal__header">
+            <div>
+              <h3 id="reminder-title" className="modal__title">
+                Recibí recordatorios y resultados
+              </h3>
+              <p className="modal__desc">
+                Te avisamos cuando empiece el sorteo y compartimos el listado de
+                ganadores.
+                <br />
+                <em style={{ color: "var(--text-3,#666)" }}>Demo sin envío real.</em>
+              </p>
+              {reminder.raffle ? (
+                <>
+                  <p className="legend" style={{ margin: 0 }}>
+                    Aplicaremos este recordatorio para
+                    <strong> {reminder.raffle.title}</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    style={{ marginTop: "0.5rem", padding: "0.25rem 0.5rem" }}
+                    onClick={() => {
+                      setReminder({ open: true, raffle: null });
+                      setToast(null);
+                    }}
+                  >
+                    Recibir novedades generales
+                  </button>
+                </>
+              ) : (
+                <p className="legend" style={{ margin: 0 }}>
+                  Te enviaremos novedades generales de los próximos sorteos.
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={handleCloseReminder}
+              aria-label="Cerrar recordatorio"
             >
-              Recibí recordatorios y resultados
-            </h2>
-            <p className="section-subtitle" style={{ marginBottom: 0 }}>
-              Te avisamos cuando empiece el sorteo y compartimos el listado de
-              ganadores.
-              <br />
-              <em style={{ color: "var(--text-3,#666)" }}>
-                Demo sin envío real.
-              </em>
-            </p>
+              Cerrar
+            </button>
           </div>
-
           <form
             className="form-card"
             onSubmit={handleSubmitSubscription}
@@ -227,6 +300,7 @@ const PublicView = ({
               <label htmlFor="subscriber-email">Correo electrónico</label>
               <input
                 id="subscriber-email"
+                ref={emailFieldRef}
                 className="input"
                 type="email"
                 required
@@ -241,19 +315,16 @@ const PublicView = ({
               <span id="email-help" className="legend">
                 Usalo para un solo recordatorio por sorteo.
               </span>
-              {/* Ayuda inline si parece inválido */}
               {email.length > 0 && !isEmailValid && (
                 <span
                   className="error-text"
                   role="alert"
                   style={{ display: "block", marginTop: "0.25rem" }}
                 >
-                  Ingresá un correo con formato válido (ej.:
-                  nombre@dominio.com).
+                  Ingresá un correo con formato válido (ej.: nombre@dominio.com).
                 </span>
               )}
             </div>
-
             <div
               className="card-actions"
               style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
@@ -263,21 +334,18 @@ const PublicView = ({
                 className="button button--primary"
                 disabled={submitting}
                 aria-live="polite"
-                title={
-                  isEmailValid
-                    ? "Te enviaremos novedades importantes"
-                    : "Ingresá un email válido"
-                }
               >
-                {submitting ? "Guardando…" : "Quiero recibir novedades"}
+                {submitting
+                  ? "Guardando..."
+                  : reminder.raffle
+                  ? "Avisarme para este sorteo"
+                  : "Quiero recibir novedades"}
               </button>
               <span className="legend">
                 Podés darte de baja cuando quieras (demo).
               </span>
             </div>
           </form>
-
-          {/* Toast mejorado (cerrable + ARIA) */}
           {toast && (
             <div
               className={`toast${toast.ok ? "" : " toast--error"}`}
@@ -300,13 +368,14 @@ const PublicView = ({
                 aria-label="Cerrar notificación"
                 style={{ padding: "0.25rem 0.5rem" }}
               >
-                ✕
+                Cerrar
               </button>
             </div>
           )}
-        </section>
+        </div>
       </div>
-    </section>
+    )}
+  </>
   );
 };
 
@@ -315,9 +384,16 @@ PublicView.propTypes = {
     PropTypes.shape({
       id: PropTypes.string.isRequired,
       title: PropTypes.string.isRequired,
+      description: PropTypes.string,
       datetime: PropTypes.string.isRequired,
       winnersCount: PropTypes.number.isRequired,
       participants: PropTypes.arrayOf(PropTypes.string).isRequired,
+      prizes: PropTypes.arrayOf(
+        PropTypes.shape({
+          name: PropTypes.string,
+          description: PropTypes.string,
+        })
+      ),
       finished: PropTypes.bool,
     })
   ).isRequired,
@@ -326,10 +402,12 @@ PublicView.propTypes = {
   onStartLive: PropTypes.func.isRequired,
   onMarkFinished: PropTypes.func,
   onRegisterSubscriber: PropTypes.func.isRequired,
+  route: PropTypes.oneOf(["public", "finished"]),
 };
 
 PublicView.defaultProps = {
   onMarkFinished: undefined,
+  route: "public",
 };
 
 export default PublicView;

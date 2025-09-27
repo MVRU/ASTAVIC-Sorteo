@@ -199,6 +199,38 @@ main {
   color: var(--text-secondary);
 }
 
+.raffle-card__description {
+  font-size: 0.95rem;
+  color: var(--text-2, #444);
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.raffle-card__prizes {
+  margin: 0 0 0.75rem;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-2, #444);
+}
+
+.raffle-card__prizes li {
+  margin-bottom: 0.35rem;
+}
+
+.raffle-card__prizes li:last-child {
+  margin-bottom: 0;
+}
+
+.raffle-card__prizes .prize-name {
+  font-weight: 600;
+  display: block;
+}
+
+.raffle-card__prizes .prize-detail {
+  display: block;
+  color: var(--text-3, #666);
+}
+
 .badge {
   position: absolute;
   top: 0.95rem;
@@ -471,6 +503,13 @@ footer {
   border: 1px solid var(--border);
   background: var(--brand-50);
   color: var(--brand-700);
+}
+
+.live-winners .winner-prize {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-3, #666);
 }
 
 .modal__footer {

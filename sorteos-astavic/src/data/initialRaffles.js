@@ -2,8 +2,15 @@ const initialRaffles = [
   {
     id: "bienvenida-primavera-2025",
     title: "Bienvenida Primavera 2025",
+    description:
+      "Celebramos la nueva estación con premios para socios que acompañan todo el año.",
     datetime: "2025-09-21T18:00:00-03:00",
     winnersCount: 3,
+    prizes: [
+      { name: "1er premio", description: "Kit de picnic completo ASTAVIC" },
+      { name: "2do premio", description: "Par de entradas para evento cultural" },
+      { name: "3er premio", description: "Voucher de heladería local" },
+    ],
     participants: [
       "Ana Lopez",
       "Bruno Diaz",
@@ -21,8 +28,12 @@ const initialRaffles = [
   {
     id: "aniversario-astavic-2025",
     title: "Aniversario ASTAVIC 2025",
+    description: "Sorteo central del aniversario institucional.",
     datetime: "2025-12-10T20:30:00-03:00",
     winnersCount: 1,
+    prizes: [
+      { name: "Premio principal", description: "Televisor LED 50\" 4K" },
+    ],
     participants: [
       "Kevin Morales",
       "Lucia Herrera",
@@ -36,8 +47,12 @@ const initialRaffles = [
   {
     id: "sorteo-planta-b-2025",
     title: "Sorteo de Planta B - 2025",
+    description: "Reconocimiento al esfuerzo del equipo de Planta B.",
     datetime: "2025-09-28T22:00:00-03:00",
     winnersCount: 1,
+    prizes: [
+      { name: "Premio único", description: "Orden de compra en tienda deportiva" },
+    ],
     participants: [
       "Rocio Alvarez",
       "Santiago Medina",
@@ -54,8 +69,12 @@ const initialRaffles = [
   {
     id: "planta-a-2025",
     title: "Sorteo de Planta A - 2025",
+    description: "Celebramos los logros de Planta A con un sorteo especial.",
     datetime: "2025-09-28T21:00:00-03:00",
     winnersCount: 1,
+    prizes: [
+      { name: "Premio único", description: "Fin de semana para dos personas" },
+    ],
     participants: [
       "Agustin Castro",
       "Barbara Benitez",
@@ -69,3 +88,4 @@ const initialRaffles = [
 ];
 
 export default initialRaffles;
+

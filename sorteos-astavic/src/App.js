@@ -13,7 +13,11 @@ const ADMIN_PASSWORD = "Colon 3115";
 const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
 const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
 
-const parseRoute = (hash) => (hash?.startsWith("#/admin") ? "admin" : "public");
+const parseRoute = (hash) => {
+  if (hash?.startsWith("#/admin")) return "admin";
+  if (hash?.startsWith("#/finalizados")) return "finished";
+  return "public";
+};
 
 const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -27,6 +31,7 @@ const App = () => {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
   const [raffles, setRaffles] = useState(buildInitialRaffles);
   const [filter, setFilter] = useState("activos");
+  const lastPublicFilterRef = useRef("activos");
   const [isAdmin, setIsAdmin] = useState(
     () => sessionStorage.getItem("adminAuth") === "1"
   );
@@ -46,7 +51,12 @@ const App = () => {
   }, []);
 
   const handleNavigate = useCallback((target) => {
-    const nextHash = target === "admin" ? "#/admin" : "#/";
+    const nextHash =
+      target === "admin"
+        ? "#/admin"
+        : target === "finished"
+        ? "#/finalizados"
+        : "#/";
     if (window.location.hash !== nextHash) {
       window.location.hash = nextHash;
     } else {
@@ -62,9 +72,23 @@ const App = () => {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const handleFilterChange = useCallback((value) => {
-    setFilter(value);
-  }, []);
+  useEffect(() => {
+    if (route === "finished") {
+      setFilter("finalizados");
+    } else if (route === "public") {
+      setFilter(lastPublicFilterRef.current || "activos");
+    }
+  }, [route]);
+
+  const handleFilterChange = useCallback(
+    (value) => {
+      setFilter(value);
+      if (route !== "finished") {
+        lastPublicFilterRef.current = value;
+      }
+    },
+    [route]
+  );
 
   const handleMarkFinished = useCallback((raffleId) => {
     setRaffles((prev) =>
@@ -163,11 +187,12 @@ const App = () => {
     };
     setRaffles((prev) => [...prev, prepared]);
     setFilter("activos");
+    lastPublicFilterRef.current = "activos";
     return {
       ok: true,
       message: "Sorteo creado (demo). Ya es visible en la vista publica.",
     };
-  }, []);
+  }, [lastPublicFilterRef]);
 
   const filteredRaffles = useMemo(() => {
     const now = new Date();
@@ -195,16 +220,7 @@ const App = () => {
     <div className="app-shell">
       <Header currentRoute={route} onNavigate={handleNavigate} />
       <main>
-        {route === "public" ? (
-          <PublicView
-            raffles={filteredRaffles}
-            filter={filter}
-            onFilterChange={handleFilterChange}
-            onStartLive={handleStartLive}
-            onMarkFinished={handleMarkFinished}
-            onRegisterSubscriber={handleRegisterSubscriber}
-          />
-        ) : (
+        {route === "admin" ? (
           <AdminView
             isAdmin={isAdmin}
             onLogin={handleLogin}
@@ -213,6 +229,16 @@ const App = () => {
             raffles={raffles}
             subscribersCount={subscribers.length}
             onCreateRaffle={handleCreateRaffle}
+          />
+        ) : (
+          <PublicView
+            raffles={filteredRaffles}
+            filter={filter}
+            onFilterChange={handleFilterChange}
+            onStartLive={handleStartLive}
+            onMarkFinished={handleMarkFinished}
+            onRegisterSubscriber={handleRegisterSubscriber}
+            route={route}
           />
         )}
       </main>

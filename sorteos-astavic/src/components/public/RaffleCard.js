@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { formatDateEs, getTimeParts } from '../../utils/raffleUtils';
 
@@ -8,7 +8,6 @@ const RaffleCard = ({
   raffle,
   onLive,
   onMarkFinished,
-  subscriberEmail,
   onRequestReminder,
 }) => {
   const [timeLeft, setTimeLeft] = useState(() => getTimeParts(raffle.datetime));
@@ -49,7 +48,7 @@ const RaffleCard = ({
   }, [showConfetti]);
 
   const watchDisabled = !isFinished;
-  const reminderTitle = subscriberEmail ? 'Te avisaremos por correo' : 'Ingresa tu email en el formulario';
+  const reminderTitle = 'Abrí el formulario para recibir recordatorios por correo';
 
   return (
     <article className={`card raffle-card${isFinished ? ' raffle-card--finished' : ''}`}>
@@ -69,6 +68,24 @@ const RaffleCard = ({
           </div>
         ))}
       </div>
+      {raffle.description && (
+        <p className="raffle-card__description">{raffle.description}</p>
+      )}
+      {Array.isArray(raffle.prizes) && raffle.prizes.length > 0 && (
+        <ul className="raffle-card__prizes">
+          {raffle.prizes.map((prize, index) => (
+            <li key={prize.name || index}>
+              <span className="prize-name">
+                {prize.name || `Premio ${index + 1}`}
+              </span>
+              {prize.description && (
+                <span className="prize-detail">{prize.description}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="card-actions">
         <button
           type="button"
@@ -105,20 +122,25 @@ RaffleCard.propTypes = {
   raffle: PropTypes.shape({
     id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
+    description: PropTypes.string,
     datetime: PropTypes.string.isRequired,
     winnersCount: PropTypes.number.isRequired,
     participants: PropTypes.arrayOf(PropTypes.string).isRequired,
+    prizes: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+        description: PropTypes.string,
+      })
+    ),
     finished: PropTypes.bool,
   }).isRequired,
   onLive: PropTypes.func.isRequired,
   onMarkFinished: PropTypes.func,
-  subscriberEmail: PropTypes.string,
   onRequestReminder: PropTypes.func.isRequired,
 };
 
 RaffleCard.defaultProps = {
   onMarkFinished: undefined,
-  subscriberEmail: '',
 };
 
 export default RaffleCard;

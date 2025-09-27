@@ -127,7 +127,12 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
           >
             Inicio
           </a>
-          <a href="#/" className="nav-link" onClick={navigate("public")}>
+          <a
+            href="#/finalizados"
+            className="nav-link"
+            aria-current={currentRoute === "finished" ? "page" : undefined}
+            onClick={navigate("finished")}
+          >
             Sorteos finalizados
           </a>
         </nav>
@@ -173,8 +178,12 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
             <a href="#/" onClick={navigate("public")} style={mobileLinkStyle}>
               Inicio
             </a>
-            <a href="#/" onClick={navigate("public")} style={mobileLinkStyle}>
-              Sorteos
+            <a
+              href="#/finalizados"
+              onClick={navigate("finished")}
+              style={mobileLinkStyle}
+            >
+              Sorteos finalizados
             </a>
             <a
               href="#/admin"
@@ -258,7 +267,7 @@ BurgerIcon.propTypes = { open: PropTypes.bool };
 BurgerIcon.defaultProps = { open: false };
 
 Header.propTypes = {
-  currentRoute: PropTypes.oneOf(["public", "admin"]).isRequired,
+  currentRoute: PropTypes.oneOf(["public", "finished", "admin"]).isRequired,
   onNavigate: PropTypes.func.isRequired,
   logoSrc: PropTypes.string,
 };

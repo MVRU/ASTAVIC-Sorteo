@@ -33,6 +33,9 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
             <p className="modal__desc">
               Seleccionando {raffle.winnersCount} ganador(es) entre {raffle.participants.length} participante(s).
             </p>
+            {raffle.description && (
+              <p className="legend" style={{ margin: 0 }}>{raffle.description}</p>
+            )}
           </div>
           <button type="button" className="button button--ghost" onClick={onClose} aria-label="Cerrar modal">
             Cerrar
@@ -40,11 +43,23 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
         </div>
         <div className="live-stage">{message}</div>
         <ul className="live-winners">
-          {winners.map((winner, index) => (
-            <li key={winner}>
-              Ganador {index + 1}: {winner}
-            </li>
-          ))}
+          {winners.map((winner, index) => {
+            const prize = Array.isArray(raffle.prizes) ? raffle.prizes[index] : null;
+            const prizeHasContent = prize && (prize.name || prize.description);
+            const prizeLabel = prize && prize.name ? prize.name : `Premio ${index + 1}`;
+            const prizeDetail = prize && prize.description ? ` - ${prize.description}` : "";
+            return (
+              <li key={`${winner}-${index}`}>
+                Ganador {index + 1}: {winner}
+                {prizeHasContent && (
+                  <span className="winner-prize">
+                    {prizeLabel}
+                    {prizeDetail}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
         <div className="modal__footer">
           <button type="button" className="button button--primary" onClick={onClose}>
@@ -60,8 +75,15 @@ LiveDrawModal.propTypes = {
   open: PropTypes.bool.isRequired,
   raffle: PropTypes.shape({
     title: PropTypes.string,
+    description: PropTypes.string,
     winnersCount: PropTypes.number,
     participants: PropTypes.arrayOf(PropTypes.string),
+    prizes: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+        description: PropTypes.string,
+      })
+    ),
   }),
   message: PropTypes.string,
   winners: PropTypes.arrayOf(PropTypes.string),
