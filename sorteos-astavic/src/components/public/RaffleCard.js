@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
-import { formatDateEs, getTimeParts } from "../../utils/raffleUtils";
+import { formatDateEs, getTimeParts } from "../../utils/raffleUtils"; // sin generación de ganadores
 
 const emojiSet = ["\u{1F389}", "\u{1F38A}", "\u{2728}", "\u{1F388}"];
 
@@ -16,6 +16,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
   const finishedRef = useRef(isFinished);
   const openBtnRef = useRef(null);
 
+  // Actualizar countdown y marcar finalizado cuando corresponda
   useEffect(() => {
     const update = () => {
       const parts = getTimeParts(raffle.datetime);
@@ -24,9 +25,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
         finishedRef.current = true;
         setIsFinished(true);
         setShowConfetti(true);
-        if (onMarkFinished) {
-          onMarkFinished(raffle.id);
-        }
+        if (onMarkFinished) onMarkFinished(raffle.id);
       }
     };
     update();
@@ -34,19 +33,20 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
     return () => window.clearInterval(timerId);
   }, [raffle.id, raffle.datetime, onMarkFinished]);
 
+  // Mantener sincronía con estado de backend
   useEffect(() => {
     finishedRef.current = raffle.finished;
     setIsFinished(raffle.finished);
   }, [raffle.finished]);
 
+  // Ocultar confetti
   useEffect(() => {
-    if (!showConfetti) {
-      return undefined;
-    }
+    if (!showConfetti) return undefined;
     const timeoutId = window.setTimeout(() => setShowConfetti(false), 900);
     return () => window.clearTimeout(timeoutId);
   }, [showConfetti]);
 
+  // Cerrar modal si cambia de sorteo
   useEffect(() => {
     setModalOpen(false);
   }, [raffle.id]);
@@ -62,7 +62,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
     { label: "seg", value: timeLeft.seconds },
   ];
 
-  // NUEVO: estado visual “soon” para sorteos que comienzan en < 60 minutos
+  // Estado visual “soon” para sorteos que comienzan en < 60 minutos
   const isSoon =
     !isFinished && timeLeft.diff > 0 && timeLeft.diff <= 60 * 60 * 1000;
 
@@ -76,7 +76,6 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
           : ""
       }`}
     >
-      {/* NUEVO: fecha semántica con <time> y aria-label descriptivo */}
       <span
         className={`raffle-card__badge${
           isFinished ? " raffle-card__badge--finished" : ""
@@ -90,7 +89,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
 
       <h3 className="raffle-card__title">{raffle.title}</h3>
 
-      {/* NUEVO: el grid visual del contador es presentacional para SR */}
+      {/* Contador (solo presentacional) */}
       <div className="countdown" aria-hidden="true">
         {countdownItems.map((item) => (
           <div key={item.label} className="countdown__item">
@@ -102,17 +101,27 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
         ))}
       </div>
 
-      {/* NUEVO: resumen accesible del tiempo restante (no anuncia cada segundo) */}
+      {/* Resumen accesible (no anuncia cada segundo) */}
       <span className="visually-hidden" aria-live="polite">
         Tiempo restante: {timeLeft.days} días, {timeLeft.hours} horas y{" "}
         {timeLeft.minutes} minutos.
       </span>
 
-      <div className="card-actions">
+      {/* Acciones apiladas */}
+      <div
+        className="card-actions"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: "0.6rem",
+          alignItems: "stretch",
+        }}
+      >
         <button
           ref={openBtnRef}
           type="button"
           className="button button--ghost"
+          style={{ width: "100%" }}
           onClick={() => setModalOpen(true)}
           title="Ver información del sorteo"
           aria-label={`Ver detalles del sorteo ${raffle.title}`}
@@ -123,29 +132,18 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
         <button
           type="button"
           className="button button--primary"
+          style={{ width: "100%" }}
           onClick={() => onRequestReminder(raffle)}
           title="Abrir formulario para recibir recordatorios por correo"
           aria-label={`Recibir recordatorio por email del sorteo ${raffle.title}`}
         >
           Avisarme por email
         </button>
-
-        {isFinished && onLive && (
-          <button
-            type="button"
-            className="button"
-            onClick={() => onLive(raffle)}
-            title="Ver sorteo en vivo"
-            aria-label={`Ver transmisión en vivo del sorteo ${raffle.title}`}
-          >
-            Ver en vivo
-          </button>
-        )}
       </div>
 
       {modalOpen && (
         <RaffleDetailsModal
-          raffle={raffle}
+          raffle={{ ...raffle, finished: isFinished }}
           participantsCount={participantsCount}
           onClose={() => setModalOpen(false)}
           returnFocusRef={openBtnRef}
@@ -179,6 +177,7 @@ function RaffleDetailsModal({
   const titleId = `raffle-modal-title-${raffle.id}`;
   const descId = `raffle-modal-desc-${raffle.id}`;
 
+  // Foco + bloqueo de scroll
   useEffect(() => {
     closeRef.current?.focus();
 
@@ -206,9 +205,7 @@ function RaffleDetailsModal({
             'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
           )
         );
-        if (focusables.length === 0) {
-          return;
-        }
+        if (focusables.length === 0) return;
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
         const active = document.activeElement;
@@ -232,12 +229,17 @@ function RaffleDetailsModal({
       document.body.style.top = prev.top;
       document.body.style.width = prev.width;
       window.scrollTo({ top: lastScrollY.current });
+
       const trigger = returnFocusRef?.current;
-      if (trigger && typeof trigger.focus === "function") {
-        trigger.focus();
-      }
+      if (trigger && typeof trigger.focus === "function") trigger.focus();
     };
   }, [onClose, returnFocusRef]);
+
+  // Ganadores desde backend (solo mostrar si finalizado y hay winners)
+  const hasWinners =
+    raffle.finished &&
+    Array.isArray(raffle.winners) &&
+    raffle.winners.length > 0;
 
   return createPortal(
     <div
@@ -271,6 +273,31 @@ function RaffleDetailsModal({
         </header>
 
         <div className="modal__body" id={descId}>
+          {/* Ganadores (del backend) sobre la descripción */}
+          {hasWinners && (
+            <section className="modal__section">
+              <h4>Ganadores</h4>
+              <ul className="live-winners" style={{ marginTop: "0.5rem" }}>
+                {raffle.winners.map((winner, index) => {
+                  const prize = Array.isArray(raffle.prizes)
+                    ? raffle.prizes[index]
+                    : null;
+                  const prizeTitle = prize && prize.title ? prize.title : null;
+                  return (
+                    <li key={`${winner}-${index}`}>
+                      Ganador {index + 1}: {winner}
+                      {prizeTitle && (
+                        <span className="winner-prize">
+                          Puesto {index + 1} - {prizeTitle}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           <section className="modal__section">
             <h4>Descripción</h4>
             <p className="modal__text">
@@ -341,13 +368,16 @@ RaffleCard.propTypes = {
       })
     ),
     finished: PropTypes.bool,
+    // NUEVO: ganadores provistos por backend
+    winners: PropTypes.arrayOf(PropTypes.string),
   }).isRequired,
-  onLive: PropTypes.func.isRequired,
+  onLive: PropTypes.func, // compatibilidad (ya no se usa para abrir otro modal)
   onMarkFinished: PropTypes.func,
   onRequestReminder: PropTypes.func.isRequired,
 };
 
 RaffleCard.defaultProps = {
+  onLive: undefined,
   onMarkFinished: undefined,
 };
 

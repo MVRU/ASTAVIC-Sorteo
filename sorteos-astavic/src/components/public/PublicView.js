@@ -248,7 +248,7 @@ const PublicView = ({
                   onClick={handleCloseReminder}
                   aria-label="Cerrar recordatorio"
                 >
-                  Cerrar
+                  <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <form
@@ -333,7 +333,7 @@ const PublicView = ({
                     aria-label="Cerrar notificacion"
                     style={{ padding: "0.25rem 0.5rem" }}
                   >
-                    Cerrar
+                    <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
               )}{" "}

@@ -470,11 +470,6 @@ const AdminDashboard = ({
             >
               Administración
             </h1>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              <Chip>Visibles: {metrics.total}</Chip>
-              <Chip>Activos: {metrics.active}</Chip>
-              <Chip>Finalizados: {metrics.finished}</Chip>
-            </div>
           </div>
 
           <button

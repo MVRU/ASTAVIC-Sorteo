@@ -24,6 +24,8 @@ const initialRaffles = [
       "Joaquin Pereyra",
     ],
     finished: true,
+    // Ganadores resueltos por backend (ordenados según premios 1°, 2°, 3°)
+    winners: ["Elena Torres", "Bruno Diaz", "Iara Gomez"],
   },
   {
     id: "aniversario-astavic-2025",
