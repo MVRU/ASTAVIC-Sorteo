@@ -1,5 +1,4 @@
 // src/App.js
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -127,7 +126,7 @@ const App = () => {
       if (!alreadyExists) {
         setSubscribers((prev) => [...prev, normalized]);
       }
-      const payload = {
+      return {
         ok: true,
         reuse: alreadyExists,
         message: alreadyExists
@@ -136,7 +135,6 @@ const App = () => {
           ? `Te avisaremos para "${raffle.title}".`
           : "Registro exitoso. Te escribiremos antes del sorteo.",
       };
-      return payload;
     },
     [subscribers]
   );
@@ -152,6 +150,8 @@ const App = () => {
       setIsAdmin(true);
       setLoginError(false);
       handleNavigate("admin");
+      // opcional: subpestaña por defecto
+      window.location.hash = "#/admin/crear";
     },
     [handleNavigate]
   );
@@ -173,6 +173,20 @@ const App = () => {
       message: "Sorteo creado (demo). Ya es visible en la vista publica.",
     };
   }, []);
+
+  // >>> NUEVOS: actualizar y eliminar
+  const handleUpdateRaffle = useCallback((updated) => {
+    setRaffles((prev) =>
+      prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
+    );
+    return { ok: true };
+  }, []);
+
+  const handleDeleteRaffle = useCallback((raffleId) => {
+    setRaffles((prev) => prev.filter((r) => r.id !== raffleId));
+    return { ok: true };
+  }, []);
+  // <<<
 
   const { activeRaffles, finishedRaffles } = useMemo(() => {
     const now = new Date();
@@ -196,7 +210,11 @@ const App = () => {
 
   return (
     <div className="app-shell">
-      <Header currentRoute={route} onNavigate={handleNavigate} />
+      <Header
+        currentRoute={route}
+        onNavigate={handleNavigate}
+        isAdmin={isAdmin}
+      />
       <main key={route} className="anim-fade-in">
         {route === "admin" ? (
           <AdminView
@@ -207,6 +225,9 @@ const App = () => {
             raffles={raffles}
             subscribersCount={subscribers.length}
             onCreateRaffle={handleCreateRaffle}
+            onUpdateRaffle={handleUpdateRaffle} // ⇐ nuevo
+            onDeleteRaffle={handleDeleteRaffle} // ⇐ nuevo
+            onMarkFinished={handleMarkFinished} // útil desde gestionar
           />
         ) : (
           <PublicView

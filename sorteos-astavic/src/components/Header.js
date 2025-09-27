@@ -1,17 +1,21 @@
 // src/components/Header.js
-
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
 const NAV_ITEMS = [
   { target: "public", href: "#/", label: "Inicio" },
   { target: "finished", href: "#/finalizados", label: "Sorteos finalizados" },
-  { target: "admin", href: "#/admin", label: "Administración" }, // se mantiene acá
+  // "Administración" ya no se lista acá para desktop; en mobile se maneja aparte según isAdmin
 ];
 
 const MOBILE_QUERY = "(max-width: 768px)";
 
-const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
+const Header = ({
+  currentRoute,
+  onNavigate,
+  logoSrc = "/Logo.png",
+  isAdmin,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isMobile, setIsMobile] = useState(() =>
@@ -21,12 +25,22 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
   );
   const menuId = "primary-menu";
 
-  const DESKTOP_ITEMS = NAV_ITEMS.filter((i) => i.target !== "admin"); // ⟵ clave
+  const DESKTOP_ITEMS = NAV_ITEMS; // sin admin aquí
 
   const handleNavigate = (target) => (event) => {
     event.preventDefault();
     setMenuOpen(false);
     onNavigate(target);
+  };
+
+  // navegación directa a subpestañas de admin (crea/gestiona) manteniendo la ruta "admin"
+  const goAdminSub = (sub) => (e) => {
+    e.preventDefault();
+    // dejamos un hash que AdminView pueda leer para decidir pestaña
+    const next = sub === "manage" ? "#/admin/gestionar" : "#/admin/crear";
+    if (window.location.hash !== next) window.location.hash = next;
+    onNavigate("admin");
+    setMenuOpen(false);
   };
 
   useEffect(() => {
@@ -89,7 +103,7 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
           )}
         </a>
 
-        {/* Desktop: sin "Administración" en el nav */}
+        {/* Desktop nav */}
         {!isMobile && (
           <nav
             className="app-header__nav app-nav"
@@ -112,7 +126,7 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
         )}
 
         <div className="app-header__actions">
-          {/* Desktop: botón de Administración aparte */}
+          {/* Desktop: acciones admin a la derecha */}
           {!isMobile && (
             <a
               href="#/admin"
@@ -126,7 +140,7 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
             </a>
           )}
 
-          {/* Mobile: hamburguesa */}
+          {/* Mobile burger igual que antes */}
           {isMobile && (
             <button
               type="button"
@@ -142,7 +156,7 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
         </div>
       </div>
 
-      {/* Mobile: el menú incluye TODOS los items, incluida Administración */}
+      {/* Mobile menu */}
       {isMobile && (
         <div
           id={menuId}
@@ -161,6 +175,15 @@ const Header = ({ currentRoute, onNavigate, logoSrc = "/Logo.png" }) => {
                 {label}
               </a>
             ))}
+
+            <a
+              href="#/admin"
+              className="app-header__mobile-link"
+              aria-current={currentRoute === "admin" ? "page" : undefined}
+              onClick={handleNavigate("admin")}
+            >
+              Administración
+            </a>
           </nav>
         </div>
       )}
@@ -201,6 +224,12 @@ Header.propTypes = {
   currentRoute: PropTypes.oneOf(["public", "finished", "admin"]).isRequired,
   onNavigate: PropTypes.func.isRequired,
   logoSrc: PropTypes.string,
+  isAdmin: PropTypes.bool, // <- NUEVO
+};
+
+Header.defaultProps = {
+  logoSrc: "/Logo.png",
+  isAdmin: false,
 };
 
 export default Header;
