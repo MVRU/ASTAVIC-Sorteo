@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import { formatDateEs, getTimeParts } from "../../utils/raffleUtils"; // sin generación de ganadores
@@ -142,8 +142,9 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
       </div>
 
       {modalOpen && (
-        <RaffleDetailsModal
-          raffle={{ ...raffle, finished: isFinished }}
+        <MemoizedRaffleDetailsModal
+          raffle={raffle} // objeto estable
+          isFinished={isFinished}
           participantsCount={participantsCount}
           onClose={() => setModalOpen(false)}
           returnFocusRef={openBtnRef}
@@ -165,6 +166,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
 
 function RaffleDetailsModal({
   raffle,
+  isFinished,
   participantsCount,
   onClose,
   returnFocusRef,
@@ -177,7 +179,11 @@ function RaffleDetailsModal({
   const titleId = `raffle-modal-title-${raffle.id}`;
   const descId = `raffle-modal-desc-${raffle.id}`;
 
-  // Foco + bloqueo de scroll
+  // --------- ESTADOS UI AVANZADOS ----------
+  const [query, setQuery] = useState("");
+  const [showAllParticipants, setShowAllParticipants] = useState(false);
+
+  // Foco + bloqueo de scroll (solo al montar/desmontar)
   useEffect(() => {
     closeRef.current?.focus();
 
@@ -197,25 +203,6 @@ function RaffleDetailsModal({
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
-        return;
-      }
-      if (event.key === "Tab" && panelRef.current) {
-        const focusables = Array.from(
-          panelRef.current.querySelectorAll(
-            'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-          )
-        );
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        const active = document.activeElement;
-        if (!event.shiftKey && active === last) {
-          event.preventDefault();
-          first.focus();
-        } else if (event.shiftKey && active === first) {
-          event.preventDefault();
-          last.focus();
-        }
       }
     };
 
@@ -233,13 +220,116 @@ function RaffleDetailsModal({
       const trigger = returnFocusRef?.current;
       if (trigger && typeof trigger.focus === "function") trigger.focus();
     };
-  }, [onClose, returnFocusRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 👈 vacío para no re-ejecutar al re-renderizar
 
   // Ganadores desde backend (solo mostrar si finalizado y hay winners)
   const hasWinners =
-    raffle.finished &&
+    (raffle.finished || isFinished) &&
     Array.isArray(raffle.winners) &&
     raffle.winners.length > 0;
+
+  // Filtro de participantes (case-insensitive, trim)
+  const filteredParticipants = useMemo(() => {
+    const base = Array.isArray(raffle.participants) ? raffle.participants : [];
+    const q = query.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter((p) => String(p).toLowerCase().includes(q));
+  }, [raffle.participants, query]);
+
+  // Compactar lista: mostrar primeros N por defecto
+  const DEFAULT_COMPACT_COUNT = 24;
+  const visibleParticipants = useMemo(() => {
+    if (showAllParticipants) return filteredParticipants;
+    return filteredParticipants.slice(0, DEFAULT_COMPACT_COUNT);
+  }, [filteredParticipants, showAllParticipants]);
+
+  // ---- ESTILOS INLINE ----
+  // Contenedor del modal en columna, con header/footer fijos y body scrollable
+  const modalContentStyle = {
+    width: "min(720px, 100%)",
+    maxHeight: "90vh",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    overscrollBehavior: "contain",
+  };
+  const stickyHeaderStyle = {
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+    background: "var(--surface, #fff)",
+    borderBottom: "1px solid rgba(15,40,105,0.08)",
+  };
+  const stickyFooterStyle = {
+    position: "sticky",
+    bottom: 0,
+    zIndex: 2,
+    background: "var(--surface, #fff)",
+    borderTop: "1px solid rgba(15,40,105,0.08)",
+  };
+  const modalScrollAreaStyle = {
+    flex: 1,
+    overflow: "auto",
+    paddingRight: "2px",
+    overscrollBehavior: "contain",
+  };
+  const modalHeaderInfoStyle = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.5rem",
+    alignItems: "center",
+  };
+  const stateBadgeStyle = (kind) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.4rem",
+    padding: "0.25rem 0.6rem",
+    borderRadius: "999px",
+    fontSize: "0.75rem",
+    border:
+      kind === "ok"
+        ? "1px solid rgba(33, 150, 83, 0.35)"
+        : "1px solid rgba(13, 71, 161, 0.25)",
+    background: kind === "ok" ? "rgba(33,150,83,0.08)" : "rgba(13,71,161,0.06)",
+    color: kind === "ok" ? "#1f9d5a" : "var(--brand-700)",
+    whiteSpace: "nowrap",
+  });
+  const bodyGridStyle = {
+    display: "grid",
+    gap: "0.9rem",
+    paddingTop: "0.75rem",
+  };
+  const participantsScroll = {
+    maxHeight: "260px",
+    overflow: "auto",
+    paddingRight: "0.25rem",
+    borderRadius: "0.65rem",
+    border: "1px solid var(--border)",
+    background: "var(--surface)",
+    overscrollBehavior: "contain",
+  };
+  const winnersListStyle = { display: "grid", gap: "0.5rem" };
+  const winnerCardStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.6rem 0.75rem",
+    borderRadius: "0.75rem",
+    background:
+      "linear-gradient(180deg, rgba(234,244,255,0.7) 0%, rgba(255,255,255,1) 100%)",
+    border: "1px solid rgba(13,71,161,0.12)",
+  };
+  const prizePillStyle = {
+    fontSize: "0.75rem",
+    padding: "0.25rem 0.5rem",
+    borderRadius: "999px",
+    background: "var(--brand-50)",
+    color: "var(--brand-700)",
+    border: "1px solid rgba(13,71,161,0.18)",
+    whiteSpace: "nowrap",
+  };
 
   return createPortal(
     <div
@@ -248,19 +338,56 @@ function RaffleDetailsModal({
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={descId}
-      onClick={onClose}
     >
-      <div className="modal__overlay" />
+      <div className="modal__overlay" onClick={onClose} />
+
       <div
         className="modal__content raffle-modal"
         role="document"
         ref={panelRef}
         onClick={(e) => e.stopPropagation()}
+        style={modalContentStyle}
       >
-        <header className="modal__header">
-          <h3 id={titleId} className="modal__title">
-            {raffle.title}
-          </h3>
+        {/* HEADER FIJO */}
+        <header
+          className="modal__header"
+          style={{ ...stickyHeaderStyle, alignItems: "center" }}
+        >
+          <div style={{ display: "grid", gap: "0.25rem" }}>
+            <h3 id={titleId} className="modal__title" style={{ margin: 0 }}>
+              {raffle.title}
+            </h3>
+            <div style={modalHeaderInfoStyle}>
+              <span
+                aria-hidden="true"
+                style={stateBadgeStyle(
+                  raffle.finished || isFinished ? "ok" : "info"
+                )}
+              >
+                {raffle.finished || isFinished ? "Finalizado" : "Activo"}
+              </span>
+              <span
+                className="legend"
+                style={{
+                  color: "var(--text-secondary)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <span aria-hidden="true">🗓️</span>
+                <time dateTime={new Date(raffle.datetime).toISOString()}>
+                  {formatDateEs(raffle.datetime)}
+                </time>
+              </span>
+              <span
+                className="legend"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Participantes: {participantsCount}
+              </span>
+            </div>
+          </div>
           <button
             ref={closeRef}
             type="button"
@@ -272,41 +399,55 @@ function RaffleDetailsModal({
           </button>
         </header>
 
-        <div className="modal__body" id={descId}>
-          {/* Ganadores (del backend) sobre la descripción */}
+        {/* ÁREA SCROLLABLE */}
+        <div
+          className="modal__body"
+          id={descId}
+          style={{ ...bodyGridStyle, ...modalScrollAreaStyle }}
+        >
           {hasWinners && (
             <section className="modal__section">
-              <h4>Ganadores</h4>
-              <ul className="live-winners" style={{ marginTop: "0.5rem" }}>
+              <h4 style={{ marginTop: 0 }}>Ganadores</h4>
+              <div style={winnersListStyle}>
                 {raffle.winners.map((winner, index) => {
                   const prize = Array.isArray(raffle.prizes)
                     ? raffle.prizes[index]
                     : null;
                   const prizeTitle = prize && prize.title ? prize.title : null;
                   return (
-                    <li key={`${winner}-${index}`}>
-                      Ganador {index + 1}: {winner}
+                    <div key={`${winner}-${index}`} style={winnerCardStyle}>
+                      <div style={{ display: "grid", gap: "0.2rem" }}>
+                        <strong style={{ fontSize: "0.95rem" }}>
+                          {index + 1}. {winner}
+                        </strong>
+                        {prizeTitle && (
+                          <span
+                            className="legend"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
+                            Premio: {prizeTitle}
+                          </span>
+                        )}
+                      </div>
                       {prizeTitle && (
-                        <span className="winner-prize">
-                          Puesto {index + 1} - {prizeTitle}
-                        </span>
+                        <span style={prizePillStyle}>Puesto {index + 1}</span>
                       )}
-                    </li>
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             </section>
           )}
 
           <section className="modal__section">
-            <h4>Descripción</h4>
+            <h4 style={{ marginTop: 0 }}>Descripción</h4>
             <p className="modal__text">
               {raffle.description || "Sin descripción disponible."}
             </p>
           </section>
 
           <section className="modal__section">
-            <h4>Premios</h4>
+            <h4 style={{ marginTop: 0 }}>Premios</h4>
             {Array.isArray(raffle.prizes) && raffle.prizes.length > 0 ? (
               <ol className="modal__list">
                 {raffle.prizes.map((prize, index) => (
@@ -323,23 +464,80 @@ function RaffleDetailsModal({
           </section>
 
           <section className="modal__section">
-            <h4>Participantes ({participantsCount})</h4>
-            {Array.isArray(raffle.participants) &&
-            raffle.participants.length > 0 ? (
-              <ul className="modal__list">
-                {raffle.participants.map((participant) => (
-                  <li key={participant}>{participant}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="modal__text modal__text--muted">
-                Sin participantes aún.
-              </p>
-            )}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "0.6rem",
+              }}
+            >
+              <h4 style={{ margin: 0 }}>
+                Participantes ({filteredParticipants.length})
+              </h4>
+              <div
+                style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+              >
+                <input
+                  className="input"
+                  type="search"
+                  placeholder="Buscar participante…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  style={{ width: "220px" }}
+                  aria-label="Buscar participante"
+                />
+                {filteredParticipants.length > DEFAULT_COMPACT_COUNT && (
+                  <button
+                    type="button"
+                    className="button button--subtle"
+                    onClick={() => setShowAllParticipants((s) => !s)}
+                    aria-pressed={showAllParticipants}
+                    aria-label={
+                      showAllParticipants
+                        ? "Mostrar menos participantes"
+                        : "Mostrar todos los participantes"
+                    }
+                  >
+                    {showAllParticipants ? "Mostrar menos" : "Mostrar todos"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: "0.6rem", ...participantsScroll }}>
+              {visibleParticipants.length > 0 ? (
+                <ul
+                  className="modal__list"
+                  style={{
+                    margin: 0,
+                    padding: "0.5rem 0.6rem",
+                    display: "grid",
+                    gap: "0.35rem",
+                  }}
+                >
+                  {visibleParticipants.map((participant) => (
+                    <li key={participant}>{participant}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p
+                  className="modal__text modal__text--muted"
+                  style={{ padding: "0.5rem 0.6rem" }}
+                >
+                  {query ? "No hay coincidencias." : "Sin participantes aún."}
+                </p>
+              )}
+            </div>
           </section>
         </div>
 
-        <div className="modal__footer">
+        {/* FOOTER FIJO */}
+        <div
+          className="modal__footer"
+          style={{ ...stickyFooterStyle, justifyContent: "flex-end" }}
+        >
           <button
             type="button"
             className="button button--primary"
@@ -353,6 +551,15 @@ function RaffleDetailsModal({
     document.body
   );
 }
+
+// Evitar re-renders innecesarios del modal
+const MemoizedRaffleDetailsModal = React.memo(
+  RaffleDetailsModal,
+  (prev, next) =>
+    prev.raffle?.id === next.raffle?.id &&
+    prev.isFinished === next.isFinished &&
+    prev.participantsCount === next.participantsCount
+);
 
 RaffleCard.propTypes = {
   raffle: PropTypes.shape({
@@ -368,10 +575,9 @@ RaffleCard.propTypes = {
       })
     ),
     finished: PropTypes.bool,
-    // NUEVO: ganadores provistos por backend
-    winners: PropTypes.arrayOf(PropTypes.string),
+    winners: PropTypes.arrayOf(PropTypes.string), // provistos por backend
   }).isRequired,
-  onLive: PropTypes.func, // compatibilidad (ya no se usa para abrir otro modal)
+  onLive: PropTypes.func, // compatibilidad
   onMarkFinished: PropTypes.func,
   onRequestReminder: PropTypes.func.isRequired,
 };
