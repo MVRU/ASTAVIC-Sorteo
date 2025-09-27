@@ -985,3 +985,187 @@ footer {
   border: 1px solid rgba(15, 40, 105, 0.1);
   box-shadow: 0 20px 48px rgba(2, 12, 27, 0.1);
 }
+
+/* =========================================================
+   RAFFLE CARD – Diseño unificado, elegante y consistente
+   ========================================================= */
+
+/* Base premium para todas las cards de sorteo */
+.raffle-card {
+  --raffle-accent: var(--brand-600);
+
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+  border: 1px solid rgba(78, 164, 234, 0.16);
+  border-radius: var(--radius-xl, 14px);
+  padding: 1.25rem 1.25rem 1.1rem;
+  box-shadow: var(--shadow-1);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-base),
+    box-shadow var(--transition-base), background var(--transition-base);
+}
+
+/* Brillo suave superior (consistencia con el sistema) */
+.raffle-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    130% 70% at 50% -20%,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0) 58%
+  );
+  pointer-events: none;
+}
+
+/* Acento ambiental lateral */
+.raffle-card::after {
+  content: "";
+  position: absolute;
+  right: -35%;
+  top: -50%;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    60% 60% at 60% 40%,
+    rgba(78, 164, 234, 0.14) 0%,
+    rgba(78, 164, 234, 0) 62%
+  );
+  transform: rotate(8deg);
+  pointer-events: none;
+}
+
+.raffle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-2);
+  background: linear-gradient(180deg, #ffffff 0%, #f2f7ff 100%);
+}
+
+/* Estados semánticos */
+.raffle-card--finished {
+  border-color: rgba(46, 160, 67, 0.28);
+  background: linear-gradient(180deg, #ffffff 0%, #f5fff6 100%);
+}
+.raffle-card--soon {
+  /* < 60 min */
+  --raffle-accent: #e59b2f; /* ámbar */
+  border-color: rgba(229, 155, 47, 0.28);
+  background: linear-gradient(180deg, #ffffff 0%, #fff9f0 100%);
+}
+
+/* Badge de fecha */
+.raffle-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(3, 23, 53, 0.06);
+  color: #031735;
+  border: 1px solid rgba(3, 23, 53, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  margin-bottom: 0.35rem;
+}
+.raffle-card__badge--finished {
+  background: rgba(46, 160, 67, 0.12);
+  border-color: rgba(46, 160, 67, 0.25);
+  color: #1d6f36;
+}
+
+/* Título */
+.raffle-card__title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--brand-700);
+  letter-spacing: 0.01em;
+  margin: 0.2rem 0 0.2rem;
+}
+
+/* -------- Countdown (pills) -------- */
+.countdown {
+  margin-top: 0.25rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  align-items: stretch;
+  text-align: center;
+}
+
+/* Cada pill tiene misma altura y radio coherente con el sistema */
+.countdown__item {
+  min-width: 3.6rem;
+  background: #fff;
+  border: 1px solid rgba(15, 40, 105, 0.09);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 6px 16px rgba(2, 12, 27, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  padding: 0.6rem 0.35rem 0.5rem;
+  display: grid;
+  place-items: center;
+}
+
+/* Números: tabulares para evitar “bailes” */
+.countdown__value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: clamp(1.6rem, 3.1vw + 0.5rem, 2.35rem);
+  font-weight: 800;
+  color: var(--brand-700);
+  line-height: 1.1;
+  margin-bottom: 0.1rem;
+}
+
+/* Labels: consistentes y legibles */
+.countdown__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+/* Responsive del grid */
+@media (max-width: 480px) {
+  .countdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+}
+
+/* -------- Zona de acciones coherente -------- */
+.card-actions {
+  margin-top: 0.35rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .card-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Botones: coherencia táctil */
+.button {
+  border-radius: 0.9rem;
+  font-weight: 600;
+}
+.button--primary {
+  background: linear-gradient(180deg, var(--brand-600) 0%, #1e66b7 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15, 77, 158, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.button--primary:hover {
+  background: linear-gradient(180deg, #2c78ca 0%, #1b5ca6 100%);
+}
+.button--ghost {
+  border: 1px solid var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  color: var(--brand-700);
+}
+.button--ghost:hover {
+  background: var(--brand-50);
+}

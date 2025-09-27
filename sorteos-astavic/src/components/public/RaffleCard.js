@@ -62,27 +62,36 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
     { label: "seg", value: timeLeft.seconds },
   ];
 
+  // NUEVO: estado visual “soon” para sorteos que comienzan en < 60 minutos
+  const isSoon =
+    !isFinished && timeLeft.diff > 0 && timeLeft.diff <= 60 * 60 * 1000;
+
   return (
     <article
       className={`card raffle-card${
-        isFinished ? " raffle-card--finished" : ""
+        isFinished
+          ? " raffle-card--finished"
+          : isSoon
+          ? " raffle-card--soon"
+          : ""
       }`}
     >
+      {/* NUEVO: fecha semántica con <time> y aria-label descriptivo */}
       <span
         className={`raffle-card__badge${
           isFinished ? " raffle-card__badge--finished" : ""
         }`}
-        aria-label="Fecha y hora del sorteo"
+        aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
       >
-        {formatDateEs(raffle.datetime)}
+        <time dateTime={new Date(raffle.datetime).toISOString()}>
+          {formatDateEs(raffle.datetime)}
+        </time>
       </span>
 
       <h3 className="raffle-card__title">{raffle.title}</h3>
 
-      <div
-        className="countdown"
-        aria-label={`Cuenta regresiva para ${raffle.title}`}
-      >
+      {/* NUEVO: el grid visual del contador es presentacional para SR */}
+      <div className="countdown" aria-hidden="true">
         {countdownItems.map((item) => (
           <div key={item.label} className="countdown__item">
             <div className="countdown__value">
@@ -93,6 +102,12 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
         ))}
       </div>
 
+      {/* NUEVO: resumen accesible del tiempo restante (no anuncia cada segundo) */}
+      <span className="visually-hidden" aria-live="polite">
+        Tiempo restante: {timeLeft.days} días, {timeLeft.hours} horas y{" "}
+        {timeLeft.minutes} minutos.
+      </span>
+
       <div className="card-actions">
         <button
           ref={openBtnRef}
@@ -100,6 +115,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
           className="button button--ghost"
           onClick={() => setModalOpen(true)}
           title="Ver información del sorteo"
+          aria-label={`Ver detalles del sorteo ${raffle.title}`}
         >
           Ver sorteo
         </button>
@@ -109,6 +125,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
           className="button button--primary"
           onClick={() => onRequestReminder(raffle)}
           title="Abrir formulario para recibir recordatorios por correo"
+          aria-label={`Recibir recordatorio por email del sorteo ${raffle.title}`}
         >
           Avisarme por email
         </button>
@@ -119,6 +136,7 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
             className="button"
             onClick={() => onLive(raffle)}
             title="Ver sorteo en vivo"
+            aria-label={`Ver transmisión en vivo del sorteo ${raffle.title}`}
           >
             Ver en vivo
           </button>
