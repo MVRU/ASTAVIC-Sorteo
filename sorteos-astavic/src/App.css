@@ -1272,3 +1272,292 @@ footer {
   background: rgba(255, 255, 255, 0.1);
   outline: none;
 }
+
+/* =============== ANIMACIONES =============== */
+@media (prefers-reduced-motion: no-preference) {
+  .anim-fade-in {
+    animation: fade-in 0.45s ease both;
+  }
+  .anim-up {
+    animation: fade-up 0.55s cubic-bezier(0.22, 0.7, 0.26, 1) both;
+  }
+  .anim-scale-in {
+    animation: scale-in 0.45s ease-out both;
+  }
+  .anim-pop {
+    animation: pop 0.38s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  }
+  .anim-blur-in {
+    animation: blur-in 0.5s ease both;
+  }
+
+  /* Stagger simple: hijos entran uno tras otro */
+  .stagger > * {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .stagger.is-on > * {
+    animation: fade-up 0.55s cubic-bezier(0.22, 0.7, 0.26, 1) both;
+  }
+  .stagger.is-on > *:nth-child(1) {
+    animation-delay: 0.03s;
+  }
+  .stagger.is-on > *:nth-child(2) {
+    animation-delay: 0.09s;
+  }
+  .stagger.is-on > *:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+  .stagger.is-on > *:nth-child(4) {
+    animation-delay: 0.21s;
+  }
+  .stagger.is-on > *:nth-child(5) {
+    animation-delay: 0.27s;
+  }
+
+  /* Hover micro-interacciones (no intrusivas) */
+  .button:hover {
+    transform: translateY(-1px);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+  }
+
+  /* Modal: entrada/salida */
+  .modal {
+    animation: fade-in 0.25s ease both;
+  }
+  .modal__content {
+    animation: scale-in 0.28s ease-out both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes blur-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+/* Footer/header coherentes ya tienen estilos; suavizamos aparición */
+.app-header,
+.app-footer {
+  will-change: transform, opacity;
+}
+
+/* Finalizado — estilo dorado/premium coherente */
+.raffle-card--finished {
+  border-color: rgba(218, 165, 32, 0.35); /* goldenrod */
+  background: radial-gradient(
+      60% 80% at 70% -10%,
+      rgba(255, 215, 0, 0.18) 0%,
+      rgba(255, 255, 255, 0) 60%
+    ),
+    linear-gradient(180deg, #ffffff 0%, #fff7df 100%); /* blanco → marfil dorado */
+}
+
+/* Badge cuando está finalizado: dorado suave */
+.raffle-card__badge--finished {
+  background: rgba(255, 215, 0, 0.14);
+  border-color: rgba(218, 165, 32, 0.45);
+  color: #8a6d1d; /* dorado oscuro legible */
+}
+
+/* Animación de salida al finalizar en "activos" */
+.raffle-card--vanish {
+  animation: raffle-vanish 1s ease forwards; /* coordina con VANISH_MS=1000 */
+}
+
+@keyframes raffle-vanish {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: saturate(1);
+  }
+  60% {
+    transform: translateY(6px) scale(0.98);
+    opacity: 0.5;
+    filter: saturate(0.9);
+  }
+  100% {
+    transform: translateY(12px) scale(0.96);
+    opacity: 0;
+    filter: saturate(0.8);
+  }
+}
+.confetti span {
+  position: absolute;
+  top: -10px;
+  font-size: 1.1rem;
+  animation: confetti-fall 1s ease-out forwards; /* 0.8s → 1s */
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-12px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(56px) rotate(14deg);
+    opacity: 0;
+  }
+}
+
+.raffle-card--finished-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(
+    90deg,
+    rgba(247, 215, 116, 0.15) 0%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  border: 1px solid rgba(185, 141, 35, 0.28);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.raffle-card--finished-horizontal h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Evita que el contenido se recorte en el borde de la card */
+.card,
+.raffle-card {
+  overflow: visible; /* <- si hoy está en hidden, cámbialo a visible */
+  height: auto; /* <- asegúrate de no tener un alto fijo */
+}
+
+/* Si usaste contain para optimizar pintura, quítalo en finalizados */
+.raffle-card--finished {
+  contain: none; /* <- si existía contain: content/layout/paint */
+}
+
+.raffle-card--finished .card__body,
+.raffle-card--finished .raffle-card__content {
+  max-height: none; /* <- anula cualquier límite anterior */
+}
+
+/* Hace que el texto del ganador pueda truncar con elipsis */
+.winner-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* Nº, nombre (flexible), pill */
+  gap: 0.6rem;
+  align-items: center;
+}
+.winner-name {
+  min-width: 0; /* <- IMPRESCINDIBLE para permitir elipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ====== Contenedor de cards (grilla/lista) ====== */
+.raffle-grid,
+.cards-grid,
+.raffles-grid {
+  /* si usas CSS Grid */
+  align-items: start; /* no estirar para igualar alturas */
+  grid-auto-rows: auto; /* en lugar de 1fr */
+}
+
+/* Si el contenedor usa Flex en vez de Grid */
+.raffle-grid,
+.cards-grid {
+  align-items: flex-start; /* que cada card defina su propio alto */
+}
+
+/* ====== Cards ====== */
+.card,
+.raffle-card {
+  height: auto !important; /* anula height:100% / min-height fijos */
+  overflow: hidden; /* contenido contenido dentro de la card */
+  box-sizing: border-box;
+}
+
+/* En caso de que tengas una envoltura interna tipo "body" de la card */
+.raffle-card .card__body,
+.raffle-card .raffle-card__content {
+  max-height: none !important; /* sin límites de alto */
+  overflow: visible;
+}
+
+/* ====== Lista de ganadores (layout robusto) ====== */
+.raffle-card--finished ol {
+  margin: 0.6rem 0 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.raffle-card--finished ol > li {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* Nº | Nombre (flex) | Premio */
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.raffle-card--finished ol > li > span:first-child {
+  /* bloque Nº + nombre */
+  min-width: 0; /* IMPRESCINDIBLE para que haya elipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.raffle-card--finished ol > li .legend,
+.raffle-card--finished ol > li [data-prize-pill] {
+  white-space: nowrap; /* el pill no “salta” de línea */
+}
+
+/* Botón dorado ocupa su línea y no se superpone */
+.raffle-card--finished .card-actions {
+  grid-template-columns: 1fr;
+}

@@ -1,6 +1,8 @@
-import PropTypes from 'prop-types';
-import AdminDashboard from './AdminDashboard';
-import AdminLogin from './AdminLogin';
+// src/components/admin/AdminView.js
+
+import PropTypes from "prop-types";
+import AdminDashboard from "./AdminDashboard";
+import AdminLogin from "./AdminLogin";
 
 const AdminView = ({
   isAdmin,

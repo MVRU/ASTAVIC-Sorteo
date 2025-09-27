@@ -1,3 +1,5 @@
+// src/App.js
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -69,7 +71,6 @@ const App = () => {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
-
 
   const handleMarkFinished = useCallback((raffleId) => {
     setRaffles((prev) =>
@@ -196,7 +197,7 @@ const App = () => {
   return (
     <div className="app-shell">
       <Header currentRoute={route} onNavigate={handleNavigate} />
-      <main>
+      <main key={route} className="anim-fade-in">
         {route === "admin" ? (
           <AdminView
             isAdmin={isAdmin}

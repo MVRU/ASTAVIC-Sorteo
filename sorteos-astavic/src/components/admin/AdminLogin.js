@@ -43,7 +43,7 @@ const AdminLogin = ({ onLogin, error }) => {
                 type="email"
                 autoComplete="username"
                 required
-                placeholder="astavic.org.ar"
+                placeholder="astavic@gmail.com"
                 value={form.email}
                 onChange={handleChange}
               />

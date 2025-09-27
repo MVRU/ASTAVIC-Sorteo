@@ -1,3 +1,4 @@
+// src/components/public/PublicView.js
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
@@ -86,9 +87,7 @@ const PublicView = ({
   useEffect(() => {
     if (reminder.open) {
       const input = emailFieldRef.current;
-      if (input) {
-        input.focus();
-      }
+      if (input) input.focus();
     }
   }, [reminder.open]);
 
@@ -119,7 +118,7 @@ const PublicView = ({
     if (source.length === 0) {
       return (
         <div
-          className="empty-state card"
+          className="empty-state card anim-fade-in"
           role="status"
           style={{
             textAlign: "center",
@@ -139,7 +138,7 @@ const PublicView = ({
 
     return (
       <div
-        className="grid-raffles"
+        className="grid-raffles stagger is-on"
         role="list"
         style={{
           display: "grid",
@@ -163,10 +162,13 @@ const PublicView = ({
 
   return (
     <>
-      <section className="section-gap" aria-labelledby="raffles-heading">
+      <section
+        className="section-gap anim-fade-in"
+        aria-labelledby="raffles-heading"
+      >
         <div className="container">
           <div className="public-toolbar">
-            <div>
+            <div className="anim-up">
               <h1 id="raffles-heading" className="section-title">
                 {sectionTitle}
               </h1>
@@ -174,7 +176,7 @@ const PublicView = ({
                 {sectionSubtitle}
               </p>
             </div>
-            <div className="public-toolbar__actions">
+            <div className="public-toolbar__actions anim-up">
               <span className="section-subtitle">
                 Hay {visibleCount} {visibleCount === 1 ? "sorteo" : "sorteos"}
               </span>
@@ -191,11 +193,12 @@ const PublicView = ({
             allowMarkFinished: !isFinishedRoute,
           })}
         </div>
-      </section>{" "}
+      </section>
+
       {reminder.open &&
         createPortal(
           <div
-            className="modal"
+            className="modal anim-fade-in"
             role="dialog"
             aria-modal="true"
             aria-labelledby="reminder-title"
@@ -203,11 +206,11 @@ const PublicView = ({
           >
             <div className="modal__overlay" />
             <div
-              className="modal__content"
+              className="modal__content anim-scale-in"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal__header">
-                <div>
+                <div className="anim-up">
                   <h3 id="reminder-title" className="modal__title">
                     Recibí recordatorios y resultados
                   </h3>
@@ -251,8 +254,9 @@ const PublicView = ({
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
+
               <form
-                className="form-card"
+                className="form-card anim-up"
                 onSubmit={handleSubmitSubscription}
                 noValidate
               >
@@ -311,9 +315,10 @@ const PublicView = ({
                   </span>
                 </div>
               </form>
+
               {toast && (
                 <div
-                  className={`toast${toast.ok ? "" : " toast--error"}`}
+                  className={`toast${toast.ok ? "" : " toast--error"} anim-pop`}
                   role={toast.ok ? "status" : "alert"}
                   aria-live={toast.ok ? "polite" : "assertive"}
                   style={{
@@ -336,7 +341,7 @@ const PublicView = ({
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-              )}{" "}
+              )}
             </div>
           </div>,
           document.body

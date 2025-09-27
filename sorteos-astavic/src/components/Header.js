@@ -1,3 +1,5 @@
+// src/components/Header.js
+
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 

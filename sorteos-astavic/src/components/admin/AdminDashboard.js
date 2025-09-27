@@ -15,7 +15,6 @@ function useMediaQuery(query) {
     const mql = window.matchMedia(query);
     const handler = (e) => setMatches(e.matches);
     mql.addEventListener?.("change", handler);
-    // fallback Safari/iOS
     mql.addListener?.(handler);
     setMatches(mql.matches);
     return () => {
@@ -26,32 +25,47 @@ function useMediaQuery(query) {
   return matches;
 }
 
-// Chip util para mostrar contadores y tags (solo mobile)
-const Chip = ({ children }) => (
-  <span
+/* =========================
+   Chip elegante (solo mobile)
+   ========================= */
+const Chip = ({ children, onClick, active }) => (
+  <button
+    type="button"
     className="tag"
+    onClick={onClick}
+    aria-pressed={!!active}
     style={{
       display: "inline-flex",
       alignItems: "center",
       gap: "0.375rem",
-      fontSize: "0.85rem",
+      fontSize: "0.825rem",
+      fontWeight: 600,
       padding: "0.25rem 0.6rem",
       borderRadius: "999px",
-      background: "var(--surface-2, #f4f4f6)",
-      color: "var(--text-2, #444)",
-      border: "1px solid var(--line-1, #e6e6ea)",
+      background: active ? "var(--brand-100)" : "var(--brand-50)",
+      color: "var(--brand-700)",
+      border: "1px solid var(--border)",
       whiteSpace: "nowrap",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+      cursor: "pointer",
     }}
   >
     {children}
-  </span>
+  </button>
 );
-Chip.propTypes = { children: PropTypes.node.isRequired };
+Chip.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func,
+  active: PropTypes.bool,
+};
+Chip.defaultProps = { onClick: undefined, active: false };
 
-// Tarjeta compacta de métricas (solo desktop)
+/* =========================
+   StatCard (solo desktop)
+   ========================= */
 const StatCard = ({ label, value, icon }) => (
   <div
-    className="card"
+    className="card anim-fade-in"
     role="status"
     aria-live="polite"
     style={{
@@ -62,15 +76,27 @@ const StatCard = ({ label, value, icon }) => (
       justifyContent: "center",
       textAlign: "center",
       gap: "0.5rem",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-      borderRadius: "0.75rem",
-      background: "var(--surface-1, #ffffff)",
-      border: "1px solid var(--line-1, #e6e6ea)",
+      borderRadius: "12px",
+      background: "var(--surface-elevated)",
+      border: "1px solid var(--border)",
+      boxShadow: "var(--shadow-1)",
+      transition:
+        "transform var(--transition-base), box-shadow var(--transition-base)",
     }}
   >
     {icon && (
       <div
-        style={{ fontSize: "1.4rem", color: "var(--text-1, #222)" }}
+        style={{
+          fontSize: "1.4rem",
+          color: "var(--brand-700)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "40px",
+          height: "40px",
+          borderRadius: "10px",
+          background: "var(--brand-50)",
+        }}
         aria-hidden="true"
       >
         {icon}
@@ -79,9 +105,9 @@ const StatCard = ({ label, value, icon }) => (
     <div>
       <div
         style={{
-          fontSize: "0.85rem",
-          fontWeight: 500,
-          color: "var(--text-3, #666)",
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          color: "var(--text-secondary)",
           marginBottom: "0.25rem",
         }}
       >
@@ -89,9 +115,9 @@ const StatCard = ({ label, value, icon }) => (
       </div>
       <div
         style={{
-          fontSize: "1.55rem",
+          fontSize: "1.65rem",
           fontWeight: 700,
-          color: "var(--text-1, #222)",
+          color: "var(--brand-700)",
           lineHeight: 1.2,
         }}
       >
@@ -107,7 +133,9 @@ StatCard.propTypes = {
 };
 StatCard.defaultProps = { icon: "📊" };
 
-// Dropzone accesible
+/* =========================
+   Dropzone accesible
+   ========================= */
 const FileDropzone = ({ onFile, disabled, fileToken }) => {
   const zoneRef = useRef(null);
   const inputRef = useRef(null);
@@ -159,7 +187,7 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
   return (
     <div
       ref={zoneRef}
-      className="card"
+      className="card anim-fade-in"
       role="button"
       tabIndex={0}
       aria-disabled={disabled}
@@ -169,24 +197,45 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       style={{
-        padding: "1rem",
-        border: "1.5px dashed var(--line-1,#d8dae0)",
-        background:
-          "linear-gradient(180deg, rgba(250,250,252,0.7), rgba(250,250,252,0.35))",
+        padding: "1.25rem",
+        border: "2px dashed var(--border)",
+        borderRadius: "12px",
+        background: "var(--surface-elevated)",
         cursor: disabled ? "not-allowed" : "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: "1rem",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <span style={{ fontSize: "1.25rem" }} aria-hidden>
-          📎
-        </span>
-        <div>
-          <div style={{ fontWeight: 600 }}>
-            Soltá tu archivo (.csv, .tsv, .txt)
-          </div>
-          <div style={{ fontSize: "0.9rem", color: "var(--text-3,#666)" }}>
-            También podés hacer clic o presionar Enter para buscarlo.
-          </div>
+      <div
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--surface)",
+          color: "var(--brand-700)",
+          fontSize: "1.4rem",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+        }}
+        aria-hidden="true"
+      >
+        📎
+      </div>
+      <div>
+        <div
+          style={{
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            fontSize: "1rem",
+          }}
+        >
+          Soltá tu archivo (.csv, .tsv, .txt)
+        </div>
+        <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+          También podés hacer clic o presionar Enter para buscarlo.
         </div>
       </div>
       <input
@@ -217,6 +266,9 @@ FileDropzone.defaultProps = {
   fileToken: "",
 };
 
+/* =========================
+   AdminDashboard
+   ========================= */
 const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const isDesktop = useMediaQuery("(min-width: 960px)");
 
@@ -233,8 +285,20 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const [file, setFile] = useState(null);
   const [previewMessage, setPreviewMessage] = useState(previewDefaultMessage);
   const [previewParticipants, setPreviewParticipants] = useState([]);
-  const [status, setStatus] = useState(null); // { ok: boolean, message: string }
+  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Hint de chips (solo mobile)
+  const [chipHint, setChipHint] = useState(null); // 'total' | 'active' | 'finished' | null
+  const chipGroupRef = useRef(null);
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!chipGroupRef.current) return;
+      if (!chipGroupRef.current.contains(e.target)) setChipHint(null);
+    };
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, []);
 
   const metrics = useMemo(() => {
     const active = raffles.filter((r) => !r.finished).length;
@@ -401,41 +465,89 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setStatus(null);
   };
 
+  /* =========================
+     Validaciones robustas
+     ========================= */
+  const validateBeforeSubmit = (payload) => {
+    const errors = [];
+
+    const title = (payload.title || "").trim();
+    if (title.length < 3)
+      errors.push("El título debe tener al menos 3 caracteres.");
+
+    if (!payload.datetime) {
+      errors.push("Seleccioná fecha y hora del sorteo.");
+    } else {
+      const selected = new Date(payload.datetime).getTime();
+      if (Number.isNaN(selected)) {
+        errors.push("La fecha/hora no es válida.");
+      } else if (selected <= Date.now()) {
+        errors.push("La fecha/hora debe ser en el futuro.");
+      }
+    }
+
+    const winnersNum = Math.max(1, Number(form.winners) || 1);
+    if (winnersNum < 1) errors.push("Debe haber al menos 1 ganador.");
+
+    // Premios: cantidad = ganadores y todos con título no vacío
+    if (!Array.isArray(prizes) || prizes.length !== winnersNum) {
+      errors.push(
+        "La cantidad de premios debe coincidir con la cantidad de ganadores."
+      );
+    }
+    prizes.forEach((p, i) => {
+      if (!p || !String(p.title).trim()) {
+        errors.push(`El título del premio ${i + 1} no puede estar vacío.`);
+      }
+    });
+
+    // Participantes: al menos winners
+    const participants = Array.isArray(payload.participants)
+      ? payload.participants
+      : [];
+    if (participants.length === 0) {
+      errors.push("No se detectaron participantes (archivo o texto).");
+    } else if (participants.length < winnersNum) {
+      errors.push(
+        "La cantidad de participantes debe ser mayor o igual a la de ganadores."
+      );
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus(null);
     setLoading(true);
     try {
-      if (!form.title.trim() || !form.datetime) {
-        setStatus({
-          ok: false,
-          message: "Completá el título y la fecha del sorteo.",
-        });
-        setLoading(false);
-        return;
-      }
       const winnersNum = Math.max(1, Number(form.winners) || 1);
       const fileText = file ? await file.text() : "";
       const participants = parseParticipants(fileText, form.manual);
-      if (participants.length === 0) {
-        setStatus({
-          ok: false,
-          message:
-            "No se detectaron participantes. Revisá el archivo o el texto.",
-        });
+
+      const draft = {
+        title: form.title,
+        description: form.description,
+        datetime: form.datetime,
+        participants,
+      };
+      const errors = validateBeforeSubmit(draft);
+      if (errors.length > 0) {
+        setStatus({ ok: false, message: errors[0] });
         setLoading(false);
         return;
       }
-      const normalizedPrizes = sanitizedPrizes.map((p) => ({ ...p }));
-      const winnersCount =
-        normalizedPrizes.length > 0 ? normalizedPrizes.length : winnersNum;
+
+      const normalizedPrizes = prizes.map((p) => ({
+        title: String(p.title).trim(),
+      }));
 
       const newRaffle = {
         id: ensureId(),
-        title: form.title.trim(),
-        description: form.description.trim(),
-        datetime: form.datetime,
-        winnersCount,
+        title: draft.title.trim(),
+        description: draft.description.trim(),
+        datetime: draft.datetime,
+        winnersCount: winnersNum,
         participants,
         prizes: normalizedPrizes,
         finished: false,
@@ -458,35 +570,99 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     ? `${file.name}-${file.size}-${file.lastModified}`
     : "";
 
+  // Contenidos de hint para chips
+  const chipText = {
+    total: "Sorteos totales",
+    active: "Sorteos activos",
+    finished: "Sorteos finalizados",
+  };
+
   return (
-    <section className="section-gap" aria-labelledby="admin-panel">
-      <div className="container" style={{ display: "grid", gap: "1.25rem" }}>
-        {/* Toolbar responsive */}
+    <section className="section-gap anim-fade-in" aria-labelledby="admin-panel">
+      <div className="container" style={{ display: "grid", gap: "1.5rem" }}>
+        {/* Toolbar */}
         <div
-          className="controls-row"
+          className="controls-row anim-up"
           style={{
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: "0.75rem",
+            gap: "1rem",
           }}
         >
           <div>
             <h1
               id="admin-panel"
               className="section-title"
-              style={{ marginBottom: "0.25rem" }}
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 700,
+                marginBottom: "0.25rem",
+              }}
             >
-              Administración
+              Panel de Administración
             </h1>
 
-            {/* Chips SOLO en mobile */}
+            {/* Chips solo en mobile + hint único */}
             {!isDesktop && (
-              <div className="tag-group">
-                <Chip>🗂️ Sorteos: {metrics.total}</Chip>
-                <Chip>⏳ Activos: {metrics.active}</Chip>
-                <Chip>✅ Finalizados: {metrics.finished}</Chip>
+              <div
+                ref={chipGroupRef}
+                className="tag-group anim-up"
+                style={{
+                  display: "grid",
+                  gridAutoFlow: "column",
+                  gap: "0.5rem",
+                  marginTop: "0.5rem",
+                  width: "fit-content",
+                }}
+              >
+                <Chip
+                  active={chipHint === "total"}
+                  onClick={() =>
+                    setChipHint((s) => (s === "total" ? null : "total"))
+                  }
+                >
+                  🗂️ {metrics.total}
+                </Chip>
+                <Chip
+                  active={chipHint === "active"}
+                  onClick={() =>
+                    setChipHint((s) => (s === "active" ? null : "active"))
+                  }
+                >
+                  ⏳ {metrics.active}
+                </Chip>
+                <Chip
+                  active={chipHint === "finished"}
+                  onClick={() =>
+                    setChipHint((s) => (s === "finished" ? null : "finished"))
+                  }
+                >
+                  ✅ {metrics.finished}
+                </Chip>
+
+                {/* Hint (solo uno a la vez) */}
+                {chipHint && (
+                  <div
+                    className="anim-pop"
+                    role="status"
+                    style={{
+                      gridColumn: "1 / -1",
+                      marginTop: "0.4rem",
+                      padding: "0.4rem 0.6rem",
+                      borderRadius: "10px",
+                      fontSize: "0.82rem",
+                      color: "var(--brand-700)",
+                      background: "var(--brand-50)",
+                      border: "1px solid var(--border)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                      width: "max-content",
+                    }}
+                  >
+                    {chipText[chipHint]}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -502,36 +678,40 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
           </button>
         </div>
 
-        {/* Layout: 1 col en mobile / 2 cols >= 960px (lo maneja App.css .admin-layout) */}
         <div className="admin-layout">
-          {/* Columna principal: formulario */}
-          <form className="card" onSubmit={handleSubmit} noValidate>
+          {/* Formulario principal */}
+          <form
+            className="card anim-scale-in"
+            onSubmit={handleSubmit}
+            noValidate
+          >
             <fieldset
-              className="form-card"
               disabled={loading}
               style={{ border: 0, padding: 0, margin: 0 }}
             >
               <legend className="visually-hidden">Crear sorteo</legend>
 
-              <div className="form-group">
-                <label htmlFor="raffle-title">Título</label>
+              <div className="form-group" style={{ marginBottom: "1.25rem" }}>
+                <label htmlFor="raffle-title">Título del sorteo</label>
                 <input
                   id="raffle-title"
                   className="input"
                   name="title"
-                  placeholder="Ej.: Sorteo Aniversario"
+                  placeholder="Ej.: Sorteo de Aniversario"
                   required
                   minLength={3}
                   value={form.title}
                   onChange={handleChange}
-                  aria-describedby="title-help"
                 />
-                <span id="title-help" className="legend">
+                <span
+                  className="legend"
+                  style={{ marginTop: "0.375rem", display: "block" }}
+                >
                   Usá un título claro y breve.
                 </span>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: "1.25rem" }}>
                 <label htmlFor="raffle-description">
                   Descripción (opcional)
                 </label>
@@ -544,13 +724,23 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   onChange={handleChange}
                   rows={3}
                 />
-                <span className="legend">
+                <span
+                  className="legend"
+                  style={{ marginTop: "0.375rem", display: "block" }}
+                >
                   Incluí condiciones o mensajes importantes.
                 </span>
               </div>
 
-              {/* .form-grid.split (App.css) hace responsive a 1/2 columnas */}
-              <div className="form-grid split">
+              <div
+                className="form-grid split"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr",
+                  gap: "1rem",
+                  marginBottom: "1.25rem",
+                }}
+              >
                 <div className="form-group">
                   <label htmlFor="raffle-datetime">Fecha y hora</label>
                   <input
@@ -561,15 +751,17 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     required
                     value={form.datetime}
                     onChange={handleChange}
-                    aria-describedby="datetime-help"
                   />
-                  <span id="datetime-help" className="legend">
+                  <span
+                    className="legend"
+                    style={{ marginTop: "0.375rem", display: "block" }}
+                  >
                     Se mostrará en formato latino.
                   </span>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="raffle-winners">Ganadores</label>
+                  <label htmlFor="raffle-winners">Número de ganadores</label>
                   <input
                     id="raffle-winners"
                     className="input"
@@ -585,28 +777,32 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: "1.25rem" }}>
                 <label>Premios</label>
-                <p className="legend" style={{ marginBottom: "0.5rem" }}>
+                <p className="legend">
                   Definí un título por premio. El orden determina el puesto.
                 </p>
                 {prizes.map((prize, index) => (
                   <div
                     key={`prize-${index}`}
+                    className="anim-fade-in"
                     style={{
-                      border: "1px solid var(--line-1,#e6e6ea)",
-                      borderRadius: "0.75rem",
-                      padding: "0.75rem",
+                      border: "1px solid var(--border)",
+                      borderRadius: "12px",
+                      padding: "1rem",
                       marginBottom: "0.75rem",
-                      background: "var(--surface-2,#f8f9fb)",
+                      background: "var(--surface)",
                     }}
                   >
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor={`prize-title-${index}`}>Título</label>
+                      <label htmlFor={`prize-title-${index}`}>
+                        Título del premio {index + 1}
+                      </label>
                       <input
                         id={`prize-title-${index}`}
                         className="input"
                         placeholder={`Premio ${index + 1}`}
+                        required
                         value={prize.title}
                         onChange={(e) =>
                           handlePrizeChange(index, e.target.value)
@@ -614,11 +810,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                       />
                       <span className="legend">
                         Puesto {index + 1} ={" "}
-                        {prize.title ? prize.title : `Premio ${index + 1}`}
+                        {prize.title || `Premio ${index + 1}`}
                       </span>
                     </div>
                     {prizes.length > 1 && (
-                      <div style={{ marginTop: "0.5rem", textAlign: "right" }}>
+                      <div style={{ marginTop: "0.75rem", textAlign: "right" }}>
                         <button
                           type="button"
                           className="button button--ghost"
@@ -634,13 +830,15 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   type="button"
                   className="button button--ghost"
                   onClick={addPrize}
-                  style={{ marginTop: "0.25rem" }}
                 >
-                  Agregar premio
+                  + Agregar premio
                 </button>
               </div>
 
-              <div className="form-group">
+              <div
+                className="form-group anim-up"
+                style={{ marginBottom: "1.25rem" }}
+              >
                 <label>Participantes</label>
                 <FileDropzone
                   onFile={handleFile}
@@ -649,7 +847,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div
+                className="form-group anim-up"
+                style={{ marginBottom: "1.25rem" }}
+              >
                 <label htmlFor="raffle-manual">
                   O pegalo manualmente (uno por línea)
                 </label>
@@ -661,26 +862,31 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   value={form.manual}
                   onChange={handleChange}
                   rows={4}
-                  aria-describedby="manual-help"
                 />
-                <span id="manual-help" className="legend">
+                <span
+                  className="legend"
+                  style={{ marginTop: "0.375rem", display: "block" }}
+                >
                   Acepta email o nombre. Se eliminan duplicados automáticamente.
                 </span>
               </div>
 
               <div
-                className="card-actions"
+                className="card-actions anim-up"
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.75rem",
+                  gap: "1rem",
                   flexWrap: "wrap",
+                  paddingTop: "0.5rem",
+                  borderTop: "1px solid var(--border)",
                 }}
               >
                 <button
                   type="submit"
                   className="button button--primary"
                   aria-live="polite"
+                  disabled={loading}
                 >
                   {loading ? "Creando..." : "Crear sorteo"}
                 </button>
@@ -693,14 +899,18 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 >
                   Limpiar
                 </button>
-                <span className="legend">Previsualizá antes de publicar.</span>
+                <span className="legend" style={{ marginLeft: "auto" }}>
+                  Previsualizá antes de publicar.
+                </span>
               </div>
 
               {status && (
                 <p
-                  className={status.ok ? "success-text" : "error-text"}
+                  className={`toast${
+                    status.ok ? "" : " toast--error"
+                  } anim-pop`}
                   role={status.ok ? "status" : "alert"}
-                  style={{ marginTop: "0.5rem" }}
+                  style={{ marginTop: "1rem" }}
                 >
                   {status.message}
                 </p>
@@ -708,35 +918,37 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
             </fieldset>
           </form>
 
-          {/* Columna lateral: tutorial / métricas (desktop) / preview */}
+          {/* Sidebar: tutorial + métricas + preview */}
           <aside
-            style={{ display: "grid", gap: "1rem", alignContent: "start" }}
+            className="stagger is-on"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.25rem",
+              alignContent: "start",
+            }}
           >
-            {/* Tutorial mejorado */}
-            <div className="card" style={{ padding: "1.1rem 1rem" }}>
-              <div
+            {/* Tutorial */}
+            <div className="card anim-fade-in">
+              <h2
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  marginBottom: "0.4rem",
+                  fontSize: "1.125rem",
+                  fontWeight: 700,
+                  margin: 0,
+                  marginBottom: "1rem",
                 }}
               >
-                <h2
-                  className="raffle-card__title"
-                  style={{ fontSize: "1rem", margin: 0 }}
-                >
-                  Cómo crear un sorteo
-                </h2>
-              </div>
-
+                Cómo crear un sorteo
+              </h2>
               <ol
+                className="stagger is-on"
                 style={{
                   listStyle: "none",
                   margin: 0,
                   padding: 0,
-                  display: "grid",
-                  gap: "0.6rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.875rem",
                 }}
               >
                 {[
@@ -758,50 +970,65 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 ].map((step, i) => (
                   <li
                     key={step.title}
+                    className="anim-up"
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr",
-                      gap: "0.6rem",
-                      alignItems: "start",
-                      padding: "0.55rem 0.6rem",
+                      display: "flex",
+                      gap: "1rem",
+                      padding: "0.875rem",
+                      borderRadius: "12px",
                       border: "1px solid var(--border)",
-                      borderRadius: "0.75rem",
                       background: "var(--surface)",
                     }}
                   >
                     <div
                       style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 10,
-                        display: "grid",
-                        placeItems: "center",
-                        border: "1px solid var(--border)",
-                        background: "var(--surface-elevated)",
-                        fontSize: "1rem",
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "var(--brand-50)",
+                        color: "var(--brand-700)",
+                        fontSize: "1.1rem",
+                        flexShrink: 0,
                       }}
                       aria-hidden
                     >
                       {step.icon}
                     </div>
                     <div>
-                      <strong style={{ display: "block", marginBottom: 2 }}>
+                      <strong
+                        style={{
+                          display: "block",
+                          marginBottom: "0.25rem",
+                          fontWeight: 700,
+                        }}
+                      >
                         {i + 1}. {step.title}
                       </strong>
-                      <span className="legend">{step.desc}</span>
+                      <span
+                        style={{
+                          fontSize: "0.925rem",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {step.desc}
+                      </span>
                     </div>
                   </li>
                 ))}
               </ol>
             </div>
 
-            {/* Métricas: SOLO DESKTOP */}
+            {/* Métricas (solo desktop) */}
             {isDesktop && (
               <div
+                className="stagger is-on"
                 style={{
                   display: "grid",
-                  gap: "0.75rem",
-                  gridTemplateColumns: "repeat( auto-fit, minmax(160px, 1fr) )",
+                  gap: "1rem",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
                 }}
               >
                 <StatCard
@@ -818,20 +1045,25 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               </div>
             )}
 
-            {/* Vista previa (más chica en desktop) */}
-            <div className="card" aria-live="polite">
+            {/* Vista previa */}
+            <div className="card anim-fade-in" aria-live="polite">
               <h2
-                className="raffle-card__title"
-                style={{ fontSize: "1rem", marginBottom: "0.25rem" }}
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: 700,
+                  margin: 0,
+                  marginBottom: "1rem",
+                }}
               >
-                Vista previa del sorteo
+                Vista previa
               </h2>
               <div
+                className="anim-up"
                 style={{
                   pointerEvents: "none",
                   opacity: previewParticipants.length ? 1 : 0.6,
-                  // Anchura contenida en desktop
-                  maxWidth: isDesktop ? "360px" : "100%",
+                  maxWidth: isDesktop ? "380px" : "100%",
+                  margin: "0 auto",
                 }}
               >
                 <RaffleCard
@@ -841,24 +1073,32 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   onRequestReminder={() => {}}
                 />
               </div>
-              <p className="section-subtitle" style={{ margin: "0.75rem 0 0" }}>
+              <p
+                className="anim-up"
+                style={{
+                  margin: "1rem 0 0.5rem",
+                  fontSize: "0.925rem",
+                  color: "var(--text-secondary)",
+                }}
+              >
                 {previewMessage}
               </p>
               {previewParticipants.length > 0 && (
                 <ul
+                  className="anim-up"
                   style={{
                     marginTop: "0.5rem",
-                    paddingLeft: "1rem",
+                    paddingLeft: "1.25rem",
                     fontSize: "0.9rem",
-                    color: "var(--text-2,#444)",
+                    color: "var(--text-secondary)",
+                    maxHeight: "100px",
+                    overflowY: "auto",
                   }}
                 >
                   {previewParticipants.slice(0, 5).map((participant) => (
                     <li key={participant}>{participant}</li>
                   ))}
-                  {previewParticipants.length > 5 && (
-                    <li key="preview-more">...</li>
-                  )}
+                  {previewParticipants.length > 5 && <li>...</li>}
                 </ul>
               )}
             </div>
