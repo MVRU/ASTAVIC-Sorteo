@@ -102,19 +102,9 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
     !isFinished && timeLeft.diff > 0 && timeLeft.diff <= 60 * 60 * 1000;
 
   // Botón "Ver sorteo": dorado/premium si finalizado
-  const viewBtnClass = isFinished
-    ? "button button--gold"
-    : "button button--primary";
-  const viewBtnStyle = isFinished
-    ? {
-        width: "100%",
-        background: "linear-gradient(180deg, #f7d774 0%, #e9b949 100%)",
-        color: "#3b2f0b",
-        boxShadow:
-          "0 10px 24px rgba(233,185,73,0.28), inset 0 1px 0 rgba(255,255,255,0.38)",
-        border: "1px solid rgba(185,141,35,0.35)",
-      }
-    : { width: "100%" };
+  const viewBtnClass = `button ${
+    isFinished ? "button--gold" : "button--primary"
+  } button--full`;
 
   // Lista de ganadores para cards finalizadas
   const WinnersInline = () => {
@@ -208,55 +198,33 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
   };
 
   // ======== RENDER ========
-  const finishedHorizontalStyles = isFinished
-    ? {
-        // fondo premium dorado sutil
-        background:
-          "linear-gradient(90deg, rgba(247,215,116,0.14) 0%, rgba(255,255,255,0.92) 100%)",
-        border: "1px solid rgba(185,141,35,0.28)",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-      }
-    : {};
-
   return (
     <article
       className={`card raffle-card${
         isFinished
-          ? " raffle-card--finished raffle-card--finished-horizontal"
+          ? " raffle-card--finished"
           : isSoon
           ? " raffle-card--soon"
           : ""
       }${isVanishing ? " raffle-card--vanish" : ""}`}
-      style={{
-        ...(finishedHorizontalStyles || {}),
-        padding: isFinished ? "1rem" : undefined,
-      }}
     >
       {/** LAYOUT HORIZONTAL para finalizados */}
       {isFinished ? (
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "stretch",
-            gap: "1rem",
-          }}
-        >
+        <div className="raffle-card__finished">
           {/* COLUMNA IZQUIERDA: fecha, título, ganadores */}
-          <div style={{ flex: "1 1 260px", minWidth: "220px" }}>
+          <div className="raffle-card__details">
             <span
               className="raffle-card__badge raffle-card__badge--finished"
               aria-label={`Fecha y hora del sorteo: ${formatDateEs(
                 raffle.datetime
               )}`}
-              style={{ marginBottom: "0.5rem" }}
             >
               <time dateTime={new Date(raffle.datetime).toISOString()}>
                 {formatDateEs(raffle.datetime)}
               </time>
             </span>
 
-            <h3 className="raffle-card__title" style={{ marginTop: "0.35rem" }}>
+            <h3 className="raffle-card__title">
               {raffle.title}
             </h3>
 
@@ -265,21 +233,11 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
           </div>
 
           {/* COLUMNA DERECHA: botón dorado */}
-          <div
-            style={{
-              flex: "0 0 180px",
-              minWidth: "180px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              gap: "0.6rem",
-            }}
-          >
+          <div className="raffle-card__actions">
             <button
               ref={openBtnRef}
               type="button"
               className={viewBtnClass}
-              style={viewBtnStyle}
               onClick={() => setModalOpen(true)}
               title="Ver información del sorteo"
               aria-label={`Ver detalles del sorteo ${raffle.title}`}
@@ -323,19 +281,10 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
           </span>
 
           {/* Acciones apiladas */}
-          <div
-            className="card-actions"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: "0.6rem",
-              alignItems: "stretch",
-            }}
-          >
+          <div className="card-actions card-actions--stacked">
             <button
               type="button"
-              className="button button--ghost"
-              style={{ width: "100%" }}
+              className="button button--ghost button--full"
               onClick={() => onRequestReminder(raffle)}
               title="Abrir formulario para recibir recordatorios por correo"
               aria-label={`Recibir recordatorio por email del sorteo ${raffle.title}`}
@@ -347,7 +296,6 @@ const RaffleCard = ({ raffle, onLive, onMarkFinished, onRequestReminder }) => {
               ref={openBtnRef}
               type="button"
               className={viewBtnClass}
-              style={viewBtnStyle}
               onClick={() => setModalOpen(true)}
               title="Ver información del sorteo"
               aria-label={`Ver detalles del sorteo ${raffle.title}`}
