@@ -1,5 +1,6 @@
 // ManageRaffles.jsx
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
+// ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
@@ -11,45 +12,126 @@ import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 
 // ========= Helpers =========
-const emptyForm = (r) => ({
-  id: r.id,
-  title: r.title || "",
-  description: r.description || "",
-  datetime: toLocalInputValue(r.datetime),
-  winnersCount: r.winnersCount ?? 1,
-  finished: !!r.finished,
-  prizesText: (Array.isArray(r.prizes) ? r.prizes : [])
-    .map((p) => (p?.title ? p.title : ""))
-    .filter(Boolean)
-    .join("\n"),
-  participantsText: (Array.isArray(r.participants) ? r.participants : []).join(
-    "\n"
-  ),
-});
+const composeFormState = (raffle) => {
+  const datetimeResult = toLocalInputValue(raffle.datetime);
+  return {
+    form: {
+      id: raffle.id,
+      title: raffle.title || "",
+      description: raffle.description || "",
+      datetime: datetimeResult.value,
+      winnersCount: raffle.winnersCount ?? 1,
+      finished: !!raffle.finished,
+      prizesText: (Array.isArray(raffle.prizes) ? raffle.prizes : [])
+        .map((prize) => (prize?.title ? prize.title : ""))
+        .filter(Boolean)
+        .join("\n"),
+      participantsText: (Array.isArray(raffle.participants)
+        ? raffle.participants
+        : []
+      ).join("\n"),
+    },
+    alert: datetimeResult.error
+      ? { message: datetimeResult.error, field: "datetime" }
+      : null,
+  };
+};
 
 // convierte ISO a valor aceptado por input datetime-local
 function toLocalInputValue(isoLike) {
+  if (!isoLike) {
+    return { value: "", error: null };
+  }
   const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) {
+    return {
+      value: "",
+      error:
+        "La fecha guardada del sorteo es inválida. Ingresá una nueva fecha antes de guardar.",
+    };
+  }
   const pad = (n) => String(n).padStart(2, "0");
   const yyyy = d.getFullYear();
   const MM = pad(d.getMonth() + 1);
   const dd = pad(d.getDate());
   const hh = pad(d.getHours());
   const mm = pad(d.getMinutes());
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+  return {
+    value: `${yyyy}-${MM}-${dd}T${hh}:${mm}`,
+    error: null,
+  };
 }
 
 function fromLocalInputValue(local) {
-  return new Date(local).toISOString();
+  if (!local) {
+    return {
+      ok: false,
+      error: "Ingresá una fecha válida antes de guardar.",
+    };
+  }
+  const parsed = new Date(local);
+  if (Number.isNaN(parsed.getTime())) {
+    return {
+      ok: false,
+      error: "La fecha ingresada no es válida. Revisala antes de guardar.",
+    };
+  }
+  return { ok: true, value: parsed.toISOString() };
+}
+
+function buildPayloadFromForm(form) {
+  const title = form.title.trim();
+  if (!title) {
+    return {
+      ok: false,
+      error: "El título no puede quedar vacío.",
+      field: "title",
+    };
+  }
+  const datetimeResult = fromLocalInputValue(form.datetime);
+  if (!datetimeResult.ok) {
+    return {
+      ok: false,
+      error: datetimeResult.error,
+      field: "datetime",
+    };
+  }
+  const parsedWinners = Number.parseInt(form.winnersCount, 10);
+  const winnersCount = Number.isFinite(parsedWinners) && parsedWinners > 0
+    ? parsedWinners
+    : 1;
+
+  return {
+    ok: true,
+    payload: {
+      id: form.id,
+      title,
+      description: form.description.trim(),
+      datetime: datetimeResult.value,
+      winnersCount,
+      finished: Boolean(form.finished),
+      prizes: form.prizesText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((prizeTitle) => ({ title: prizeTitle })),
+      participants: form.participantsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    },
+  };
 }
 
 function formatNiceDate(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString();
-  } catch {
-    return iso;
+  if (!iso) {
+    return "Fecha no disponible";
   }
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Fecha no disponible";
+  }
+  return parsed.toLocaleString();
 }
 
 // ========= Main =========
@@ -64,8 +146,10 @@ const ManageRaffles = ({
   const [sort, setSort] = useState("date_desc");
   const [editState, setEditState] = useState(null); // { raffle, form }
   const [confirmState, setConfirmState] = useState(null); // { type, raffle }
+  const [formAlert, setFormAlert] = useState(null);
   const titleInputRef = useRef(null);
   const editFormId = useId();
+  const alertId = `${editFormId}-alert`;
 
   const activeAll = useMemo(
     () => raffles.filter((r) => !r.finished),
@@ -103,11 +187,14 @@ const ManageRaffles = ({
   }, [tab, activeAll, finishedAll, q, sort]);
 
   const startEdit = (raffle) => {
-    setEditState({ raffle, form: emptyForm(raffle) });
+    const mapped = composeFormState(raffle);
+    setEditState({ raffle, form: mapped.form });
+    setFormAlert(mapped.alert);
   };
 
   const closeEdit = () => {
     setEditState(null);
+    setFormAlert(null);
   };
 
   const handleEditField = (event) => {
@@ -122,29 +209,20 @@ const ManageRaffles = ({
         },
       };
     });
+    if (formAlert && (!formAlert.field || formAlert.field === name)) {
+      setFormAlert(null);
+    }
   };
 
   const handleEditSubmit = (event) => {
     event.preventDefault();
     if (!editState?.form) return;
-    const payload = {
-      id: editState.form.id,
-      title: editState.form.title.trim(),
-      description: editState.form.description.trim(),
-      datetime: fromLocalInputValue(editState.form.datetime),
-      winnersCount: Math.max(1, Number(editState.form.winnersCount || 1)),
-      finished: !!editState.form.finished,
-      prizes: editState.form.prizesText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((title) => ({ title })),
-      participants: editState.form.participantsText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    };
-    onUpdateRaffle(payload);
+    const result = buildPayloadFromForm(editState.form);
+    if (!result.ok) {
+      setFormAlert({ message: result.error, field: result.field });
+      return;
+    }
+    onUpdateRaffle(result.payload);
     closeEdit();
   };
 
@@ -293,6 +371,8 @@ const ManageRaffles = ({
               onSubmit={handleEditSubmit}
               formId={editFormId}
               titleRef={titleInputRef}
+              alert={formAlert}
+              alertId={alertId}
             />
           ) : null}
         </div>
@@ -364,6 +444,11 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
   const participantsCount = Array.isArray(raffle.participants)
     ? raffle.participants.length
     : 0;
+  const parsedDatetime = raffle.datetime ? new Date(raffle.datetime) : null;
+  const datetimeAttribute =
+    parsedDatetime && !Number.isNaN(parsedDatetime.getTime())
+      ? parsedDatetime.toISOString()
+      : undefined;
 
   return (
     <article className="manage-card">
@@ -377,7 +462,7 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
             {raffle.finished ? "Finalizado" : "Activo"}
           </span>
           <span className="admin-tag admin-tag--date">
-            <time dateTime={new Date(raffle.datetime).toISOString()}>
+            <time dateTime={datetimeAttribute}>
               {formatNiceDate(raffle.datetime)}
             </time>
           </span>
@@ -432,95 +517,125 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
 };
 
 // ========= Formulario =========
-const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
-  <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
-    <div className="form-group">
-      <label htmlFor={`${formId}-title`}>Título</label>
-      <input
-        className="input"
-        id={`${formId}-title`}
-        name="title"
-        value={form.title}
-        onChange={onChange}
-        required
-        ref={titleRef}
-        data-modal-autofocus="true"
-        aria-describedby={`${formId}-title-hint`}
-      />
-      <small id={`${formId}-title-hint`} className="hint">
-        Un nombre claro facilita la búsqueda.
-      </small>
-    </div>
+const RaffleEditForm = ({
+  form,
+  onChange,
+  onSubmit,
+  formId,
+  titleRef,
+  alert,
+  alertId,
+}) => {
+  const titleDescribedBy = [
+    `${formId}-title-hint`,
+    alert?.field === "title" ? alertId : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const datetimeDescribedBy = [
+    alert?.field === "datetime" ? alertId : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-    <div className="form-group">
-      <label htmlFor={`${formId}-description`}>Descripción</label>
-      <textarea
-        className="input"
-        id={`${formId}-description`}
-        name="description"
-        value={form.description}
-        onChange={onChange}
-        rows={3}
-      />
-    </div>
-
-    <div className="form-row form-row--3">
+  return (
+    <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
+      {alert ? (
+        <div className="form-alert" role="alert" id={alertId} aria-live="assertive">
+          {alert.message}
+        </div>
+      ) : null}
       <div className="form-group">
-        <label htmlFor={`${formId}-datetime`}>Fecha y hora</label>
+        <label htmlFor={`${formId}-title`}>Título</label>
         <input
           className="input"
-          type="datetime-local"
-          id={`${formId}-datetime`}
-          name="datetime"
-          value={form.datetime}
+          id={`${formId}-title`}
+          name="title"
+          value={form.title}
           onChange={onChange}
           required
+          ref={titleRef}
+          data-modal-autofocus="true"
+          aria-describedby={titleDescribedBy || undefined}
+          aria-invalid={alert?.field === "title" ? "true" : undefined}
         />
+        <small id={`${formId}-title-hint`} className="hint">
+          Un nombre claro facilita la búsqueda.
+        </small>
       </div>
-      <div className="form-group">
-        <label htmlFor={`${formId}-winners`}>Ganadores</label>
-        <input
-          className="input"
-          type="number"
-          min={1}
-          id={`${formId}-winners`}
-          name="winnersCount"
-          value={form.winnersCount}
-          onChange={onChange}
-        />
-      </div>
-    </div>
 
-    <div className="form-row form-row--2">
       <div className="form-group">
-        <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
+        <label htmlFor={`${formId}-description`}>Descripción</label>
         <textarea
           className="input"
-          id={`${formId}-prizes`}
-          name="prizesText"
-          value={form.prizesText}
+          id={`${formId}-description`}
+          name="description"
+          value={form.description}
           onChange={onChange}
-          rows={4}
-          spellCheck="false"
+          rows={3}
         />
       </div>
-      <div className="form-group">
-        <label htmlFor={`${formId}-participants`}>
-          Participantes (uno por línea)
-        </label>
-        <textarea
-          className="input"
-          id={`${formId}-participants`}
-          name="participantsText"
-          value={form.participantsText}
-          onChange={onChange}
-          rows={4}
-          spellCheck="false"
-        />
+
+      <div className="form-row form-row--3">
+        <div className="form-group">
+          <label htmlFor={`${formId}-datetime`}>Fecha y hora</label>
+          <input
+            className="input"
+            type="datetime-local"
+            id={`${formId}-datetime`}
+            name="datetime"
+            value={form.datetime}
+            onChange={onChange}
+            required
+            aria-describedby={datetimeDescribedBy || undefined}
+            aria-invalid={alert?.field === "datetime" ? "true" : undefined}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor={`${formId}-winners`}>Ganadores</label>
+          <input
+            className="input"
+            type="number"
+            min={1}
+            id={`${formId}-winners`}
+            name="winnersCount"
+            value={form.winnersCount}
+            onChange={onChange}
+          />
+        </div>
       </div>
-    </div>
-  </form>
-);
+
+      <div className="form-row form-row--2">
+        <div className="form-group">
+          <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
+          <textarea
+            className="input"
+            id={`${formId}-prizes`}
+            name="prizesText"
+            value={form.prizesText}
+            onChange={onChange}
+            rows={4}
+            spellCheck="false"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor={`${formId}-participants`}>
+            Participantes (uno por línea)
+          </label>
+          <textarea
+            className="input"
+            id={`${formId}-participants`}
+            name="participantsText"
+            value={form.participantsText}
+            onChange={onChange}
+            rows={4}
+            spellCheck="false"
+          />
+        </div>
+      </div>
+    </form>
+  );
+};
 
 // ========= Vacio =========
 const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;
@@ -565,6 +680,14 @@ function LocalStyles() {
         resize: vertical;
         overflow-wrap: anywhere; /* por si pegan líneas larguísimas */
         white-space: pre-wrap;
+      }
+
+      .form-alert{
+        background: var(--alert-danger-bg, #fee2e2);
+        border-radius: 8px;
+        color: var(--alert-danger-fg, #991b1b);
+        padding: 12px;
+        font-size: .9rem;
       }
 
       .form-row{
@@ -641,6 +764,11 @@ RaffleEditForm.propTypes = {
   formId: PropTypes.string.isRequired,
   titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
     .isRequired,
+  alert: PropTypes.shape({
+    message: PropTypes.string.isRequired,
+    field: PropTypes.string,
+  }),
+  alertId: PropTypes.string.isRequired,
 };
 
 EmptyHint.propTypes = { text: PropTypes.string.isRequired };
