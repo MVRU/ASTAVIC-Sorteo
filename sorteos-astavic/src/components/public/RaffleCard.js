@@ -426,6 +426,7 @@ function RaffleDetailsModal({
     };
 
     document.addEventListener("keydown", handleKeyDown);
+    const triggerEl = returnFocusRef?.current;
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -436,8 +437,7 @@ function RaffleDetailsModal({
       document.body.style.width = prev.width;
       window.scrollTo({ top: lastScrollY.current });
 
-      const trigger = returnFocusRef?.current;
-      if (trigger && typeof trigger.focus === "function") trigger.focus();
+      if (triggerEl && typeof triggerEl.focus === "function") triggerEl.focus();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 👈 vacío para no re-ejecutar al re-renderizar

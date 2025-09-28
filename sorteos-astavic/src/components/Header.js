@@ -33,16 +33,6 @@ const Header = ({
     onNavigate(target);
   };
 
-  // navegación directa a subpestañas de admin (crea/gestiona) manteniendo la ruta "admin"
-  const goAdminSub = (sub) => (e) => {
-    e.preventDefault();
-    // dejamos un hash que AdminView pueda leer para decidir pestaña
-    const next = sub === "manage" ? "#/admin/gestionar" : "#/admin/crear";
-    if (window.location.hash !== next) window.location.hash = next;
-    onNavigate("admin");
-    setMenuOpen(false);
-  };
-
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
