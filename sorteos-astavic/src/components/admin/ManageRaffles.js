@@ -1,15 +1,17 @@
 // src/components/admin/ManageRaffles.js
+// ! DECISIÓN DE DISEÑO: El helper compartido de validación garantiza consistencia y bloquea envíos inválidos en el editor embebido.
 
-/**
- * TODOS:
+/*
+ * TODO:
  *  - [ ] Mejorar UI/UX del editor embebido (scroll, tamaño, etc)
- *  - [ ] Validar que la fecha no sea en el pasado
- *  - [ ] Validar que haya al menos un premio
- *  - [ ] Validar que no haya participantes repetidos
+ *  - [x] Validar que la fecha no sea en el pasado
+ *  - [x] Validar que haya al menos un premio
+ *  - [x] Validar que no haya participantes repetidos
  */
 
 import { useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { validateRaffleDraft } from "../../utils/raffleValidation";
 
 // ========= Helpers =========
 const emptyForm = (r) => ({
@@ -63,6 +65,7 @@ const ManageRaffles = ({
 }) => {
   const [editing, setEditing] = useState(null); // id en edición
   const [form, setForm] = useState(null); // datos del form
+  const [formError, setFormError] = useState(null); // mensaje de error accesible
   const [tab, setTab] = useState("active"); // 'active' | 'finished'
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("date_desc"); // 'date_desc' | 'date_asc' | 'title_asc'
@@ -103,17 +106,20 @@ const ManageRaffles = ({
   }, [tab, activeAll, finishedAll, q, sort]);
 
   const startEdit = (r) => {
-    setEditing(r.id);
+    setFormError(null);
     setForm(emptyForm(r));
+    setEditing(r.id);
   };
 
   const cancelEdit = () => {
     setEditing(null);
     setForm(null);
+    setFormError(null);
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    setFormError(null);
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -122,23 +128,49 @@ const ManageRaffles = ({
 
   const handleSave = (e) => {
     e.preventDefault();
+    if (!form) return;
+
+    const prizeLines = form.prizesText.split("\n");
+    const participantLines = form.participantsText.split("\n");
+
+    const validationErrors = validateRaffleDraft({
+      title: form.title,
+      datetime: form.datetime,
+      winnersCount: form.winnersCount,
+      prizes: prizeLines.map((line) => ({ title: line })),
+      participants: participantLines,
+    });
+
+    if (validationErrors.length > 0) {
+      setFormError(validationErrors[0]);
+      return;
+    }
+
+    let isoDatetime;
+    try {
+      isoDatetime = fromLocalInputValue(form.datetime);
+    } catch {
+      setFormError("La fecha/hora no es válida.");
+      return;
+    }
+
+    const winnersCount = Math.max(1, Number(form.winnersCount || 1));
     const payload = {
       id: form.id,
       title: form.title.trim(),
       description: form.description.trim(),
-      datetime: fromLocalInputValue(form.datetime),
-      winnersCount: Math.max(1, Number(form.winnersCount || 1)),
+      datetime: isoDatetime,
+      winnersCount,
       finished: !!form.finished,
-      prizes: form.prizesText
-        .split("\n")
-        .map((s) => s.trim())
+      prizes: prizeLines
+        .map((line) => line.trim())
         .filter(Boolean)
         .map((title) => ({ title })),
-      participants: form.participantsText
-        .split("\n")
-        .map((s) => s.trim())
+      participants: participantLines
+        .map((line) => line.trim())
         .filter(Boolean),
     };
+
     onUpdateRaffle(payload);
     cancelEdit();
   };
@@ -223,6 +255,7 @@ const ManageRaffles = ({
                 onChange={handleChange}
                 onSave={handleSave}
                 onCancel={cancelEdit}
+                error={formError}
               />
             ) : (
               <RaffleAdminCard
@@ -326,12 +359,33 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
 };
 
 // ========= Editor embebido (card) =========
-const EditCard = ({ form, onChange, onSave, onCancel }) => {
+const EditCard = ({ form, onChange, onSave, onCancel, error }) => {
+  const errorId = error ? `manage-edit-error-${form.id}` : undefined;
   return (
-    <form onSubmit={onSave} className="manage-edit">
+    <form
+      onSubmit={onSave}
+      className="manage-edit"
+      aria-describedby={errorId}
+    >
       <header className="manage-edit__header">
         <strong>Editar sorteo</strong>
       </header>
+
+      {error && (
+        <p
+          id={errorId}
+          role="alert"
+          aria-live="assertive"
+          className="manage-edit__error"
+          style={{
+            margin: "0 1.5rem 1rem",
+            color: "var(--danger)",
+            fontWeight: 600,
+          }}
+        >
+          {error}
+        </p>
+      )}
 
       <div className="form-group">
         <label>Título</label>
@@ -340,6 +394,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
           name="title"
           value={form.title}
           onChange={onChange}
+          aria-label="Título"
           required
         />
       </div>
@@ -351,6 +406,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
           name="description"
           value={form.description}
           onChange={onChange}
+          aria-label="Descripción"
           rows={3}
         />
       </div>
@@ -364,6 +420,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
             name="datetime"
             value={form.datetime}
             onChange={onChange}
+            aria-label="Fecha y hora"
             required
           />
         </div>
@@ -376,6 +433,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
             name="winnersCount"
             value={form.winnersCount}
             onChange={onChange}
+            aria-label="Ganadores"
           />
         </div>
         <div className="form-group form-group--checkbox">
@@ -385,6 +443,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
               name="finished"
               checked={form.finished}
               onChange={onChange}
+              aria-label="Finalizado"
             />
             Finalizado
           </label>
@@ -399,6 +458,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
             name="prizesText"
             value={form.prizesText}
             onChange={onChange}
+            aria-label="Premios (uno por línea)"
             rows={4}
           />
         </div>
@@ -409,6 +469,7 @@ const EditCard = ({ form, onChange, onSave, onCancel }) => {
             name="participantsText"
             value={form.participantsText}
             onChange={onChange}
+            aria-label="Participantes (uno por línea)"
             rows={4}
           />
         </div>
@@ -455,6 +516,7 @@ EditCard.propTypes = {
   onChange: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  error: PropTypes.string,
 };
 
 EmptyHint.propTypes = { text: PropTypes.string.isRequired };

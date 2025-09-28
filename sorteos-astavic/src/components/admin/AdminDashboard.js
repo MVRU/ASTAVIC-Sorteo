@@ -1,7 +1,9 @@
 // src/components/admin/AdminDashboard.js
+// ! DECISIÓN DE DISEÑO: Este panel delega la validación en un helper compartido para mantener reglas coherentes en toda la aplicación.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
+import { validateRaffleDraft } from "../../utils/raffleValidation";
 import RaffleCard from "../public/RaffleCard";
 
 /* =========================
@@ -465,57 +467,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setStatus(null);
   };
 
-  /* =========================
-     Validaciones robustas
-     ========================= */
-  const validateBeforeSubmit = (payload) => {
-    const errors = [];
-
-    const title = (payload.title || "").trim();
-    if (title.length < 3)
-      errors.push("El título debe tener al menos 3 caracteres.");
-
-    if (!payload.datetime) {
-      errors.push("Seleccioná fecha y hora del sorteo.");
-    } else {
-      const selected = new Date(payload.datetime).getTime();
-      if (Number.isNaN(selected)) {
-        errors.push("La fecha/hora no es válida.");
-      } else if (selected <= Date.now()) {
-        errors.push("La fecha/hora debe ser en el futuro.");
-      }
-    }
-
-    const winnersNum = Math.max(1, Number(form.winners) || 1);
-    if (winnersNum < 1) errors.push("Debe haber al menos 1 ganador.");
-
-    // Premios: cantidad = ganadores y todos con título no vacío
-    if (!Array.isArray(prizes) || prizes.length !== winnersNum) {
-      errors.push(
-        "La cantidad de premios debe coincidir con la cantidad de ganadores."
-      );
-    }
-    prizes.forEach((p, i) => {
-      if (!p || !String(p.title).trim()) {
-        errors.push(`El título del premio ${i + 1} no puede estar vacío.`);
-      }
-    });
-
-    // Participantes: al menos winners
-    const participants = Array.isArray(payload.participants)
-      ? payload.participants
-      : [];
-    if (participants.length === 0) {
-      errors.push("No se detectaron participantes (archivo o texto).");
-    } else if (participants.length < winnersNum) {
-      errors.push(
-        "La cantidad de participantes debe ser mayor o igual a la de ganadores."
-      );
-    }
-
-    return errors;
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus(null);
@@ -529,9 +480,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         title: form.title,
         description: form.description,
         datetime: form.datetime,
+        winnersCount: winnersNum,
+        prizes,
         participants,
       };
-      const errors = validateBeforeSubmit(draft);
+      const errors = validateRaffleDraft(draft);
       if (errors.length > 0) {
         setStatus({ ok: false, message: errors[0] });
         setLoading(false);
