@@ -1,3 +1,4 @@
+// ManageRaffles.jsx
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
@@ -169,6 +170,9 @@ const ManageRaffles = ({
 
   return (
     <section className="section-gap admin-manage">
+      {/* ====== estilos locales para asegurar no overflow en el modal ====== */}
+      <LocalStyles />
+
       <div className="container">
         <header className="manage-toolbar">
           <div className="manage-toolbar__left">
@@ -233,9 +237,7 @@ const ManageRaffles = ({
               raffle={r}
               onEdit={() => startEdit(r)}
               onDelete={() => openConfirm("delete", r)}
-              onFinish={
-                r.finished ? null : () => openConfirm("finish", r)
-              }
+              onFinish={r.finished ? null : () => openConfirm("finish", r)}
             />
           ))}
           {list.length === 0 && (
@@ -252,6 +254,7 @@ const ManageRaffles = ({
         </div>
       </div>
 
+      {/* ====== Modal de edición ====== */}
       <AdminModal
         open={Boolean(editState)}
         title="Editar sorteo"
@@ -277,17 +280,25 @@ const ManageRaffles = ({
         }
         initialFocusRef={titleInputRef}
       >
-        {editState ? (
-          <RaffleEditForm
-            form={editState.form}
-            onChange={handleEditField}
-            onSubmit={handleEditSubmit}
-            formId={editFormId}
-            titleRef={titleInputRef}
-          />
-        ) : null}
+        {/* Scroll vertical controlado sin desbordar horizontal */}
+        <div
+          className="modal-scroll-area"
+          role="region"
+          aria-label="Formulario de edición"
+        >
+          {editState ? (
+            <RaffleEditForm
+              form={editState.form}
+              onChange={handleEditField}
+              onSubmit={handleEditSubmit}
+              formId={editFormId}
+              titleRef={titleInputRef}
+            />
+          ) : null}
+        </div>
       </AdminModal>
 
+      {/* ====== Modal de confirmación ====== */}
       <AdminModal
         open={Boolean(confirmState)}
         title={confirmCopy.title}
@@ -422,7 +433,7 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
 
 // ========= Formulario =========
 const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
-  <form onSubmit={onSubmit} className="manage-edit" id={formId}>
+  <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
     <div className="form-group">
       <label htmlFor={`${formId}-title`}>Título</label>
       <input
@@ -434,7 +445,11 @@ const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
         required
         ref={titleRef}
         data-modal-autofocus="true"
+        aria-describedby={`${formId}-title-hint`}
       />
+      <small id={`${formId}-title-hint`} className="hint">
+        Un nombre claro facilita la búsqueda.
+      </small>
     </div>
 
     <div className="form-group">
@@ -474,18 +489,6 @@ const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
           onChange={onChange}
         />
       </div>
-      <div className="form-group form-group--checkbox">
-        <label className="checkbox" htmlFor={`${formId}-finished`}>
-          <input
-            type="checkbox"
-            id={`${formId}-finished`}
-            name="finished"
-            checked={form.finished}
-            onChange={onChange}
-          />
-          Finalizado
-        </label>
-      </div>
     </div>
 
     <div className="form-row form-row--2">
@@ -498,6 +501,7 @@ const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
           value={form.prizesText}
           onChange={onChange}
           rows={4}
+          spellCheck="false"
         />
       </div>
       <div className="form-group">
@@ -511,6 +515,7 @@ const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
           value={form.participantsText}
           onChange={onChange}
           rows={4}
+          spellCheck="false"
         />
       </div>
     </div>
@@ -519,6 +524,98 @@ const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
 
 // ========= Vacio =========
 const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;
+
+/**
+ * Estilos locales críticos para:
+ * - Evitar scroll horizontal (minmax(0,1fr), min-width: 0, word-wrap)
+ * - Forzar scroll vertical sobre el contenido del modal
+ * - Responsividad: columnas colapsan en pantallas angostas
+ */
+function LocalStyles() {
+  return (
+    <style>{`
+      .modal-scroll-area{
+        max-height: min(70vh, 720px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 4px; /* evita salto por scrollbar */
+      }
+
+      .manage-edit{
+        display: grid;
+        gap: 12px;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .manage-edit .form-group{
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0; /* clave para que no se expanda y cause overflow */
+      }
+
+      .manage-edit .input{
+        width: 100%;
+        min-width: 0; /* evita overflow en grid */
+        box-sizing: border-box;
+      }
+
+      .manage-edit textarea.input{
+        resize: vertical;
+        overflow-wrap: anywhere; /* por si pegan líneas larguísimas */
+        white-space: pre-wrap;
+      }
+
+      .form-row{
+        display: grid;
+        gap: 12px;
+        grid-auto-rows: minmax(0, auto);
+      }
+
+      /* 2 columnas fluidas */
+      .form-row--2{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      /* 3 columnas fluidas para fecha/ganadores/checkbox */
+      .form-row--3{
+        grid-template-columns: 2fr 1fr auto;
+        align-items: end;
+      }
+
+      .form-group--checkbox{
+        display: flex;
+        align-items: flex-end;
+        min-width: 0;
+      }
+
+      .checkbox{
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .hint{
+        font-size: .8rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      /* Responsivo: colapsar a una columna en pantallas angostas */
+      @media (max-width: 720px){
+        .form-row--2,
+        .form-row--3{
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .form-group--checkbox{
+          align-items: center;
+        }
+      }
+    `}</style>
+  );
+}
 
 // ========= PropTypes =========
 RaffleAdminCard.propTypes = {
@@ -542,7 +639,8 @@ RaffleEditForm.propTypes = {
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   formId: PropTypes.string.isRequired,
-  titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) }).isRequired,
+  titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
+    .isRequired,
 };
 
 EmptyHint.propTypes = { text: PropTypes.string.isRequired };
