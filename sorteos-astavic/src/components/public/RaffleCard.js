@@ -1,4 +1,5 @@
 // src/components/public/RaffleCard.js
+// ! DECISIÓN DE DISEÑO: Gestionamos el foco manualmente para cumplir WCAG al cerrar el modal de participantes.
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
@@ -427,6 +428,8 @@ function RaffleDetailsModal({
 
     document.addEventListener("keydown", handleKeyDown);
 
+    const focusTarget = returnFocusRef?.current;
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       const prev = previousBodyStyle.current;
@@ -436,8 +439,9 @@ function RaffleDetailsModal({
       document.body.style.width = prev.width;
       window.scrollTo({ top: lastScrollY.current });
 
-      const trigger = returnFocusRef?.current;
-      if (trigger && typeof trigger.focus === "function") trigger.focus();
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 👈 vacío para no re-ejecutar al re-renderizar

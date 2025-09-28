@@ -1,4 +1,5 @@
 // src/components/Header.js
+// ! DECISIÓN DE DISEÑO: Delegamos el control de subrutas al contenedor, manteniendo este header como un disparador accesible.
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
@@ -31,16 +32,6 @@ const Header = ({
     event.preventDefault();
     setMenuOpen(false);
     onNavigate(target);
-  };
-
-  // navegación directa a subpestañas de admin (crea/gestiona) manteniendo la ruta "admin"
-  const goAdminSub = (sub) => (e) => {
-    e.preventDefault();
-    // dejamos un hash que AdminView pueda leer para decidir pestaña
-    const next = sub === "manage" ? "#/admin/gestionar" : "#/admin/crear";
-    if (window.location.hash !== next) window.location.hash = next;
-    onNavigate("admin");
-    setMenuOpen(false);
   };
 
   useEffect(() => {
