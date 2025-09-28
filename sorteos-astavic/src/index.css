@@ -1,39 +1,69 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-* {
-  box-sizing: border-box;
-}
+/* ! DECISIÓN DE DISEÑO: Consolidamos tokens tipográficos y reseteamos estilos base para asegurar consistencia transversal. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   color-scheme: light;
-  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  --brand-50: #e8f2fb;
-  --brand-100: #d9ecfb;
-  --brand-200: #b3d8f6;
-  --brand-300: #8cc4f2;
-  --brand-400: #4ea4ea;
-  --brand-500: #1e88e5;
-  --brand-600: #1565c0;
-  --brand-700: #0d47a1;
-  --brand-800: #0a3a85;
-  --brand-900: #072b63;
-  --surface: #f7fafc;
-  --surface-elevated: #ffffff;
-  --border: #d6e0ef;
-  --text-primary: #16213c;
-  --text-secondary: #5b6475;
-  --success: #1aa368;
-  --danger: #cc3a3a;
-  background-color: var(--surface);
+
+  /* -*- Colores de marca y superficies -*- */
+  --brand-50: #eaf4ff;
+  --brand-100: #d7eaff;
+  --brand-200: #b6d7ff;
+  --brand-300: #8fbefa;
+  --brand-400: #68a7ef;
+  --brand-500: #4ea4ea;
+  --brand-600: #2d7ed1;
+  --brand-700: #0f4d9e;
+  --surface-page: #f3f6fb;
+  --surface-card: #ffffff;
+  --surface-muted: #f7fbff;
+  --surface-overlay: rgba(15, 27, 48, 0.65);
+
+  /* -*- Textos y bordes -*- */
+  --text-primary: #0a1630;
+  --text-secondary: #536079;
+  --text-muted: #6b7a94;
+  --border-soft: rgba(15, 40, 105, 0.12);
+  --border-strong: rgba(15, 40, 105, 0.24);
+
+  /* -*- Feedback -*- */
+  --success: #1f9d5a;
+  --danger: #c03434;
+
+  /* -*- Tokens globales -*- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.15rem;
+  --radius-xl: 1.35rem;
+  --shadow-sm: 0 6px 16px rgba(2, 12, 27, 0.08);
+  --shadow-md: 0 14px 34px rgba(2, 12, 27, 0.12);
+  --shadow-lg: 0 24px 60px rgba(2, 12, 27, 0.18);
+  --transition-fast: 0.16s ease;
+  --transition-base: 0.22s ease;
+  --transition-slow: 0.32s ease;
+  --focus-ring: 0 0 0 3px rgba(78, 164, 234, 0.35);
+  --container-max: 1120px;
+
+  background-color: var(--surface-page);
   color: var(--text-primary);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--surface);
+  background: var(--surface-page);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -48,12 +78,19 @@ a:hover {
   text-decoration: underline;
 }
 
-img, video {
+img,
+picture,
+video,
+canvas,
+svg {
   display: block;
   max-width: 100%;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -68,10 +105,19 @@ button:disabled {
 }
 
 code {
-  font-family: 'Fira Code', 'Source Code Pro', Menlo, monospace;
+  font-family: "Fira Code", "Source Code Pro", Menlo, monospace;
   font-size: 0.95em;
 }
 
 #root {
   min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
