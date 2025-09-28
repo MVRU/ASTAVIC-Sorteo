@@ -1,15 +1,14 @@
-// src/components/admin/ManageRaffles.js
+// ManageRaffles.jsx
+// ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
+// ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
- * TODOS:
- *  - [ ] Mejorar UI/UX del editor embebido (scroll, tamaño, etc)
- *  - [ ] Validar que la fecha no sea en el pasado
- *  - [ ] Validar que haya al menos un premio
- *  - [ ] Validar que no haya participantes repetidos
+ * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useId } from "react";
 import PropTypes from "prop-types";
+import AdminModal from "./AdminModal";
 
 // ========= Helpers =========
 const emptyForm = (r) => ({
@@ -41,7 +40,6 @@ function toLocalInputValue(isoLike) {
 }
 
 function fromLocalInputValue(local) {
-  // conserva zona local; la app ya compara por Date()
   return new Date(local).toISOString();
 }
 
@@ -61,11 +59,13 @@ const ManageRaffles = ({
   onDeleteRaffle,
   onMarkFinished,
 }) => {
-  const [editing, setEditing] = useState(null); // id en edición
-  const [form, setForm] = useState(null); // datos del form
-  const [tab, setTab] = useState("active"); // 'active' | 'finished'
+  const [tab, setTab] = useState("active");
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState("date_desc"); // 'date_desc' | 'date_asc' | 'title_asc'
+  const [sort, setSort] = useState("date_desc");
+  const [editState, setEditState] = useState(null); // { raffle, form }
+  const [confirmState, setConfirmState] = useState(null); // { type, raffle }
+  const titleInputRef = useRef(null);
+  const editFormId = useId();
 
   const activeAll = useMemo(
     () => raffles.filter((r) => !r.finished),
@@ -102,60 +102,77 @@ const ManageRaffles = ({
     return out;
   }, [tab, activeAll, finishedAll, q, sort]);
 
-  const startEdit = (r) => {
-    setEditing(r.id);
-    setForm(emptyForm(r));
+  const startEdit = (raffle) => {
+    setEditState({ raffle, form: emptyForm(raffle) });
   };
 
-  const cancelEdit = () => {
-    setEditing(null);
-    setForm(null);
+  const closeEdit = () => {
+    setEditState(null);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+  const handleEditField = (event) => {
+    const { name, value, type, checked } = event.target;
+    setEditState((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        form: {
+          ...prev.form,
+          [name]: type === "checkbox" ? checked : value,
+        },
+      };
+    });
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  const handleEditSubmit = (event) => {
+    event.preventDefault();
+    if (!editState?.form) return;
     const payload = {
-      id: form.id,
-      title: form.title.trim(),
-      description: form.description.trim(),
-      datetime: fromLocalInputValue(form.datetime),
-      winnersCount: Math.max(1, Number(form.winnersCount || 1)),
-      finished: !!form.finished,
-      prizes: form.prizesText
+      id: editState.form.id,
+      title: editState.form.title.trim(),
+      description: editState.form.description.trim(),
+      datetime: fromLocalInputValue(editState.form.datetime),
+      winnersCount: Math.max(1, Number(editState.form.winnersCount || 1)),
+      finished: !!editState.form.finished,
+      prizes: editState.form.prizesText
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean)
         .map((title) => ({ title })),
-      participants: form.participantsText
+      participants: editState.form.participantsText
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean),
     };
     onUpdateRaffle(payload);
-    cancelEdit();
+    closeEdit();
   };
 
-  const askDelete = (r) => {
-    const ok = window.confirm(`¿Eliminar definitivamente "${r.title}"?`);
-    if (ok) onDeleteRaffle(r.id);
+  const openConfirm = (type, raffle) => {
+    setConfirmState({ type, raffle });
   };
 
-  const askFinish = (r) => {
-    const ok = window.confirm(`¿Marcar como finalizado "${r.title}"?`);
-    if (ok) onMarkFinished(r.id);
+  const closeConfirm = () => {
+    setConfirmState(null);
   };
+
+  const confirmAction = () => {
+    if (!confirmState?.raffle) return;
+    if (confirmState.type === "delete") {
+      onDeleteRaffle(confirmState.raffle.id);
+    } else if (confirmState.type === "finish") {
+      onMarkFinished(confirmState.raffle.id);
+    }
+    closeConfirm();
+  };
+
+  const confirmCopy = buildConfirmCopy(confirmState);
 
   return (
     <section className="section-gap admin-manage">
-      {/* Toolbar / Header */}
+      {/* ====== estilos locales para asegurar no overflow en el modal ====== */}
+      <LocalStyles />
+
       <div className="container">
         <header className="manage-toolbar">
           <div className="manage-toolbar__left">
@@ -212,30 +229,17 @@ const ManageRaffles = ({
         </header>
       </div>
 
-      {/* Grid */}
       <div className="container">
         <div className="manage-grid">
-          {list.map((r) =>
-            editing === r.id ? (
-              <EditCard
-                key={r.id}
-                form={form}
-                onChange={handleChange}
-                onSave={handleSave}
-                onCancel={cancelEdit}
-              />
-            ) : (
-              <RaffleAdminCard
-                key={r.id}
-                raffle={r}
-                onEdit={() => startEdit(r)}
-                onDelete={() => askDelete(r)}
-                onFinish={
-                  r.finished ? null : () => askFinish(r) // no mostrar si ya está finalizado
-                }
-              />
-            )
-          )}
+          {list.map((r) => (
+            <RaffleAdminCard
+              key={r.id}
+              raffle={r}
+              onEdit={() => startEdit(r)}
+              onDelete={() => openConfirm("delete", r)}
+              onFinish={r.finished ? null : () => openConfirm("finish", r)}
+            />
+          ))}
           {list.length === 0 && (
             <EmptyHint
               text={
@@ -249,11 +253,113 @@ const ManageRaffles = ({
           )}
         </div>
       </div>
+
+      {/* ====== Modal de edición ====== */}
+      <AdminModal
+        open={Boolean(editState)}
+        title="Editar sorteo"
+        description="Actualizá los datos y guardá los cambios cuando estés listo."
+        onClose={closeEdit}
+        footer={
+          <>
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={closeEdit}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="button button--primary"
+              form={editFormId}
+            >
+              Guardar cambios
+            </button>
+          </>
+        }
+        initialFocusRef={titleInputRef}
+      >
+        {/* Scroll vertical controlado sin desbordar horizontal */}
+        <div
+          className="modal-scroll-area"
+          role="region"
+          aria-label="Formulario de edición"
+        >
+          {editState ? (
+            <RaffleEditForm
+              form={editState.form}
+              onChange={handleEditField}
+              onSubmit={handleEditSubmit}
+              formId={editFormId}
+              titleRef={titleInputRef}
+            />
+          ) : null}
+        </div>
+      </AdminModal>
+
+      {/* ====== Modal de confirmación ====== */}
+      <AdminModal
+        open={Boolean(confirmState)}
+        title={confirmCopy.title}
+        description={confirmCopy.description}
+        onClose={closeConfirm}
+        footer={
+          <>
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={closeConfirm}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={
+                confirmState?.type === "delete"
+                  ? "button button--danger"
+                  : "button button--primary"
+              }
+              onClick={confirmAction}
+            >
+              {confirmCopy.cta}
+            </button>
+          </>
+        }
+      >
+        <p className="modal__text">{confirmCopy.body}</p>
+      </AdminModal>
     </section>
   );
 };
 
-// ========= Card visual mejorada =========
+const buildConfirmCopy = (state) => {
+  if (!state?.raffle) {
+    return {
+      title: "Confirmar acción",
+      description: undefined,
+      body: "Confirmá para continuar.",
+      cta: "Confirmar",
+    };
+  }
+  const title = state.raffle.title || "este sorteo";
+  if (state.type === "delete") {
+    return {
+      title: "Eliminar sorteo",
+      description: "Esta acción no se puede deshacer.",
+      body: `¿Seguro que querés eliminar "${title}"?`,
+      cta: "Eliminar",
+    };
+  }
+  return {
+    title: "Finalizar sorteo",
+    description: "El sorteo dejará de mostrarse como activo.",
+    body: `¿Confirmás marcar como finalizado "${title}"?`,
+    cta: "Finalizar",
+  };
+};
+
+// ========= Card visual =========
 const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
   const participantsCount = Array.isArray(raffle.participants)
     ? raffle.participants.length
@@ -325,113 +431,191 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
   );
 };
 
-// ========= Editor embebido (card) =========
-const EditCard = ({ form, onChange, onSave, onCancel }) => {
-  return (
-    <form onSubmit={onSave} className="manage-edit">
-      <header className="manage-edit__header">
-        <strong>Editar sorteo</strong>
-      </header>
+// ========= Formulario =========
+const RaffleEditForm = ({ form, onChange, onSubmit, formId, titleRef }) => (
+  <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
+    <div className="form-group">
+      <label htmlFor={`${formId}-title`}>Título</label>
+      <input
+        className="input"
+        id={`${formId}-title`}
+        name="title"
+        value={form.title}
+        onChange={onChange}
+        required
+        ref={titleRef}
+        data-modal-autofocus="true"
+        aria-describedby={`${formId}-title-hint`}
+      />
+      <small id={`${formId}-title-hint`} className="hint">
+        Un nombre claro facilita la búsqueda.
+      </small>
+    </div>
 
+    <div className="form-group">
+      <label htmlFor={`${formId}-description`}>Descripción</label>
+      <textarea
+        className="input"
+        id={`${formId}-description`}
+        name="description"
+        value={form.description}
+        onChange={onChange}
+        rows={3}
+      />
+    </div>
+
+    <div className="form-row form-row--3">
       <div className="form-group">
-        <label>Título</label>
+        <label htmlFor={`${formId}-datetime`}>Fecha y hora</label>
         <input
           className="input"
-          name="title"
-          value={form.title}
+          type="datetime-local"
+          id={`${formId}-datetime`}
+          name="datetime"
+          value={form.datetime}
           onChange={onChange}
           required
         />
       </div>
-
       <div className="form-group">
-        <label>Descripción</label>
-        <textarea
+        <label htmlFor={`${formId}-winners`}>Ganadores</label>
+        <input
           className="input"
-          name="description"
-          value={form.description}
+          type="number"
+          min={1}
+          id={`${formId}-winners`}
+          name="winnersCount"
+          value={form.winnersCount}
           onChange={onChange}
-          rows={3}
         />
       </div>
+    </div>
 
-      <div className="form-row form-row--3">
-        <div className="form-group">
-          <label>Fecha y hora</label>
-          <input
-            className="input"
-            type="datetime-local"
-            name="datetime"
-            value={form.datetime}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Ganadores</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            name="winnersCount"
-            value={form.winnersCount}
-            onChange={onChange}
-          />
-        </div>
-        <div className="form-group form-group--checkbox">
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              name="finished"
-              checked={form.finished}
-              onChange={onChange}
-            />
-            Finalizado
-          </label>
-        </div>
+    <div className="form-row form-row--2">
+      <div className="form-group">
+        <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
+        <textarea
+          className="input"
+          id={`${formId}-prizes`}
+          name="prizesText"
+          value={form.prizesText}
+          onChange={onChange}
+          rows={4}
+          spellCheck="false"
+        />
       </div>
-
-      <div className="form-row form-row--2">
-        <div className="form-group">
-          <label>Premios (uno por línea)</label>
-          <textarea
-            className="input"
-            name="prizesText"
-            value={form.prizesText}
-            onChange={onChange}
-            rows={4}
-          />
-        </div>
-        <div className="form-group">
-          <label>Participantes (uno por línea)</label>
-          <textarea
-            className="input"
-            name="participantsText"
-            value={form.participantsText}
-            onChange={onChange}
-            rows={4}
-          />
-        </div>
+      <div className="form-group">
+        <label htmlFor={`${formId}-participants`}>
+          Participantes (uno por línea)
+        </label>
+        <textarea
+          className="input"
+          id={`${formId}-participants`}
+          name="participantsText"
+          value={form.participantsText}
+          onChange={onChange}
+          rows={4}
+          spellCheck="false"
+        />
       </div>
-
-      <footer className="manage-edit__actions">
-        <button
-          type="button"
-          className="button button--ghost"
-          onClick={onCancel}
-        >
-          Cancelar
-        </button>
-        <button type="submit" className="button button--primary">
-          Guardar cambios
-        </button>
-      </footer>
-    </form>
-  );
-};
+    </div>
+  </form>
+);
 
 // ========= Vacio =========
 const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;
+
+/**
+ * Estilos locales críticos para:
+ * - Evitar scroll horizontal (minmax(0,1fr), min-width: 0, word-wrap)
+ * - Forzar scroll vertical sobre el contenido del modal
+ * - Responsividad: columnas colapsan en pantallas angostas
+ */
+function LocalStyles() {
+  return (
+    <style>{`
+      .modal-scroll-area{
+        max-height: min(70vh, 720px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 4px; /* evita salto por scrollbar */
+      }
+
+      .manage-edit{
+        display: grid;
+        gap: 12px;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      .manage-edit .form-group{
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0; /* clave para que no se expanda y cause overflow */
+      }
+
+      .manage-edit .input{
+        width: 100%;
+        min-width: 0; /* evita overflow en grid */
+        box-sizing: border-box;
+      }
+
+      .manage-edit textarea.input{
+        resize: vertical;
+        overflow-wrap: anywhere; /* por si pegan líneas larguísimas */
+        white-space: pre-wrap;
+      }
+
+      .form-row{
+        display: grid;
+        gap: 12px;
+        grid-auto-rows: minmax(0, auto);
+      }
+
+      /* 2 columnas fluidas */
+      .form-row--2{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      /* 3 columnas fluidas para fecha/ganadores/checkbox */
+      .form-row--3{
+        grid-template-columns: 2fr 1fr auto;
+        align-items: end;
+      }
+
+      .form-group--checkbox{
+        display: flex;
+        align-items: flex-end;
+        min-width: 0;
+      }
+
+      .checkbox{
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .hint{
+        font-size: .8rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      /* Responsivo: colapsar a una columna en pantallas angostas */
+      @media (max-width: 720px){
+        .form-row--2,
+        .form-row--3{
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .form-group--checkbox{
+          align-items: center;
+        }
+      }
+    `}</style>
+  );
+}
 
 // ========= PropTypes =========
 RaffleAdminCard.propTypes = {
@@ -450,11 +634,13 @@ RaffleAdminCard.propTypes = {
   onFinish: PropTypes.oneOfType([PropTypes.func, PropTypes.oneOf([null])]),
 };
 
-EditCard.propTypes = {
+RaffleEditForm.propTypes = {
   form: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
-  onSave: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  formId: PropTypes.string.isRequired,
+  titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
+    .isRequired,
 };
 
 EmptyHint.propTypes = { text: PropTypes.string.isRequired };

@@ -150,8 +150,6 @@ const App = () => {
       setIsAdmin(true);
       setLoginError(false);
       handleNavigate("admin");
-      // opcional: subpestaña por defecto
-      window.location.hash = "#/admin/crear";
     },
     [handleNavigate]
   );
