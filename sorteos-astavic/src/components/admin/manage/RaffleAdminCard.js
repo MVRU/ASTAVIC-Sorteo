@@ -1,14 +1,43 @@
-// ! DECISIÓN DE DISEÑO: La tarjeta se separa para facilitar pruebas unitarias y lectura.
+// ! DECISIÓN DE DISEÑO: La tarjeta unifica su superficie con el contenedor para eliminar biseles y mejorar la lectura.
+// ? Riesgo: El formateo de fecha depende de la configuración regional del navegador.
 import PropTypes from "prop-types";
 import { formatReadableDate } from "./manageRafflesHelpers";
+
+const sanitizeDomId = (value) =>
+  `raffle-${String(value ?? "item")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item"}`;
+
+const buildDatetimeAttribute = (value) => {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  return parsed.toISOString();
+};
 
 const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
   const participantsCount = Array.isArray(raffle.participants)
     ? raffle.participants.length
     : 0;
+  const cardState = raffle.finished ? "finished" : "active";
+  const baseId = sanitizeDomId(raffle.id);
+  const titleId = `${baseId}-title`;
+  const descriptionId = raffle.description ? `${baseId}-desc` : null;
+  const metaId = `${baseId}-stats`;
+  const describedBy = [descriptionId, metaId].filter(Boolean).join(" ") || undefined;
+  const actionsLabel =
+    cardState === "finished"
+      ? "Acciones del sorteo finalizado"
+      : "Acciones del sorteo activo";
 
   return (
-    <article className="manage-card">
+    <article
+      className="manage-card"
+      data-state={cardState}
+      aria-labelledby={titleId}
+      aria-describedby={describedBy}
+    >
       <header className="manage-card__header">
         <div className="manage-card__badges">
           <span
@@ -19,18 +48,22 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
             {raffle.finished ? "Finalizado" : "Activo"}
           </span>
           <span className="admin-tag admin-tag--date">
-            <time dateTime={new Date(raffle.datetime).toISOString()}>
+            <time dateTime={buildDatetimeAttribute(raffle.datetime)}>
               {formatReadableDate(raffle.datetime)}
             </time>
           </span>
         </div>
-        <strong className="manage-card__title">{raffle.title}</strong>
+        <strong id={titleId} className="manage-card__title">
+          {raffle.title}
+        </strong>
         {raffle.description && (
-          <p className="manage-card__desc">{raffle.description}</p>
+          <p id={descriptionId ?? undefined} className="manage-card__desc">
+            {raffle.description}
+          </p>
         )}
       </header>
 
-      <dl className="manage-card__meta">
+      <dl id={metaId} className="manage-card__meta">
         <div className="meta-row">
           <dt>Participantes</dt>
           <dd>{participantsCount}</dd>
@@ -41,7 +74,7 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
         </div>
       </dl>
 
-      <footer className="manage-card__actions">
+      <footer className="manage-card__actions" role="group" aria-label={actionsLabel}>
         {!raffle.finished && onFinish && (
           <button
             type="button"

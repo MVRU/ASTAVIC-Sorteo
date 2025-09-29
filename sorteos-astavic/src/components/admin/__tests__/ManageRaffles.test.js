@@ -43,6 +43,12 @@ describe('ManageRaffles', () => {
     const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByLabelText(/título/i)).toHaveValue('Sorteo aniversario');
+    expect(
+      within(dialog).getByRole('button', { name: /guardar cambios/i })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /cancelar/i })
+    ).toBeInTheDocument();
   });
 
   test('requiere confirmación antes de eliminar un sorteo', async () => {
@@ -188,6 +194,51 @@ describe('ManageRaffles', () => {
         screen.queryByRole('dialog', { name: /finalizar sorteo/i })
       ).not.toBeInTheDocument()
     );
+  });
+
+  test('expone la grilla de sorteos con roles accesibles y etiquetas dinámicas', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const activeList = screen.getByRole('list', {
+      name: /sorteos activos/i,
+    });
+    expect(within(activeList).getAllByRole('listitem')).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: /finalizados/i }));
+
+    expect(activeList).toHaveAccessibleName(/sorteos finalizados/i);
+    expect(within(activeList).queryAllByRole('listitem')).toHaveLength(0);
+    expect(screen.getByText(/no hay sorteos finalizados/i)).toBeInTheDocument();
+  });
+
+  test('la tarjeta conserva etiquetas claras y agrupa las acciones', () => {
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const card = screen.getByRole('article', { name: /sorteo aniversario/i });
+    expect(card).toHaveAttribute('data-state', 'active');
+
+    const actionsGroup = within(card).getByRole('group', {
+      name: /acciones del sorteo activo/i,
+    });
+    expect(actionsGroup).toBeInTheDocument();
+    const actionButtons = within(actionsGroup).getAllByRole('button');
+    expect(actionButtons).toHaveLength(3);
   });
 
   test('muestra un toast cuando la actualización se completa con éxito', async () => {

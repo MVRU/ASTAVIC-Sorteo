@@ -2,16 +2,27 @@
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
 // ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
+// ! DECISIÓN DE DISEÑO: El drawer lateral calcula offsets dinámicos para garantizar visibilidad constante de cabecera y acciones.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
  */
 
-import { useMemo, useState, useRef, useId, useCallback } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useId,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import { useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
+import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
+import EmptyHint from "./manage/EmptyHint";
+import RaffleAdminCard from "./manage/RaffleAdminCard";
 import { useToast } from "../../context/ToastContext";
 
 // ========= Helpers =========
@@ -125,17 +136,6 @@ function buildPayloadFromForm(form) {
   };
 }
 
-function formatNiceDate(iso) {
-  if (!iso) {
-    return "Fecha no disponible";
-  }
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) {
-    return "Fecha no disponible";
-  }
-  return parsed.toLocaleString();
-}
-
 // ========= Main =========
 const ManageRaffles = ({
   raffles,
@@ -153,6 +153,72 @@ const ManageRaffles = ({
   const titleInputRef = useRef(null);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
+  const drawerHeaderRef = useRef(null);
+  const drawerContentRef = useRef(null);
+  const drawerFooterRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!editState) {
+      return undefined;
+    }
+
+    const contentEl = drawerContentRef.current;
+    if (!contentEl) {
+      return undefined;
+    }
+
+    const applyMetrics = () => {
+      const headerHeight = drawerHeaderRef.current?.offsetHeight ?? 0;
+      const footerHeight = drawerFooterRef.current?.offsetHeight ?? 0;
+
+      if (headerHeight > 0) {
+        contentEl.style.setProperty(
+          "--drawer-header-offset",
+          `${headerHeight}px`
+        );
+      } else {
+        contentEl.style.removeProperty("--drawer-header-offset");
+      }
+
+      if (footerHeight > 0) {
+        contentEl.style.setProperty(
+          "--drawer-footer-offset",
+          `${footerHeight}px`
+        );
+      } else {
+        contentEl.style.removeProperty("--drawer-footer-offset");
+      }
+    };
+
+    applyMetrics();
+
+    const isBrowser = typeof window !== "undefined";
+    const hasResizeObserver =
+      isBrowser && typeof window.ResizeObserver === "function";
+    let cleanup = () => {};
+
+    if (hasResizeObserver) {
+      const observer = new window.ResizeObserver(applyMetrics);
+      if (drawerHeaderRef.current) {
+        observer.observe(drawerHeaderRef.current);
+      }
+      if (drawerFooterRef.current) {
+        observer.observe(drawerFooterRef.current);
+      }
+      cleanup = () => observer.disconnect();
+    } else if (isBrowser) {
+      window.addEventListener("resize", applyMetrics);
+      cleanup = () => window.removeEventListener("resize", applyMetrics);
+    }
+
+    return () => {
+      cleanup();
+      if (contentEl) {
+        contentEl.style.removeProperty("--drawer-header-offset");
+        contentEl.style.removeProperty("--drawer-footer-offset");
+      }
+    };
+  }, [editState]);
 
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
@@ -180,6 +246,18 @@ const ManageRaffles = ({
     () => raffles.filter((r) => r.finished),
     [raffles]
   );
+
+  const toolbarStats = useMemo(
+    () => ({
+      activeCount: activeAll.length,
+      finishedCount: finishedAll.length,
+    }),
+    [activeAll, finishedAll]
+  );
+
+  const handleTabChange = useCallback((nextTab) => setTab(nextTab), [setTab]);
+  const handleQueryChange = useCallback((value) => setQ(value), [setQ]);
+  const handleSortChange = useCallback((value) => setSort(value), [setSort]);
 
   const list = useMemo(() => {
     const src = tab === "active" ? activeAll : finishedAll;
@@ -358,6 +436,10 @@ const ManageRaffles = ({
   };
 
   const confirmCopy = buildConfirmCopy(confirmState);
+  const listAriaLabel =
+    tab === "active"
+      ? "Listado de sorteos activos"
+      : "Listado de sorteos finalizados";
 
   return (
     <section className="section-gap admin-manage">
@@ -365,65 +447,25 @@ const ManageRaffles = ({
       <LocalStyles />
 
       <div className="container">
-        <header className="manage-toolbar">
-          <div className="manage-toolbar__left">
-            <h1 className="section-title" style={{ margin: 0 }}>
-              Gestionar sorteos
-            </h1>
-            <div className="manage-stats">
-              <span className="pill pill--ok">Activos: {activeAll.length}</span>
-              <span className="pill pill--muted">
-                Finalizados: {finishedAll.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="manage-toolbar__right">
-            <div className="tabs">
-              <button
-                className={`tab${tab === "active" ? " is-active" : ""}`}
-                onClick={() => setTab("active")}
-                type="button"
-              >
-                Activos
-              </button>
-              <button
-                className={`tab${tab === "finished" ? " is-active" : ""}`}
-                onClick={() => setTab("finished")}
-                type="button"
-              >
-                Finalizados
-              </button>
-            </div>
-
-            <div className="filters">
-              <input
-                className="input input--sm"
-                type="search"
-                placeholder="Buscar por título o descripción…"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                aria-label="Buscar sorteos"
-              />
-              <select
-                className="input input--sm"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                aria-label="Ordenar resultados"
-              >
-                <option value="date_desc">Más recientes primero</option>
-                <option value="date_asc">Más antiguos primero</option>
-                <option value="title_asc">Título (A→Z)</option>
-              </select>
-            </div>
-          </div>
-        </header>
+        <ManageRafflesToolbar
+          tab={tab}
+          onTabChange={handleTabChange}
+          query={q}
+          onQueryChange={handleQueryChange}
+          sort={sort}
+          onSortChange={handleSortChange}
+          stats={toolbarStats}
+        />
       </div>
 
       <div className="container">
-        <div className="manage-grid stagger is-on">
+        <div
+          className="manage-grid stagger is-on"
+          role="list"
+          aria-label={listAriaLabel}
+        >
           {list.map((r) => (
-            <div className="anim-up" key={r.id}>
+            <div className="anim-up" key={r.id} role="listitem">
               <RaffleAdminCard
                 raffle={r}
                 onEdit={() => startEdit(r)}
@@ -456,7 +498,7 @@ const ManageRaffles = ({
         >
           <div className="drawer-overlay" onClick={requestCloseEdit} />
           <aside className="drawer anim-scale-in">
-            <header className="drawer__header">
+            <header ref={drawerHeaderRef} className="drawer__header">
               <div>
                 <h2 id="edit-drawer-title" className="drawer__title">
                   Editar sorteo
@@ -475,6 +517,7 @@ const ManageRaffles = ({
               </button>
             </header>
             <div
+              ref={drawerContentRef}
               className="drawer__content"
               role="region"
               aria-label="Formulario de edición"
@@ -491,7 +534,7 @@ const ManageRaffles = ({
                 />
               ) : null}
             </div>
-            <footer className="drawer__footer">
+            <footer ref={drawerFooterRef} className="drawer__footer">
               <button
                 type="button"
                 className="button button--ghost"
@@ -570,83 +613,6 @@ const buildConfirmCopy = (state) => {
     body: `¿Confirmás marcar como finalizado "${title}"?`,
     cta: "Finalizar",
   };
-};
-
-// ========= Card visual =========
-const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
-  const participantsCount = Array.isArray(raffle.participants)
-    ? raffle.participants.length
-    : 0;
-  const parsedDatetime = raffle.datetime ? new Date(raffle.datetime) : null;
-  const datetimeAttribute =
-    parsedDatetime && !Number.isNaN(parsedDatetime.getTime())
-      ? parsedDatetime.toISOString()
-      : undefined;
-
-  return (
-    <article className="manage-card">
-      <header className="manage-card__header">
-        <div className="manage-card__badges">
-          <span
-            className={`admin-tag ${
-              raffle.finished ? "admin-tag--finished" : "admin-tag--active"
-            }`}
-          >
-            {raffle.finished ? "Finalizado" : "Activo"}
-          </span>
-          <span className="admin-tag admin-tag--date">
-            <time dateTime={datetimeAttribute}>
-              {formatNiceDate(raffle.datetime)}
-            </time>
-          </span>
-        </div>
-        <strong className="manage-card__title">{raffle.title}</strong>
-        {raffle.description && (
-          <p className="manage-card__desc">{raffle.description}</p>
-        )}
-      </header>
-
-      <dl className="manage-card__meta">
-        <div className="meta-row">
-          <dt>Participantes</dt>
-          <dd>{participantsCount}</dd>
-        </div>
-        <div className="meta-row">
-          <dt>Ganadores</dt>
-          <dd>{raffle.winnersCount ?? 1}</dd>
-        </div>
-      </dl>
-
-      <footer className="manage-card__actions">
-        {!raffle.finished && onFinish && (
-          <button
-            type="button"
-            className="button button--subtle"
-            onClick={onFinish}
-            title="Marcar como finalizado"
-          >
-            Finalizar
-          </button>
-        )}
-        <button
-          type="button"
-          className="button button--ghost"
-          onClick={onEdit}
-          title="Editar sorteo"
-        >
-          Editar
-        </button>
-        <button
-          type="button"
-          className="button button--danger"
-          onClick={onDelete}
-          title="Eliminar sorteo"
-        >
-          Eliminar
-        </button>
-      </footer>
-    </article>
-  );
 };
 
 // ========= Formulario =========
@@ -772,16 +738,7 @@ const RaffleEditForm = ({
     </form>
   );
 };
-
-// ========= Vacio =========
-const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;
-
-/**
- * Estilos locales críticos para:
- * - Evitar scroll horizontal (minmax(0,1fr), min-width: 0, word-wrap)
- * - Forzar scroll vertical sobre el contenido del modal
- * - Responsividad: columnas colapsan en pantallas angostas
- */
+// ! DECISIÓN DE DISEÑO: Estilos críticos en línea para garantizar scroll controlado y evitar overflow responsivo del modal.
 function LocalStyles() {
   return (
     <style>{`
@@ -876,23 +833,6 @@ function LocalStyles() {
   );
 }
 
-// ========= PropTypes =========
-RaffleAdminCard.propTypes = {
-  raffle: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string,
-    description: PropTypes.string,
-    datetime: PropTypes.string.isRequired,
-    winnersCount: PropTypes.number,
-    finished: PropTypes.bool,
-    participants: PropTypes.arrayOf(PropTypes.string),
-    prizes: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string })),
-  }).isRequired,
-  onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  onFinish: PropTypes.oneOfType([PropTypes.func, PropTypes.oneOf([null])]),
-};
-
 RaffleEditForm.propTypes = {
   form: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
@@ -906,8 +846,6 @@ RaffleEditForm.propTypes = {
   }),
   alertId: PropTypes.string.isRequired,
 };
-
-EmptyHint.propTypes = { text: PropTypes.string.isRequired };
 
 ManageRaffles.propTypes = {
   raffles: PropTypes.array.isRequired,
