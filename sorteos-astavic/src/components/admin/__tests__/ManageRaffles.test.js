@@ -196,6 +196,30 @@ describe('ManageRaffles', () => {
     );
   });
 
+  test('expone la grilla de sorteos con roles accesibles y etiquetas dinámicas', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const activeList = screen.getByRole('list', {
+      name: /sorteos activos/i,
+    });
+    expect(within(activeList).getAllByRole('listitem')).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: /finalizados/i }));
+
+    expect(activeList).toHaveAccessibleName(/sorteos finalizados/i);
+    expect(within(activeList).queryAllByRole('listitem')).toHaveLength(0);
+    expect(screen.getByText(/no hay sorteos finalizados/i)).toBeInTheDocument();
+  });
+
   test('muestra un toast cuando la actualización se completa con éxito', async () => {
     const user = createUser();
     const onUpdate = jest.fn(() => ({

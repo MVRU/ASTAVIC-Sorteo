@@ -446,6 +446,10 @@ const ManageRaffles = ({
   };
 
   const confirmCopy = buildConfirmCopy(confirmState);
+  const listAriaLabel =
+    tab === "active"
+      ? "Listado de sorteos activos"
+      : "Listado de sorteos finalizados";
 
   return (
     <section className="section-gap admin-manage">
@@ -465,9 +469,13 @@ const ManageRaffles = ({
       </div>
 
       <div className="container">
-        <div className="manage-grid stagger is-on">
+        <div
+          className="manage-grid stagger is-on"
+          role="list"
+          aria-label={listAriaLabel}
+        >
           {list.map((r) => (
-            <div className="anim-up" key={r.id}>
+            <div className="anim-up" key={r.id} role="listitem">
               <RaffleAdminCard
                 raffle={r}
                 onEdit={() => startEdit(r)}

@@ -1927,20 +1927,38 @@ footer {
 }
 /* ==== Gestionar sorteos: UI premium y responsive ==== */
 
+.admin-manage {
+  padding: clamp(1.75rem, 4vw, 3rem) 0 clamp(2.5rem, 5vw, 4rem);
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+}
+.admin-manage > * {
+  min-width: 0;
+}
+
 .manage-toolbar {
   display: grid;
-  gap: clamp(0.9rem, 1.8vw, 1.35rem);
+  gap: clamp(0.9rem, 1.8vw, 1.4rem);
   align-items: flex-start;
-  padding: clamp(1rem, 1.6vw, 1.5rem) 0 clamp(1.1rem, 1.8vw, 1.75rem);
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(1rem, 1.6vw, 1.5rem)
+    clamp(1rem, 2.2vw, 1.75rem)
+    clamp(1.1rem, 1.8vw, 1.75rem);
   border-bottom: 1px solid rgba(15, 40, 105, 0.08);
   background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
-  border-radius: 0 0 16px 16px;
+  border-radius: clamp(1rem, 2vw, 1.35rem);
   box-shadow: 0 16px 40px rgba(2, 12, 27, 0.08);
 }
 @media (min-width: 720px) {
   .manage-toolbar {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
     align-items: center;
+  }
+}
+@media (min-width: 1080px) {
+  .manage-toolbar {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
   }
 }
 .manage-toolbar__left,
@@ -1949,7 +1967,7 @@ footer {
 }
 .manage-toolbar__left {
   display: grid;
-  gap: 0.6rem;
+  gap: clamp(0.55rem, 1.2vw, 0.8rem);
 }
 .manage-toolbar__headline {
   display: grid;
@@ -1961,6 +1979,7 @@ footer {
 .manage-toolbar__subtitle {
   margin: 0;
   color: var(--text-secondary, #42526e);
+  max-width: 38ch;
 }
 .manage-stats {
   display: inline-flex;
@@ -1970,6 +1989,11 @@ footer {
 }
 .manage-toolbar__stats {
   justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+.manage-toolbar__stats .pill {
+  min-width: min(100%, 200px);
 }
 .pill {
   display: inline-flex;
@@ -1981,6 +2005,7 @@ footer {
   border: 1px solid rgba(13, 71, 161, 0.14);
   background: rgba(13, 71, 161, 0.06);
   color: var(--brand-700, #0d47a1);
+  min-width: 0;
 }
 .pill--ok {
   border-color: rgba(33, 150, 83, 0.2);
@@ -1994,7 +2019,7 @@ footer {
 .manage-toolbar__right {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: clamp(0.65rem, 1.5vw, 0.95rem);
   align-items: stretch;
 }
 @media (min-width: 720px) {
@@ -2017,9 +2042,11 @@ footer {
   border-radius: 999px;
   padding: 0.25rem;
   box-shadow: 0 6px 16px rgba(2, 12, 27, 0.06);
+  width: 100%;
 }
 .manage-toolbar__tabs {
   width: 100%;
+  max-width: 100%;
 }
 @media (min-width: 520px) {
   .manage-toolbar__tabs {
@@ -2038,6 +2065,8 @@ footer {
     transform var(--transition-fast);
   min-width: 0;
   white-space: nowrap;
+  flex: 1 1 140px;
+  text-align: center;
 }
 .tab:focus-visible {
   outline: 2px solid var(--brand-500, #1976d2);
@@ -2049,9 +2078,9 @@ footer {
   color: var(--brand-700, #0d47a1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
-@media (max-width: 480px) {
+@media (min-width: 720px) {
   .tab {
-    flex: 1 1 140px;
+    flex: 0 1 auto;
   }
 }
 
@@ -2061,7 +2090,8 @@ footer {
 }
 @media (min-width: 520px) {
   .filters {
-    grid-template-columns: minmax(0, 1fr) minmax(140px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 200px);
+    align-items: center;
   }
 }
 @media (min-width: 920px) {
@@ -2075,7 +2105,7 @@ footer {
 }
 @media (min-width: 720px) {
   .manage-toolbar__filters {
-    width: min(100%, 540px);
+    width: min(100%, 560px);
   }
 }
 .manage-toolbar__field {
@@ -2095,24 +2125,21 @@ footer {
 /* Grid de tarjetas */
 .manage-grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: clamp(1rem, 2vw, 1.4rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: stretch;
 }
-@media (min-width: 680px) {
+@media (max-width: 360px) {
   .manage-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (min-width: 1040px) {
-  .manage-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
 /* Tarjeta de sorteo */
 .manage-card {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto 1fr auto;
   gap: 0.75rem;
   padding: 1rem;
   border: 1px solid var(--border, #e6eaf3);
@@ -2123,6 +2150,8 @@ footer {
   overflow: hidden;
   transition: transform var(--transition-base),
     box-shadow var(--transition-base), background var(--transition-base);
+  height: 100%;
+  min-height: 100%;
 }
 .manage-card::before {
   content: "";
@@ -2209,11 +2238,34 @@ footer {
 
 .manage-card__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.45rem;
   justify-content: flex-end;
+  margin-top: auto;
+  width: 100%;
 }
 .manage-card__actions .button {
-  min-width: 110px;
+  min-width: 0;
+  flex: 1 1 150px;
+}
+@media (min-width: 720px) {
+  .manage-card__actions {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+  .manage-card__actions .button {
+    flex: 0 0 auto;
+    min-width: 110px;
+  }
+}
+@media (max-width: 520px) {
+  .manage-card__actions {
+    gap: 0.6rem;
+    justify-content: stretch;
+  }
+  .manage-card__actions .button {
+    flex: 1 1 100%;
+  }
 }
 
 /* Editor */

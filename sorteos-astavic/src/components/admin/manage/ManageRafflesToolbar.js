@@ -1,4 +1,4 @@
-// ! DECISIÓN DE DISEÑO: Toolbar segregada y semántica para asegurar controles accesibles y responsivos.
+// ! DECISIÓN DE DISEÑO: Toolbar segregada, semántica y con layout fluido para mantener controles visibles en cualquier viewport.
 import { useId } from "react";
 import PropTypes from "prop-types";
 
