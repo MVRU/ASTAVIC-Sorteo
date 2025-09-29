@@ -1,7 +1,8 @@
 // ! DECISIÓN DE DISEÑO: Cubrimos interacciones clave del panel para asegurar que los modales funcionen según lo requerido.
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ManageRaffles from '../ManageRaffles';
+import { ToastProvider } from '../../../context/ToastContext';
 
 const createUser = () =>
   typeof userEvent.setup === 'function'
@@ -28,7 +29,7 @@ const sampleRaffles = [
 describe('ManageRaffles', () => {
   test('abre el modal de edición con los datos cargados', async () => {
     const user = createUser();
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
         onUpdateRaffle={jest.fn()}
@@ -48,7 +49,7 @@ describe('ManageRaffles', () => {
     const user = createUser();
     const onDelete = jest.fn();
 
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
         onUpdateRaffle={jest.fn()}
@@ -62,15 +63,25 @@ describe('ManageRaffles', () => {
     const dialog = await screen.findByRole('dialog', { name: /eliminar sorteo/i });
     expect(within(dialog).getByText(/¿seguro que querés eliminar/i)).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole('button', { name: /eliminar/i }));
-    expect(onDelete).toHaveBeenCalledWith('r1');
+    await act(async () => {
+      await user.click(within(dialog).getByRole('button', { name: /eliminar/i }));
+    });
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith('r1'));
+    expect(
+      await screen.findByText(/sorteo "sorteo aniversario" eliminado\./i)
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /eliminar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
   });
 
   test('muestra feedback si la fecha guardada del sorteo es inválida', async () => {
     const user = createUser();
     const brokenRaffle = [{ ...sampleRaffles[0], id: 'r2', datetime: 'invalid' }];
 
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={brokenRaffle}
         onUpdateRaffle={jest.fn()}
@@ -90,7 +101,7 @@ describe('ManageRaffles', () => {
     const user = createUser();
     const onUpdate = jest.fn();
 
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
         onUpdateRaffle={onUpdate}
@@ -103,11 +114,16 @@ describe('ManageRaffles', () => {
     const datetimeInput = await screen.findByLabelText(/fecha y hora/i);
     await user.clear(datetimeInput);
 
-    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+    });
 
     expect(onUpdate).not.toHaveBeenCalled();
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(/ingresá una fecha válida/i);
+    const alerts = await screen.findAllByRole('alert');
+    const feedback = alerts.find((node) =>
+      node.textContent?.toLowerCase().includes('ingresá una fecha válida')
+    );
+    expect(feedback).toBeDefined();
     expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
   });
 
@@ -115,7 +131,7 @@ describe('ManageRaffles', () => {
     const user = createUser();
     const onUpdate = jest.fn();
 
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
         onUpdateRaffle={onUpdate}
@@ -130,11 +146,16 @@ describe('ManageRaffles', () => {
     datetimeInput.type = 'text';
     fireEvent.change(datetimeInput, { target: { value: '2024-13-40T99:00' } });
 
-    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+    });
 
     expect(onUpdate).not.toHaveBeenCalled();
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(/válida/i);
+    const alerts = await screen.findAllByRole('alert');
+    const feedback = alerts.find((node) =>
+      node.textContent?.toLowerCase().includes('válida')
+    );
+    expect(feedback).toBeDefined();
     expect(datetimeInput).toHaveAttribute('aria-invalid', 'true');
   });
 
@@ -142,7 +163,7 @@ describe('ManageRaffles', () => {
     const user = createUser();
     const onFinish = jest.fn();
 
-    render(
+    renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
         onUpdateRaffle={jest.fn()}
@@ -154,8 +175,52 @@ describe('ManageRaffles', () => {
     await user.click(screen.getByRole('button', { name: /finalizar/i }));
 
     const dialog = await screen.findByRole('dialog', { name: /finalizar sorteo/i });
-    await user.click(within(dialog).getByRole('button', { name: /finalizar/i }));
+    await act(async () => {
+      await user.click(within(dialog).getByRole('button', { name: /finalizar/i }));
+    });
 
-    expect(onFinish).toHaveBeenCalledWith('r1');
+    await waitFor(() => expect(onFinish).toHaveBeenCalledWith('r1'));
+    expect(
+      await screen.findByText(/sorteo "sorteo aniversario" marcado como finalizado\./i)
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /finalizar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
+  });
+
+  test('muestra un toast cuando la actualización se completa con éxito', async () => {
+    const user = createUser();
+    const onUpdate = jest.fn(() => ({
+      ok: true,
+      message: 'Sorteo actualizado correctamente.',
+    }));
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await act(async () => {
+      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+    });
+
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1));
+    expect(
+      await screen.findByText(/sorteo actualizado correctamente/i)
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /editar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
   });
 });
+const renderWithToast = (ui) => render(<ToastProvider>{ui}</ToastProvider>);
+

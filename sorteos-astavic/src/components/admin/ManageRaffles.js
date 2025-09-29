@@ -1,15 +1,17 @@
 // ManageRaffles.jsx
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
+// ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
  */
 
-import { useMemo, useState, useRef, useId } from "react";
+import { useMemo, useState, useRef, useId, useCallback } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
+import { useToast } from "../../context/ToastContext";
 
 // ========= Helpers =========
 const composeFormState = (raffle) => {
@@ -141,6 +143,7 @@ const ManageRaffles = ({
   onDeleteRaffle,
   onMarkFinished,
 }) => {
+  const { showToast } = useToast();
   const [tab, setTab] = useState("active");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("date_desc");
@@ -150,6 +153,24 @@ const ManageRaffles = ({
   const titleInputRef = useRef(null);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
+
+  const emitOutcomeToast = useCallback(
+    (result, { successMessage, errorMessage }) => {
+      if (result?.ok === false) {
+        showToast({
+          status: "error",
+          message: result.message || errorMessage,
+        });
+        return false;
+      }
+      showToast({
+        status: "success",
+        message: (result && result.message) || successMessage,
+      });
+      return true;
+    },
+    [showToast]
+  );
 
   const activeAll = useMemo(
     () => raffles.filter((r) => !r.finished),
@@ -214,16 +235,35 @@ const ManageRaffles = ({
     }
   };
 
-  const handleEditSubmit = (event) => {
+  const handleEditSubmit = async (event) => {
     event.preventDefault();
     if (!editState?.form) return;
     const result = buildPayloadFromForm(editState.form);
     if (!result.ok) {
       setFormAlert({ message: result.error, field: result.field });
+      showToast({
+        status: "error",
+        message: result.error || "Revisá los datos antes de guardar.",
+      });
       return;
     }
-    onUpdateRaffle(result.payload);
-    closeEdit();
+    try {
+      const response = await Promise.resolve(onUpdateRaffle(result.payload));
+      const success = emitOutcomeToast(response, {
+        successMessage: "Sorteo actualizado correctamente.",
+        errorMessage: "No se pudo actualizar el sorteo. Intentá nuevamente.",
+      });
+      if (success) {
+        closeEdit();
+      }
+    } catch (error) {
+      showToast({
+        status: "error",
+        message:
+          error?.message ||
+          "Ocurrió un error inesperado al actualizar. Intentá nuevamente.",
+      });
+    }
   };
 
   const openConfirm = (type, raffle) => {
@@ -234,14 +274,40 @@ const ManageRaffles = ({
     setConfirmState(null);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!confirmState?.raffle) return;
-    if (confirmState.type === "delete") {
-      onDeleteRaffle(confirmState.raffle.id);
-    } else if (confirmState.type === "finish") {
-      onMarkFinished(confirmState.raffle.id);
+    const label = confirmState.raffle.title || "el sorteo";
+    try {
+      if (confirmState.type === "delete") {
+        const response = await Promise.resolve(
+          onDeleteRaffle(confirmState.raffle.id)
+        );
+        const success = emitOutcomeToast(response, {
+          successMessage: `Sorteo "${label}" eliminado.`,
+          errorMessage: "No se pudo eliminar el sorteo. Intentá nuevamente.",
+        });
+        if (success) closeConfirm();
+      } else if (confirmState.type === "finish") {
+        const response = await Promise.resolve(
+          onMarkFinished(confirmState.raffle.id)
+        );
+        const success = emitOutcomeToast(response, {
+          successMessage: `Sorteo "${label}" marcado como finalizado.`,
+          errorMessage:
+            "No se pudo marcar como finalizado. Intentá nuevamente.",
+        });
+        if (success) closeConfirm();
+      } else {
+        closeConfirm();
+      }
+    } catch (error) {
+      showToast({
+        status: "error",
+        message:
+          error?.message ||
+          "Ocurrió un error inesperado al ejecutar la acción. Intentá nuevamente.",
+      });
     }
-    closeConfirm();
   };
 
   const confirmCopy = buildConfirmCopy(confirmState);

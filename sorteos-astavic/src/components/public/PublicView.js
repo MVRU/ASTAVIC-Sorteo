@@ -1,8 +1,10 @@
 // src/components/public/PublicView.js
+// ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import RaffleCard from "./RaffleCard";
+import { useToast } from "../../context/ToastContext";
 
 const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -30,11 +32,10 @@ const PublicView = ({
   route,
 }) => {
   const [email, setEmail] = useState("");
-  const [toast, setToast] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [reminder, setReminder] = useState({ open: false, raffle: null });
   const emailFieldRef = useRef(null);
-  const toastTimerRef = useRef(null);
+  const { showToast } = useToast();
   const isEmailValid = emailRegex.test(email.trim());
   const isFinishedRoute = route === "finished";
   const visibleRaffles = isFinishedRoute ? finishedRaffles : activeRaffles;
@@ -54,22 +55,11 @@ const PublicView = ({
 
   const handleCloseReminder = useCallback(() => {
     setReminder({ open: false, raffle: null });
-    setToast(null);
   }, []);
 
   const handleReminder = useCallback((raffle) => {
     setReminder({ open: true, raffle: raffle || null });
-    setToast(null);
   }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const duration = toast.ok ? 3200 : 4200;
-    toastTimerRef.current = window.setTimeout(() => setToast(null), duration);
-    return () => {
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    };
-  }, [toast]);
 
   useEffect(() => {
     if (!reminder.open) {
@@ -91,20 +81,33 @@ const PublicView = ({
     }
   }, [reminder.open]);
 
-  const showToast = useCallback((payload) => {
-    setToast(payload);
-  }, []);
-
   const handleSubmitSubscription = async (event) => {
     event.preventDefault();
     if (!isEmailValid) {
-      showToast({ ok: false, message: "Ingresá un correo válido." });
+      showToast({ status: "error", message: "Ingresá un correo válido." });
       return;
     }
     try {
       setSubmitting(true);
       const result = await onRegisterSubscriber(email.trim(), reminder.raffle);
-      showToast(result);
+      if (result?.ok === false) {
+        showToast({
+          status: "error",
+          message: result.message || "No pudimos registrar tu correo. Intentá nuevamente.",
+        });
+      } else if (result?.reuse) {
+        showToast({
+          status: "info",
+          message:
+            result.message || "Ya estabas suscripto. Mantendremos tus recordatorios.",
+        });
+      } else {
+        showToast({
+          status: "success",
+          message:
+            result?.message || "Registro exitoso. Te avisaremos antes del sorteo.",
+        });
+      }
       if (result?.ok && !result?.reuse) setEmail("");
     } finally {
       setSubmitting(false);
@@ -233,7 +236,6 @@ const PublicView = ({
                         }}
                         onClick={() => {
                           setReminder({ open: true, raffle: null });
-                          setToast(null);
                         }}
                       >
                         Recibir novedades generales
@@ -315,33 +317,6 @@ const PublicView = ({
                   </span>
                 </div>
               </form>
-
-              {toast && (
-                <div
-                  className={`toast${toast.ok ? "" : " toast--error"} anim-pop`}
-                  role={toast.ok ? "status" : "alert"}
-                  aria-live={toast.ok ? "polite" : "assertive"}
-                  style={{
-                    marginTop: "0.75rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <span>{toast.message}</span>
-                  <button
-                    type="button"
-                    className="button button--ghost"
-                    onClick={() => setToast(null)}
-                    title="Cerrar notificacion"
-                    aria-label="Cerrar notificacion"
-                    style={{ padding: "0.25rem 0.5rem" }}
-                  >
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-              )}
             </div>
           </div>,
           document.body

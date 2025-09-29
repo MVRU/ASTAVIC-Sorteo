@@ -1,8 +1,10 @@
 // src/components/admin/AdminDashboard.js
+// ! DECISIÓN DE DISEÑO: Los toasts globales sustituyen feedback locales para mantener consistencia y accesibilidad en el panel.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import RaffleCard from "../public/RaffleCard";
+import { useToast } from "../../context/ToastContext";
 
 /* =========================
    Hook simple de media query
@@ -271,6 +273,7 @@ FileDropzone.defaultProps = {
    ========================= */
 const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const isDesktop = useMediaQuery("(min-width: 960px)");
+  const { showToast } = useToast();
 
   const previewDefaultMessage =
     "Subí un archivo o pegá participantes para ver un resumen acá.";
@@ -285,7 +288,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const [file, setFile] = useState(null);
   const [previewMessage, setPreviewMessage] = useState(previewDefaultMessage);
   const [previewParticipants, setPreviewParticipants] = useState([]);
-  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Hint de chips (solo mobile)
@@ -412,12 +414,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       return;
     }
     setForm((prev) => ({ ...prev, [name]: value }));
-    setStatus(null);
   };
 
   const handleFile = (nextFile) => {
     setFile(nextFile);
-    setStatus(null);
   };
 
   const handlePrizeChange = (index, value) => {
@@ -426,7 +426,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       next[index] = { title: value };
       return next;
     });
-    setStatus(null);
   };
 
   const addPrize = () => {
@@ -462,7 +461,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
-    setStatus(null);
   };
 
   /* =========================
@@ -518,7 +516,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus(null);
     setLoading(true);
     try {
       const winnersNum = Math.max(1, Number(form.winners) || 1);
@@ -533,8 +530,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       };
       const errors = validateBeforeSubmit(draft);
       if (errors.length > 0) {
-        setStatus({ ok: false, message: errors[0] });
-        setLoading(false);
+        showToast({
+          status: "error",
+          message: errors[0] || "Revisá los datos antes de crear el sorteo.",
+        });
         return;
       }
 
@@ -553,12 +552,25 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         finished: false,
       };
 
-      const result = onCreateRaffle(newRaffle);
-      setStatus(result);
-      if (result?.ok) resetForm();
+      const result = await Promise.resolve(onCreateRaffle(newRaffle));
+      if (result?.ok === false) {
+        showToast({
+          status: "error",
+          message:
+            result.message || "No pudimos crear el sorteo. Intentá nuevamente.",
+        });
+        return;
+      }
+      showToast({
+        status: "success",
+        message:
+          result?.message ||
+          "Sorteo creado (demo). Ya es visible en la vista pública.",
+      });
+      resetForm();
     } catch {
-      setStatus({
-        ok: false,
+      showToast({
+        status: "error",
         message: "Ocurrió un problema al leer el archivo. Intentá nuevamente.",
       });
     } finally {
@@ -904,17 +916,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 </span>
               </div>
 
-              {status && (
-                <p
-                  className={`toast${
-                    status.ok ? "" : " toast--error"
-                  } anim-pop`}
-                  role={status.ok ? "status" : "alert"}
-                  style={{ marginTop: "1rem" }}
-                >
-                  {status.message}
-                </p>
-              )}
             </fieldset>
           </form>
 
