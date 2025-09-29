@@ -1,8 +1,9 @@
-// ! DECISIÓN DE DISEÑO: Encapsulamos métricas y chips para mantener la lógica de hints controlada y reutilizable.
+// ! DECISIÓN DE DISEÑO: Encapsulamos métricas y chips y adoptamos iconografía SVG compartida para mantener la UI coherente.
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Chip from "./ui/Chip";
 import StatCard from "./ui/StatCard";
+import Icon from "../ui/Icon";
 
 const metricsShape = PropTypes.shape({
   total: PropTypes.number.isRequired,
@@ -48,16 +49,19 @@ const StatsChips = ({ metrics }) => {
       }}
     >
       <Chip active={chipHint === "total"} onClick={() => toggleChip("total")}>
-        🗂️ {metrics.total}
+        <Icon name="collection" decorative size={16} strokeWidth={2} />
+        {metrics.total}
       </Chip>
       <Chip active={chipHint === "active"} onClick={() => toggleChip("active")}>
-        ⏳ {metrics.active}
+        <Icon name="hourglass" decorative size={16} strokeWidth={2} />
+        {metrics.active}
       </Chip>
       <Chip
         active={chipHint === "finished"}
         onClick={() => toggleChip("finished")}
       >
-        ✅ {metrics.finished}
+        <Icon name="checkCircle" decorative size={16} strokeWidth={2} />
+        {metrics.finished}
       </Chip>
 
       {chipHint && (
@@ -97,9 +101,9 @@ const StatsCards = ({ metrics }) => (
       gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
     }}
   >
-    <StatCard label="Sorteos totales" value={metrics.total} icon="📂" />
-    <StatCard label="Activos" value={metrics.active} icon="⏳" />
-    <StatCard label="Finalizados" value={metrics.finished} icon="✅" />
+    <StatCard label="Sorteos totales" value={metrics.total} iconName="collection" />
+    <StatCard label="Activos" value={metrics.active} iconName="hourglass" />
+    <StatCard label="Finalizados" value={metrics.finished} iconName="checkCircle" />
   </div>
 );
 

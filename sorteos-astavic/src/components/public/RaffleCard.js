@@ -1,8 +1,10 @@
 // src/components/public/RaffleCard.js
+// ! DECISIÓN DE DISEÑO: Integrar iconos SVG compartidos refuerza consistencia entre vista pública y panel administrativo.
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import { formatDateEs, getTimeParts } from "../../utils/raffleUtils";
+import Icon from "../ui/Icon";
 
 const emojiSet = ["\u{1F389}", "\u{1F38A}", "\u{2728}", "\u{1F388}"];
 
@@ -592,7 +594,7 @@ function RaffleDetailsModal({
                   gap: "0.4rem",
                 }}
               >
-                <span aria-hidden="true">🗓️</span>
+                <Icon name="calendarCheck" decorative size={18} strokeWidth={1.9} />
                 <time dateTime={new Date(raffle.datetime).toISOString()}>
                   {formatDateEs(raffle.datetime)}
                 </time>

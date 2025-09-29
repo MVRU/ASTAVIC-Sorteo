@@ -1,7 +1,8 @@
-// ! DECISIÓN DE DISEÑO: Estatizamos las tarjetas para mantener consistencia visual y semántica entre métricas.
+// ! DECISIÓN DE DISEÑO: Estatizamos las tarjetas y empleamos iconografía SVG centralizada para consistencia visual.
 import PropTypes from "prop-types";
+import Icon, { ICON_NAMES } from "../../ui/Icon";
 
-const StatCard = ({ label, value, icon }) => (
+const StatCard = ({ label, value, iconName }) => (
   <div
     className="card anim-fade-in"
     role="status"
@@ -21,10 +22,9 @@ const StatCard = ({ label, value, icon }) => (
       transition: "transform var(--transition-base), box-shadow var(--transition-base)",
     }}
   >
-    {icon && (
+    {iconName && (
       <div
         style={{
-          fontSize: "1.4rem",
           color: "var(--brand-700)",
           display: "flex",
           alignItems: "center",
@@ -34,9 +34,8 @@ const StatCard = ({ label, value, icon }) => (
           borderRadius: "10px",
           background: "var(--brand-50)",
         }}
-        aria-hidden="true"
       >
-        {icon}
+        <Icon name={iconName} decorative size={24} strokeWidth={1.8} />
       </div>
     )}
     <div>
@@ -67,11 +66,11 @@ const StatCard = ({ label, value, icon }) => (
 StatCard.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  icon: PropTypes.node,
+  iconName: PropTypes.oneOf(ICON_NAMES),
 };
 
 StatCard.defaultProps = {
-  icon: "📊",
+  iconName: "chart",
 };
 
 export default StatCard;
