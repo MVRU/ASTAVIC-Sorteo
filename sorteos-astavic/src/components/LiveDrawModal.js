@@ -17,13 +17,13 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
 
   return (
     <div
-      className="modal"
+      className="modal anim-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="live-draw-title"
     >
       <div className="modal__overlay" onClick={onClose} />
-      <div className="modal__content">
+      <div className="modal__content anim-scale-in">
         <div className="modal__header">
           <div>
             <h3 id="live-draw-title" className="modal__title">
@@ -46,18 +46,18 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
         </div>
 
         {/* Mensaje opcional (estado o info) */}
-        {message && <div className="live-stage">{message}</div>}
+        {message && <div className="live-stage anim-blur-in">{message}</div>}
 
         {/* Ganadores provistos por backend */}
         {hasWinners && (
-          <ul className="live-winners">
+          <ul className="live-winners stagger is-on">
             {winners.map((winner, index) => {
               const prize = Array.isArray(raffle.prizes)
                 ? raffle.prizes[index]
                 : null;
               const prizeTitle = prize && prize.title ? prize.title : null;
               return (
-                <li key={`${winner}-${index}`}>
+                <li key={`${winner}-${index}`} className="anim-up">
                   Ganador {index + 1}: {winner}
                   {prizeTitle && (
                     <span className="winner-prize">

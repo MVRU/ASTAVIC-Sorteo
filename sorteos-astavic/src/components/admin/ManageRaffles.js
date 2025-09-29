@@ -9,6 +9,7 @@
  */
 
 import { useMemo, useState, useRef, useId, useCallback } from "react";
+import { useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import { useToast } from "../../context/ToastContext";
@@ -99,9 +100,8 @@ function buildPayloadFromForm(form) {
     };
   }
   const parsedWinners = Number.parseInt(form.winnersCount, 10);
-  const winnersCount = Number.isFinite(parsedWinners) && parsedWinners > 0
-    ? parsedWinners
-    : 1;
+  const winnersCount =
+    Number.isFinite(parsedWinners) && parsedWinners > 0 ? parsedWinners : 1;
 
   return {
     ok: true,
@@ -217,6 +217,53 @@ const ManageRaffles = ({
     setEditState(null);
     setFormAlert(null);
   };
+
+  const hasUnsavedChanges = useCallback(() => {
+    if (!editState?.form || !editState?.raffle) return false;
+    const initial = composeFormState(editState.raffle).form;
+    const pick = (f) => ({
+      title: f.title || "",
+      description: f.description || "",
+      datetime: f.datetime || "",
+      winnersCount: Number(f.winnersCount || 0),
+      finished: Boolean(f.finished),
+      prizesText: f.prizesText || "",
+      participantsText: f.participantsText || "",
+    });
+    const a = pick(initial);
+    const b = pick(editState.form);
+    return JSON.stringify(a) !== JSON.stringify(b);
+  }, [editState]);
+
+  const requestCloseEdit = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      const ok = window.confirm(
+        "Hay cambios sin guardar. ¿Deseás descartarlos?"
+      );
+      if (!ok) return;
+    }
+    closeEdit();
+  }, [hasUnsavedChanges]);
+
+  // Drawer UX: focus management, Esc to close, body scroll lock
+  useEffect(() => {
+    if (!editState) return undefined;
+    const input = titleInputRef.current;
+    if (input && typeof input.focus === "function") {
+      input.focus();
+    }
+    const onKey = (e) => {
+      if (e.key === "Escape") requestCloseEdit();
+    };
+    const { style } = document.body;
+    const prevOverflow = style.overflow;
+    style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      style.overflow = prevOverflow;
+    };
+  }, [editState, requestCloseEdit]);
 
   const handleEditField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -374,15 +421,16 @@ const ManageRaffles = ({
       </div>
 
       <div className="container">
-        <div className="manage-grid">
+        <div className="manage-grid stagger is-on">
           {list.map((r) => (
-            <RaffleAdminCard
-              key={r.id}
-              raffle={r}
-              onEdit={() => startEdit(r)}
-              onDelete={() => openConfirm("delete", r)}
-              onFinish={r.finished ? null : () => openConfirm("finish", r)}
-            />
+            <div className="anim-up" key={r.id}>
+              <RaffleAdminCard
+                raffle={r}
+                onEdit={() => startEdit(r)}
+                onDelete={() => openConfirm("delete", r)}
+                onFinish={r.finished ? null : () => openConfirm("finish", r)}
+              />
+            </div>
           ))}
           {list.length === 0 && (
             <EmptyHint
@@ -398,51 +446,70 @@ const ManageRaffles = ({
         </div>
       </div>
 
-      {/* ====== Modal de edición ====== */}
-      <AdminModal
-        open={Boolean(editState)}
-        title="Editar sorteo"
-        description="Actualizá los datos y guardá los cambios cuando estés listo."
-        onClose={closeEdit}
-        footer={
-          <>
-            <button
-              type="button"
-              className="button button--ghost"
-              onClick={closeEdit}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="button button--primary"
-              form={editFormId}
-            >
-              Guardar cambios
-            </button>
-          </>
-        }
-        initialFocusRef={titleInputRef}
-      >
-        {/* Scroll vertical controlado sin desbordar horizontal */}
+      {/* ====== Panel lateral de edición (drawer) ====== */}
+      {Boolean(editState) && (
         <div
-          className="modal-scroll-area"
-          role="region"
-          aria-label="Formulario de edición"
+          className="drawer-layer"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-drawer-title"
         >
-          {editState ? (
-            <RaffleEditForm
-              form={editState.form}
-              onChange={handleEditField}
-              onSubmit={handleEditSubmit}
-              formId={editFormId}
-              titleRef={titleInputRef}
-              alert={formAlert}
-              alertId={alertId}
-            />
-          ) : null}
+          <div className="drawer-overlay" onClick={requestCloseEdit} />
+          <aside className="drawer anim-scale-in">
+            <header className="drawer__header">
+              <div>
+                <h2 id="edit-drawer-title" className="drawer__title">
+                  Editar sorteo
+                </h2>
+                <p className="drawer__desc">
+                  Actualizá los datos y guardá los cambios cuando estés listo.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button button--ghost"
+                aria-label="Cerrar panel"
+                onClick={requestCloseEdit}
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </header>
+            <div
+              className="drawer__content"
+              role="region"
+              aria-label="Formulario de edición"
+            >
+              {editState ? (
+                <RaffleEditForm
+                  form={editState.form}
+                  onChange={handleEditField}
+                  onSubmit={handleEditSubmit}
+                  formId={editFormId}
+                  titleRef={titleInputRef}
+                  alert={formAlert}
+                  alertId={alertId}
+                />
+              ) : null}
+            </div>
+            <footer className="drawer__footer">
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={requestCloseEdit}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="button button--primary"
+                form={editFormId}
+              >
+                Guardar cambios
+              </button>
+            </footer>
+          </aside>
         </div>
-      </AdminModal>
+      )}
 
       {/* ====== Modal de confirmación ====== */}
       <AdminModal
@@ -598,16 +665,19 @@ const RaffleEditForm = ({
   ]
     .filter(Boolean)
     .join(" ");
-  const datetimeDescribedBy = [
-    alert?.field === "datetime" ? alertId : null,
-  ]
+  const datetimeDescribedBy = [alert?.field === "datetime" ? alertId : null]
     .filter(Boolean)
     .join(" ");
 
   return (
     <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
       {alert ? (
-        <div className="form-alert" role="alert" id={alertId} aria-live="assertive">
+        <div
+          className="form-alert"
+          role="alert"
+          id={alertId}
+          aria-live="assertive"
+        >
           {alert.message}
         </div>
       ) : null}
