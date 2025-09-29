@@ -43,6 +43,12 @@ describe('ManageRaffles', () => {
     const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByLabelText(/título/i)).toHaveValue('Sorteo aniversario');
+    expect(
+      within(dialog).getByRole('button', { name: /guardar cambios/i })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: /cancelar/i })
+    ).toBeInTheDocument();
   });
 
   test('requiere confirmación antes de eliminar un sorteo', async () => {

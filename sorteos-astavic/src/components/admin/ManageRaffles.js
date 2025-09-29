@@ -2,13 +2,21 @@
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
 // ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
+// ! DECISIÓN DE DISEÑO: El drawer lateral calcula offsets dinámicos para garantizar visibilidad constante de cabecera y acciones.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
  */
 
-import { useMemo, useState, useRef, useId, useCallback } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useId,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import { useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
@@ -153,6 +161,72 @@ const ManageRaffles = ({
   const titleInputRef = useRef(null);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
+  const drawerHeaderRef = useRef(null);
+  const drawerContentRef = useRef(null);
+  const drawerFooterRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!editState) {
+      return undefined;
+    }
+
+    const contentEl = drawerContentRef.current;
+    if (!contentEl) {
+      return undefined;
+    }
+
+    const applyMetrics = () => {
+      const headerHeight = drawerHeaderRef.current?.offsetHeight ?? 0;
+      const footerHeight = drawerFooterRef.current?.offsetHeight ?? 0;
+
+      if (headerHeight > 0) {
+        contentEl.style.setProperty(
+          "--drawer-header-offset",
+          `${headerHeight}px`
+        );
+      } else {
+        contentEl.style.removeProperty("--drawer-header-offset");
+      }
+
+      if (footerHeight > 0) {
+        contentEl.style.setProperty(
+          "--drawer-footer-offset",
+          `${footerHeight}px`
+        );
+      } else {
+        contentEl.style.removeProperty("--drawer-footer-offset");
+      }
+    };
+
+    applyMetrics();
+
+    const isBrowser = typeof window !== "undefined";
+    const hasResizeObserver =
+      isBrowser && typeof window.ResizeObserver === "function";
+    let cleanup = () => {};
+
+    if (hasResizeObserver) {
+      const observer = new window.ResizeObserver(applyMetrics);
+      if (drawerHeaderRef.current) {
+        observer.observe(drawerHeaderRef.current);
+      }
+      if (drawerFooterRef.current) {
+        observer.observe(drawerFooterRef.current);
+      }
+      cleanup = () => observer.disconnect();
+    } else if (isBrowser) {
+      window.addEventListener("resize", applyMetrics);
+      cleanup = () => window.removeEventListener("resize", applyMetrics);
+    }
+
+    return () => {
+      cleanup();
+      if (contentEl) {
+        contentEl.style.removeProperty("--drawer-header-offset");
+        contentEl.style.removeProperty("--drawer-footer-offset");
+      }
+    };
+  }, [editState]);
 
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
@@ -456,7 +530,7 @@ const ManageRaffles = ({
         >
           <div className="drawer-overlay" onClick={requestCloseEdit} />
           <aside className="drawer anim-scale-in">
-            <header className="drawer__header">
+            <header ref={drawerHeaderRef} className="drawer__header">
               <div>
                 <h2 id="edit-drawer-title" className="drawer__title">
                   Editar sorteo
@@ -475,6 +549,7 @@ const ManageRaffles = ({
               </button>
             </header>
             <div
+              ref={drawerContentRef}
               className="drawer__content"
               role="region"
               aria-label="Formulario de edición"
@@ -491,7 +566,7 @@ const ManageRaffles = ({
                 />
               ) : null}
             </div>
-            <footer className="drawer__footer">
+            <footer ref={drawerFooterRef} className="drawer__footer">
               <button
                 type="button"
                 className="button button--ghost"

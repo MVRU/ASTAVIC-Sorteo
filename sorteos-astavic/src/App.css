@@ -952,6 +952,7 @@ footer {
 /* ============================
    DRAWER LATERAL (panel deslizante)
    ============================ */
+/* ! DECISIÓN DE DISEÑO: Los offsets del drawer combinan áreas seguras y medidas dinámicas para asegurar acciones visibles. */
 .drawer-layer {
   position: fixed;
   inset: 0;
@@ -966,13 +967,20 @@ footer {
   position: absolute;
   right: 0;
   top: 0;
-  height: 100%;
+  bottom: 0;
   width: min(680px, 100%);
   background: var(--surface-elevated);
   border-left: 1px solid rgba(15, 40, 105, 0.12);
   box-shadow: -20px 0 60px rgba(2, 12, 27, 0.18);
   display: flex;
   flex-direction: column;
+  max-height: 100vh;
+  overflow: hidden;
+}
+@supports (height: 100dvh) {
+  .drawer {
+    max-height: 100dvh;
+  }
 }
 @media (min-width: 1280px) {
   .drawer {
@@ -984,7 +992,10 @@ footer {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding-top: calc(1rem + var(--safe-area-top));
+  padding-right: calc(1.25rem + var(--safe-area-right));
+  padding-bottom: 1rem;
+  padding-left: calc(1.25rem + var(--safe-area-left));
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -1009,14 +1020,27 @@ footer {
 .drawer__content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 1.25rem 6.5rem; /* deja espacio para footer fijo */
+  -webkit-overflow-scrolling: touch;
+  padding-top: 1rem;
+  padding-right: calc(1.25rem + var(--safe-area-right));
+  padding-bottom: calc(
+    1rem + var(--drawer-footer-offset, 6.5rem) + var(--safe-area-bottom)
+  );
+  padding-left: calc(1.25rem + var(--safe-area-left));
   min-height: 0; /* evita overflow colgante en flex */
+  scroll-padding-bottom: calc(
+    var(--drawer-footer-offset, 6.5rem) + var(--safe-area-bottom) + 0.5rem
+  );
+  scroll-padding-top: calc(var(--drawer-header-offset, 4.5rem) + 0.5rem);
 }
 .drawer__footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
-  padding: 0.9rem 1.25rem;
+  padding-top: 0.9rem;
+  padding-right: calc(1.25rem + var(--safe-area-right));
+  padding-bottom: calc(0.9rem + var(--safe-area-bottom));
+  padding-left: calc(1.25rem + var(--safe-area-left));
   border-top: 1px solid var(--border);
   position: sticky;
   bottom: 0;
