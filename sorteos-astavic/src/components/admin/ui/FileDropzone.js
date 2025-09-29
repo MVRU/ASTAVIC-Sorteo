@@ -1,6 +1,7 @@
-// ! DECISIÓN DE DISEÑO: Separar la dropzone simplifica pruebas y permite reutilizar el componente en otros flujos.
+// ! DECISIÓN DE DISEÑO: Separar la dropzone simplifica pruebas, reutilización e iconografía coherente.
 import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import Icon from "../../ui/Icon";
 
 const FileDropzone = ({ onFile, disabled, fileToken }) => {
   const inputRef = useRef(null);
@@ -79,12 +80,10 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
           justifyContent: "center",
           background: "var(--surface)",
           color: "var(--brand-700)",
-          fontSize: "1.4rem",
           boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         }}
-        aria-hidden="true"
       >
-        📎
+        <Icon name="paperclip" decorative size={26} strokeWidth={1.9} />
       </div>
       <div>
         <div

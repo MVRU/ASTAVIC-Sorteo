@@ -4,19 +4,19 @@ export const PREVIEW_DEFAULT_MESSAGE =
 
 export const TUTORIAL_STEPS = [
   {
-    icon: "📥",
+    iconName: "upload",
     title: "Cargá participantes",
     description:
       "Subí un CSV/TSV o pegá la lista (uno por línea). Eliminamos duplicados automáticamente.",
   },
   {
-    icon: "🗓️",
+    iconName: "calendar",
     title: "Configurá detalles",
     description:
       "Definí título, fecha y cantidad de ganadores. Ordená los premios según el puesto.",
   },
   {
-    icon: "🚀",
+    iconName: "rocket",
     title: "Publicá el sorteo",
     description:
       "Se mostrará el contador y, al finalizar, todos verán los mismos ganadores.",
