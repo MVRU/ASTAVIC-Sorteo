@@ -220,6 +220,27 @@ describe('ManageRaffles', () => {
     expect(screen.getByText(/no hay sorteos finalizados/i)).toBeInTheDocument();
   });
 
+  test('la tarjeta conserva etiquetas claras y agrupa las acciones', () => {
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const card = screen.getByRole('article', { name: /sorteo aniversario/i });
+    expect(card).toHaveAttribute('data-state', 'active');
+
+    const actionsGroup = within(card).getByRole('group', {
+      name: /acciones del sorteo activo/i,
+    });
+    expect(actionsGroup).toBeInTheDocument();
+    const actionButtons = within(actionsGroup).getAllByRole('button');
+    expect(actionButtons).toHaveLength(3);
+  });
+
   test('muestra un toast cuando la actualización se completa con éxito', async () => {
     const user = createUser();
     const onUpdate = jest.fn(() => ({

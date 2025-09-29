@@ -22,6 +22,7 @@ import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
 import EmptyHint from "./manage/EmptyHint";
+import RaffleAdminCard from "./manage/RaffleAdminCard";
 import { useToast } from "../../context/ToastContext";
 
 // ========= Helpers =========
@@ -133,17 +134,6 @@ function buildPayloadFromForm(form) {
         .filter(Boolean),
     },
   };
-}
-
-function formatNiceDate(iso) {
-  if (!iso) {
-    return "Fecha no disponible";
-  }
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) {
-    return "Fecha no disponible";
-  }
-  return parsed.toLocaleString();
 }
 
 // ========= Main =========
@@ -625,83 +615,6 @@ const buildConfirmCopy = (state) => {
   };
 };
 
-// ========= Card visual =========
-const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
-  const participantsCount = Array.isArray(raffle.participants)
-    ? raffle.participants.length
-    : 0;
-  const parsedDatetime = raffle.datetime ? new Date(raffle.datetime) : null;
-  const datetimeAttribute =
-    parsedDatetime && !Number.isNaN(parsedDatetime.getTime())
-      ? parsedDatetime.toISOString()
-      : undefined;
-
-  return (
-    <article className="manage-card">
-      <header className="manage-card__header">
-        <div className="manage-card__badges">
-          <span
-            className={`admin-tag ${
-              raffle.finished ? "admin-tag--finished" : "admin-tag--active"
-            }`}
-          >
-            {raffle.finished ? "Finalizado" : "Activo"}
-          </span>
-          <span className="admin-tag admin-tag--date">
-            <time dateTime={datetimeAttribute}>
-              {formatNiceDate(raffle.datetime)}
-            </time>
-          </span>
-        </div>
-        <strong className="manage-card__title">{raffle.title}</strong>
-        {raffle.description && (
-          <p className="manage-card__desc">{raffle.description}</p>
-        )}
-      </header>
-
-      <dl className="manage-card__meta">
-        <div className="meta-row">
-          <dt>Participantes</dt>
-          <dd>{participantsCount}</dd>
-        </div>
-        <div className="meta-row">
-          <dt>Ganadores</dt>
-          <dd>{raffle.winnersCount ?? 1}</dd>
-        </div>
-      </dl>
-
-      <footer className="manage-card__actions">
-        {!raffle.finished && onFinish && (
-          <button
-            type="button"
-            className="button button--subtle"
-            onClick={onFinish}
-            title="Marcar como finalizado"
-          >
-            Finalizar
-          </button>
-        )}
-        <button
-          type="button"
-          className="button button--ghost"
-          onClick={onEdit}
-          title="Editar sorteo"
-        >
-          Editar
-        </button>
-        <button
-          type="button"
-          className="button button--danger"
-          onClick={onDelete}
-          title="Eliminar sorteo"
-        >
-          Eliminar
-        </button>
-      </footer>
-    </article>
-  );
-};
-
 // ========= Formulario =========
 const RaffleEditForm = ({
   form,
@@ -919,23 +832,6 @@ function LocalStyles() {
     `}</style>
   );
 }
-
-// ========= PropTypes =========
-RaffleAdminCard.propTypes = {
-  raffle: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string,
-    description: PropTypes.string,
-    datetime: PropTypes.string.isRequired,
-    winnersCount: PropTypes.number,
-    finished: PropTypes.bool,
-    participants: PropTypes.arrayOf(PropTypes.string),
-    prizes: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string })),
-  }).isRequired,
-  onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  onFinish: PropTypes.oneOfType([PropTypes.func, PropTypes.oneOf([null])]),
-};
 
 RaffleEditForm.propTypes = {
   form: PropTypes.object.isRequired,
