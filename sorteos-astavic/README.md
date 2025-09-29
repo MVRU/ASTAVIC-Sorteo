@@ -1,3 +1,28 @@
+# Sorteos ASTAVIC
+
+Este proyecto administra sorteos para ASTAVIC. La aplicación requiere credenciales de administración provistas en tiempo de despliegue para acceder al panel privado.
+
+## Configuración de autenticación
+
+1. Copiá el archivo `.env.example` a `.env.local` (o al archivo `.env` que utilices en tu entorno de despliegue).
+2. Completá los valores:
+
+   ```bash
+   REACT_APP_ADMIN_EMAIL=correo@tu-dominio.com
+   REACT_APP_ADMIN_PASSWORD=contraseña-muy-segura
+   ```
+
+3. Reiniciá el servidor de desarrollo para aplicar los cambios.
+
+//! DECISIÓN DE DISEÑO: Las credenciales se leen únicamente desde variables de entorno obligatorias; la app falla en caso de omisión para evitar usos inseguros.
+
+## Riesgos y recomendaciones
+
+-? El servicio de autenticación rechaza todas las solicitudes si faltan variables. Asegurate de definirlas en cada entorno (desarrollo, staging y producción).
+-? Considerá reemplazar el comparador por un backend con tokens firmados cuando el proyecto lo permita.
+
+## Scripts disponibles
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

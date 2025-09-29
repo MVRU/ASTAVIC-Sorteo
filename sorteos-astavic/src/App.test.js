@@ -2,6 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
+beforeEach(() => {
+  process.env.REACT_APP_ADMIN_EMAIL = 'admin@example.com';
+  process.env.REACT_APP_ADMIN_PASSWORD = 'clave-super-segura';
+});
+
+afterEach(() => {
+  delete process.env.REACT_APP_ADMIN_EMAIL;
+  delete process.env.REACT_APP_ADMIN_PASSWORD;
+  sessionStorage.clear();
+  window.location.hash = '#/';
+});
+
 const createUser = () =>
   typeof userEvent.setup === 'function'
     ? userEvent.setup()
@@ -25,11 +37,11 @@ test('redirecciona al panel principal tras iniciar sesión sin forzar subrutas',
 
   await user.type(
     screen.getByLabelText(/email/i, { selector: 'input' }),
-    'astavic@gmail.com'
+    'admin@example.com'
   );
   await user.type(
     screen.getByLabelText(/contraseña/i, { selector: 'input' }),
-    'Colon 3115'
+    'clave-super-segura'
   );
   await user.click(screen.getByRole('button', { name: /ingresar/i }));
 

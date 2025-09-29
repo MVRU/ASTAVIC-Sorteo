@@ -1,12 +1,13 @@
 /**
  * TODOS:
  * - [ ] Admin, luego de iniciar sesión, debe tener dos vistas: crear un nuevo sorteo y gestionar los sorteos existentes (editar o borrar).
- */
+*/
 
+//! DECISIÓN DE DISEÑO: Se comunica explícitamente la indisponibilidad del servicio para evitar intentos fallidos.
 import { useState } from "react";
 import PropTypes from "prop-types";
 
-const AdminLogin = ({ onLogin, error }) => {
+const AdminLogin = ({ onLogin, error, authUnavailable }) => {
   const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = (event) => {
@@ -43,9 +44,10 @@ const AdminLogin = ({ onLogin, error }) => {
                 type="email"
                 autoComplete="username"
                 required
-                placeholder="astavic@gmail.com"
+                placeholder="correo@ejemplo.com"
                 value={form.email}
                 onChange={handleChange}
+                disabled={authUnavailable}
               />
             </div>
             <div className="form-group">
@@ -57,15 +59,31 @@ const AdminLogin = ({ onLogin, error }) => {
                 type="password"
                 autoComplete="current-password"
                 required
-                placeholder="Colon 3115"
+                placeholder="Contraseña segura"
                 value={form.password}
                 onChange={handleChange}
+                disabled={authUnavailable}
               />
             </div>
-            <button type="submit" className="button button--primary">
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={authUnavailable}
+              aria-disabled={authUnavailable}
+            >
               Ingresar
             </button>
-            {error && <p className="error-text">Credenciales inválidas.</p>}
+            {authUnavailable ? (
+              <p className="error-text" role="alert">
+                Servicio de autenticación no disponible. Contactá a la mesa técnica.
+              </p>
+            ) : (
+              error && (
+                <p className="error-text" role="alert">
+                  Credenciales inválidas.
+                </p>
+              )
+            )}
           </form>
         </div>
       </div>
@@ -76,10 +94,12 @@ const AdminLogin = ({ onLogin, error }) => {
 AdminLogin.propTypes = {
   onLogin: PropTypes.func.isRequired,
   error: PropTypes.bool,
+  authUnavailable: PropTypes.bool,
 };
 
 AdminLogin.defaultProps = {
   error: false,
+  authUnavailable: false,
 };
 
 export default AdminLogin;

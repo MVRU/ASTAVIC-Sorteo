@@ -1,4 +1,5 @@
 // src/App.js
+//! DECISIÓN DE DISEÑO: Se separa la autenticación en un servicio inyectable para reforzar seguridad y mantenibilidad.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -8,9 +9,8 @@ import AdminView from "./components/admin/AdminView";
 import initialRaffles from "./data/initialRaffles";
 import { isFinished, pickWinners } from "./utils/raffleUtils";
 import "./App.css";
+import { buildAuthenticationServiceSafely } from "./services/authenticationService";
 
-const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "astavic@gmail.com";
-const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Colon 3115";
 const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
 const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
 
@@ -35,6 +35,9 @@ const App = () => {
     () => sessionStorage.getItem("adminAuth") === "1"
   );
   const [loginError, setLoginError] = useState(false);
+  const authSetup = useMemo(() => buildAuthenticationServiceSafely(), []);
+  const authenticationService = authSetup.service;
+  const hasAuthConfigurationIssue = Boolean(authSetup.configurationError);
   const [subscribers, setSubscribers] = useState([]);
   const [liveDraw, setLiveDraw] = useState({
     open: false,
@@ -116,6 +119,14 @@ const App = () => {
 
   useEffect(() => () => clearLiveTimers(), [clearLiveTimers]);
 
+  useEffect(() => {
+    if (hasAuthConfigurationIssue) {
+      console.error(
+        "Configuración de autenticación incompleta. Define las variables de entorno requeridas."
+      );
+    }
+  }, [hasAuthConfigurationIssue]);
+
   const handleRegisterSubscriber = useCallback(
     (email, raffle) => {
       const normalized = (email || "").trim().toLowerCase();
@@ -140,18 +151,34 @@ const App = () => {
   );
 
   const handleLogin = useCallback(
-    (email, password) => {
-      const valid = email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
-      if (!valid) {
+    async (email, password) => {
+      if (hasAuthConfigurationIssue) {
         setLoginError(true);
         return;
       }
+
+      try {
+        const isValid = await authenticationService.validateCredentials({
+          email,
+          password,
+        });
+
+        if (!isValid) {
+          setLoginError(true);
+          return;
+        }
+      } catch (error) {
+        console.error("Servicio de autenticación no disponible", error);
+        setLoginError(true);
+        return;
+      }
+
       sessionStorage.setItem("adminAuth", "1");
       setIsAdmin(true);
       setLoginError(false);
       handleNavigate("admin");
     },
-    [handleNavigate]
+    [authenticationService, handleNavigate, hasAuthConfigurationIssue]
   );
 
   const handleLogout = useCallback(() => {
@@ -184,8 +211,6 @@ const App = () => {
     setRaffles((prev) => prev.filter((r) => r.id !== raffleId));
     return { ok: true };
   }, []);
-  // <<<
-
   const { activeRaffles, finishedRaffles } = useMemo(() => {
     const now = new Date();
     const active = [];
@@ -220,6 +245,7 @@ const App = () => {
             onLogin={handleLogin}
             onLogout={handleLogout}
             loginError={loginError}
+            authUnavailable={hasAuthConfigurationIssue}
             raffles={raffles}
             subscribersCount={subscribers.length}
             onCreateRaffle={handleCreateRaffle}

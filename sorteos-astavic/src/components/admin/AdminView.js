@@ -1,4 +1,5 @@
 // src/components/admin/AdminView.js
+//! DECISIÓN DE DISEÑO: Se expone el estado del servicio de autenticación para informar fallos de configuración.
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import AdminDashboard from "./AdminDashboard";
@@ -18,6 +19,7 @@ const AdminView = ({
   onLogin,
   onLogout,
   loginError,
+  authUnavailable,
   raffles,
   subscribersCount,
   onCreateRaffle,
@@ -34,7 +36,13 @@ const AdminView = ({
   }, []);
 
   if (!isAdmin) {
-    return <AdminLogin onLogin={onLogin} error={loginError} />;
+    return (
+      <AdminLogin
+        onLogin={onLogin}
+        error={loginError}
+        authUnavailable={authUnavailable}
+      />
+    );
   }
 
   if (subroute === "create") {
@@ -68,6 +76,7 @@ AdminView.propTypes = {
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   loginError: PropTypes.bool,
+  authUnavailable: PropTypes.bool,
   raffles: PropTypes.array.isRequired,
   subscribersCount: PropTypes.number.isRequired,
   onCreateRaffle: PropTypes.func.isRequired,
@@ -78,6 +87,7 @@ AdminView.propTypes = {
 
 AdminView.defaultProps = {
   loginError: false,
+  authUnavailable: false,
 };
 
 export default AdminView;
