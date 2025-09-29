@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
+import { ADMIN_CREDENTIALS, ADMIN_DEMO_MESSAGE } from './config/adminCredentials';
 import { ToastProvider } from './context/ToastContext';
 
 const createUser = () =>
@@ -26,14 +27,18 @@ test('redirecciona al panel principal tras iniciar sesión sin forzar subrutas',
 
   renderWithToast(<App />);
 
-  await user.type(
-    screen.getByLabelText(/email/i, { selector: 'input' }),
-    'astavic@gmail.com'
-  );
-  await user.type(
-    screen.getByLabelText(/contraseña/i, { selector: 'input' }),
-    'Colon 3115'
-  );
+  expect(
+    await screen.findByTestId('admin-demo-notice')
+  ).toHaveTextContent(ADMIN_DEMO_MESSAGE);
+
+  const emailInput = screen.getByLabelText(/email/i, { selector: 'input' });
+  const passwordInput = screen.getByLabelText(/contraseña/i, { selector: 'input' });
+
+  await userEvent.clear(emailInput);
+  await userEvent.clear(passwordInput);
+
+  await user.type(emailInput, ADMIN_CREDENTIALS.email);
+  await user.type(passwordInput, ADMIN_CREDENTIALS.password);
   await user.click(screen.getByRole('button', { name: /ingresar/i }));
 
   await waitFor(() => expect(window.location.hash).toBe('#/admin'));

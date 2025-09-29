@@ -1253,6 +1253,30 @@ footer {
   box-shadow: 0 20px 48px rgba(2, 12, 27, 0.1);
 }
 
+.demo-notice {
+  margin-bottom: 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(45, 126, 209, 0.08);
+  border: 1px solid rgba(45, 126, 209, 0.18);
+  color: var(--brand-700);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.demo-notice__credentials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.demo-notice__credentials strong {
+  font-weight: 700;
+}
+
 /* =========================================================
    RAFFLE CARD – Diseño unificado, elegante y consistente
    ========================================================= */

@@ -8,10 +8,8 @@ import PublicView from "./components/public/PublicView";
 import AdminView from "./components/admin/AdminView";
 import initialRaffles from "./data/initialRaffles";
 import { isFinished, pickWinners } from "./utils/raffleUtils";
+import ADMIN_CREDENTIALS from "./config/adminCredentials";
 import "./App.css";
-
-const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "astavic@gmail.com";
-const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Colon 3115";
 const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
 const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
 
@@ -143,8 +141,15 @@ const App = () => {
 
   const handleLogin = useCallback(
     (email, password) => {
-      const valid = email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
-      if (!valid) {
+      const expectedEmail = (ADMIN_CREDENTIALS.email || "").trim().toLowerCase();
+      const expectedPassword = (ADMIN_CREDENTIALS.password || "").trim();
+      const normalizedEmail = (email || "").trim().toLowerCase();
+      const sanitizedPassword = (password || "").trim();
+
+      const isValid =
+        normalizedEmail === expectedEmail && sanitizedPassword === expectedPassword;
+
+      if (!isValid) {
         setLoginError(true);
         return;
       }
