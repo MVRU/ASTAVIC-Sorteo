@@ -1,9 +1,10 @@
 // ! DECISIÓN DE DISEÑO: Este hook abstrae la autenticación demo basada en sessionStorage.
 import { useCallback, useMemo, useState } from "react";
+import { ADMIN_CREDENTIALS } from "../config/adminCredentials";
 
 const STORAGE_KEY = "adminAuth";
 
-export const useAdminSession = (credentials) => {
+export const useAdminSession = (credentials = ADMIN_CREDENTIALS) => {
   const [isAdmin, setIsAdmin] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.sessionStorage.getItem(STORAGE_KEY) === "1";
