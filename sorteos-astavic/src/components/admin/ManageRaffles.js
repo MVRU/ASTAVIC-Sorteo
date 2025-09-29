@@ -20,6 +20,8 @@ import {
 import { useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
+import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
+import EmptyHint from "./manage/EmptyHint";
 import { useToast } from "../../context/ToastContext";
 
 // ========= Helpers =========
@@ -255,6 +257,18 @@ const ManageRaffles = ({
     [raffles]
   );
 
+  const toolbarStats = useMemo(
+    () => ({
+      activeCount: activeAll.length,
+      finishedCount: finishedAll.length,
+    }),
+    [activeAll, finishedAll]
+  );
+
+  const handleTabChange = useCallback((nextTab) => setTab(nextTab), [setTab]);
+  const handleQueryChange = useCallback((value) => setQ(value), [setQ]);
+  const handleSortChange = useCallback((value) => setSort(value), [setSort]);
+
   const list = useMemo(() => {
     const src = tab === "active" ? activeAll : finishedAll;
     const query = q.trim().toLowerCase();
@@ -439,59 +453,15 @@ const ManageRaffles = ({
       <LocalStyles />
 
       <div className="container">
-        <header className="manage-toolbar">
-          <div className="manage-toolbar__left">
-            <h1 className="section-title" style={{ margin: 0 }}>
-              Gestionar sorteos
-            </h1>
-            <div className="manage-stats">
-              <span className="pill pill--ok">Activos: {activeAll.length}</span>
-              <span className="pill pill--muted">
-                Finalizados: {finishedAll.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="manage-toolbar__right">
-            <div className="tabs">
-              <button
-                className={`tab${tab === "active" ? " is-active" : ""}`}
-                onClick={() => setTab("active")}
-                type="button"
-              >
-                Activos
-              </button>
-              <button
-                className={`tab${tab === "finished" ? " is-active" : ""}`}
-                onClick={() => setTab("finished")}
-                type="button"
-              >
-                Finalizados
-              </button>
-            </div>
-
-            <div className="filters">
-              <input
-                className="input input--sm"
-                type="search"
-                placeholder="Buscar por título o descripción…"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                aria-label="Buscar sorteos"
-              />
-              <select
-                className="input input--sm"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                aria-label="Ordenar resultados"
-              >
-                <option value="date_desc">Más recientes primero</option>
-                <option value="date_asc">Más antiguos primero</option>
-                <option value="title_asc">Título (A→Z)</option>
-              </select>
-            </div>
-          </div>
-        </header>
+        <ManageRafflesToolbar
+          tab={tab}
+          onTabChange={handleTabChange}
+          query={q}
+          onQueryChange={handleQueryChange}
+          sort={sort}
+          onSortChange={handleSortChange}
+          stats={toolbarStats}
+        />
       </div>
 
       <div className="container">
@@ -847,16 +817,7 @@ const RaffleEditForm = ({
     </form>
   );
 };
-
-// ========= Vacio =========
-const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;
-
-/**
- * Estilos locales críticos para:
- * - Evitar scroll horizontal (minmax(0,1fr), min-width: 0, word-wrap)
- * - Forzar scroll vertical sobre el contenido del modal
- * - Responsividad: columnas colapsan en pantallas angostas
- */
+// ! DECISIÓN DE DISEÑO: Estilos críticos en línea para garantizar scroll controlado y evitar overflow responsivo del modal.
 function LocalStyles() {
   return (
     <style>{`
@@ -981,8 +942,6 @@ RaffleEditForm.propTypes = {
   }),
   alertId: PropTypes.string.isRequired,
 };
-
-EmptyHint.propTypes = { text: PropTypes.string.isRequired };
 
 ManageRaffles.propTypes = {
   raffles: PropTypes.array.isRequired,
