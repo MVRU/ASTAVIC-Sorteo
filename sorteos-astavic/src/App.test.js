@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
+import { ToastProvider } from './context/ToastContext';
 
 const createUser = () =>
   typeof userEvent.setup === 'function'
@@ -10,8 +11,10 @@ const createUser = () =>
         type: (...args) => userEvent.type(...args),
       };
 
+const renderWithToast = (ui) => render(<ToastProvider>{ui}</ToastProvider>);
+
 test('renderiza la vista publica con el titulo Sorteos', () => {
-  render(<App />);
+  renderWithToast(<App />);
   const heading = screen.getByRole('heading', { name: /Sorteos/i });
   expect(heading).toBeInTheDocument();
 });
@@ -21,7 +24,7 @@ test('redirecciona al panel principal tras iniciar sesión sin forzar subrutas',
   window.location.hash = '#/admin';
   sessionStorage.clear();
 
-  render(<App />);
+  renderWithToast(<App />);
 
   await user.type(
     screen.getByLabelText(/email/i, { selector: 'input' }),

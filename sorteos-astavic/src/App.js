@@ -1,4 +1,5 @@
 // src/App.js
+// ! DECISIÓN DE DISEÑO: Las operaciones mutables devuelven feedback semántico para disparar toasts globales coherentes.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -77,6 +78,7 @@ const App = () => {
         raffle.id === raffleId ? { ...raffle, finished: true } : raffle
       )
     );
+    return { ok: true, message: "Sorteo marcado como finalizado." };
   }, []);
 
   const handleStartLive = useCallback(
@@ -177,12 +179,12 @@ const App = () => {
     setRaffles((prev) =>
       prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
     );
-    return { ok: true };
+    return { ok: true, message: "Sorteo actualizado correctamente." };
   }, []);
 
   const handleDeleteRaffle = useCallback((raffleId) => {
     setRaffles((prev) => prev.filter((r) => r.id !== raffleId));
-    return { ok: true };
+    return { ok: true, message: "Sorteo eliminado." };
   }, []);
   // <<<
 

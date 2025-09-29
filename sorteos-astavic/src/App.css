@@ -707,6 +707,15 @@ main {
 /* ============================
    TOASTS & ETIQUETAS
    ============================ */
+.toast-layer {
+  position: fixed;
+  inset: auto 1.5rem 1.5rem 1.5rem;
+  display: grid;
+  justify-items: end;
+  z-index: 1200;
+  pointer-events: none;
+}
+
 .toast {
   margin-top: 0.75rem;
   padding: 0.65rem 0.85rem;
@@ -714,10 +723,43 @@ main {
   background: rgba(30, 136, 229, 0.12);
   color: var(--brand-700);
   font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  max-width: min(420px, 100%);
 }
+
+.toast--info {
+  background: rgba(30, 136, 229, 0.12);
+  color: var(--brand-700);
+}
+
+.toast--success {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
 .toast--error {
   background: rgba(204, 58, 58, 0.12);
   color: var(--danger);
+}
+
+.toast__close {
+  padding: 0.25rem 0.45rem;
+  min-height: auto;
+}
+
+@media (max-width: 600px) {
+  .toast-layer {
+    inset: auto 1rem 1rem 1rem;
+    justify-items: stretch;
+  }
+
+  .toast {
+    justify-content: space-between;
+  }
 }
 
 .tag-group {
