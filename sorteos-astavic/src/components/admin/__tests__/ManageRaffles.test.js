@@ -1,5 +1,5 @@
 // ! DECISIÓN DE DISEÑO: Cubrimos interacciones clave del panel para asegurar que los modales funcionen según lo requerido.
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ManageRaffles from '../ManageRaffles';
 
@@ -9,6 +9,7 @@ const createUser = () =>
     : {
         click: (...args) => userEvent.click(...args),
         type: (...args) => userEvent.type(...args),
+        clear: (...args) => userEvent.clear(...args),
       };
 
 const sampleRaffles = [
@@ -63,6 +64,78 @@ describe('ManageRaffles', () => {
 
     await user.click(within(dialog).getByRole('button', { name: /eliminar/i }));
     expect(onDelete).toHaveBeenCalledWith('r1');
+  });
+
+  test('muestra feedback si la fecha guardada del sorteo es inválida', async () => {
+    const user = createUser();
+    const brokenRaffle = [{ ...sampleRaffles[0], id: 'r2', datetime: 'invalid' }];
+
+    render(
+      <ManageRaffles
+        raffles={brokenRaffle}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/fecha guardada.*inválida/i);
+    expect(screen.getByLabelText(/fecha y hora/i)).toHaveValue('');
+  });
+
+  test('impide enviar cambios cuando la fecha queda vacía', async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    render(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const datetimeInput = await screen.findByLabelText(/fecha y hora/i);
+    await user.clear(datetimeInput);
+
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/ingresá una fecha válida/i);
+    expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
+  });
+
+  test('valida que la fecha ingresada tenga un formato correcto', async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    render(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const datetimeInput = await screen.findByLabelText(/fecha y hora/i);
+    await user.clear(datetimeInput);
+    datetimeInput.type = 'text';
+    fireEvent.change(datetimeInput, { target: { value: '2024-13-40T99:00' } });
+
+    await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/válida/i);
+    expect(datetimeInput).toHaveAttribute('aria-invalid', 'true');
   });
 
   test('confirma antes de finalizar un sorteo activo', async () => {
