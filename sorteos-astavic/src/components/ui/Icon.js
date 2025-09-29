@@ -1,4 +1,5 @@
 // ! DECISIÓN DE DISEÑO: Centralizamos iconos SVG para garantizar consistencia visual y accesibilidad en toda la UI.
+// -*- Ampliamos la colección con estados semánticos reutilizables (éxito, error, aviso) para reemplazar emojis.
 import PropTypes from "prop-types";
 import { useId } from "react";
 
@@ -53,6 +54,36 @@ const ICONS = Object.freeze({
       <>
         <circle cx="12" cy="12" r="8.25" />
         <path d="M9 12.75l2.25 2.25L15 10.5" />
+      </>
+    ),
+  },
+  xCircle: {
+    label: "Error",
+    paths: (
+      <>
+        <circle cx="12" cy="12" r="8.25" />
+        <path d="M9.5 9.5l5 5" />
+        <path d="M14.5 9.5l-5 5" />
+      </>
+    ),
+  },
+  infoCircle: {
+    label: "Información",
+    paths: (
+      <>
+        <circle cx="12" cy="12" r="8.25" />
+        <path d="M12 10.5v5" />
+        <circle cx="12" cy="8" r="0.9" />
+      </>
+    ),
+  },
+  warningTriangle: {
+    label: "Advertencia",
+    paths: (
+      <>
+        <path d="M12 4l8 14H4l8-14z" />
+        <path d="M12 10v4" />
+        <circle cx="12" cy="16" r="0.8" />
       </>
     ),
   },

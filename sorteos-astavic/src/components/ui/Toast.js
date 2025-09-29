@@ -1,14 +1,17 @@
 // src/components/ui/Toast.js
 // ! DECISIÓN DE DISEÑO: Renderizamos el toast en un portal para garantizar que se superponga correctamente sin alterar layouts.
+// -*- Usamos iconografía SVG compartida para mantener cohesión visual y cumplir con el pedido de eliminar emojis.
 // ? Riesgo: Si se añaden nuevos estados sin registrar su iconografía y estilo, se degradará la consistencia visual del sistema de notificaciones.
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 
+import Icon from "./Icon";
+
 const STATUS_META = {
-  success: { title: "Éxito", icon: "✓" },
-  error: { title: "Error", icon: "⛔" },
-  warning: { title: "Advertencia", icon: "⚠" },
-  info: { title: "Aviso", icon: "ℹ" },
+  success: { title: "Éxito", iconName: "checkCircle" },
+  error: { title: "Error", iconName: "xCircle" },
+  warning: { title: "Advertencia", iconName: "warningTriangle" },
+  info: { title: "Aviso", iconName: "infoCircle" },
 };
 
 const Toast = ({ toast, onClose }) => {
@@ -32,7 +35,12 @@ const Toast = ({ toast, onClose }) => {
         aria-atomic="true"
       >
         <span className="toast__icon" aria-hidden="true">
-          {statusMeta.icon}
+          <Icon
+            name={statusMeta.iconName}
+            decorative
+            size={28}
+            strokeWidth={1.8}
+          />
         </span>
         <div className="toast__content">
           <p className="toast__title">{statusMeta.title}</p>
