@@ -173,6 +173,37 @@ describe('ManageRaffles', () => {
     );
   });
 
+  test('mantiene el foco en el campo que se está editando', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const descriptionInput = await screen.findByLabelText(/descripción/i);
+    descriptionInput.focus();
+    await user.type(descriptionInput, 'Nueva descripción');
+
+    await waitFor(() => {
+      expect(descriptionInput).toHaveFocus();
+    });
+
+    const winnersInput = screen.getByLabelText(/ganadores/i);
+    await user.click(winnersInput);
+    await user.clear(winnersInput);
+    await user.type(winnersInput, '3');
+
+    await waitFor(() => {
+      expect(winnersInput).toHaveFocus();
+    });
+  });
+
   test('valida que la fecha ingresada tenga un formato correcto', async () => {
     const user = createUser();
     const onUpdate = jest.fn();

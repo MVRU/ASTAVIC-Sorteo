@@ -198,6 +198,7 @@ const ManageRaffles = ({
   const handleTabChange = useCallback((nextTab) => setTab(nextTab), [setTab]);
   const handleQueryChange = useCallback((value) => setQ(value), [setQ]);
   const handleSortChange = useCallback((value) => setSort(value), [setSort]);
+  const isEditing = Boolean(editState);
 
   const list = useMemo(() => {
     const src = tab === "active" ? activeAll : finishedAll;
@@ -271,18 +272,35 @@ const ManageRaffles = ({
     [hasUnsavedChanges, editState, closeEdit]
   );
 
+  const requestCloseEditRef = useRef(requestCloseEdit);
+  useEffect(() => {
+    requestCloseEditRef.current = requestCloseEdit;
+  }, [requestCloseEdit]);
+
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
   // Drawer UX: focus management, Esc to close, body scroll lock
   useEffect(() => {
-    if (!editState) return undefined;
+    if (!isEditing) return undefined;
     const input = titleInputRef.current;
     if (input && typeof input.focus === "function") {
       input.focus();
     }
+    return undefined;
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) return undefined;
     const onKey = (e) => {
-      if (e.key === "Escape") requestCloseEdit();
+      if (e.key === "Escape") {
+        requestCloseEditRef.current?.();
+      }
     };
     const handleBeforeUnload = (event) => {
-      if (hasUnsavedChanges()) {
+      if (hasUnsavedChangesRef.current?.()) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -297,10 +315,10 @@ const ManageRaffles = ({
       window.removeEventListener("beforeunload", handleBeforeUnload);
       style.overflow = prevOverflow;
     };
-  }, [editState, requestCloseEdit, hasUnsavedChanges]);
+  }, [isEditing]);
 
   useEffect(() => {
-    if (!editState) return undefined;
+    if (!isEditing) return undefined;
     if (!historySentinelRef.current) {
       previousHistoryStateRef.current = window.history.state ?? null;
       const baseState = window.history.state ?? {};
@@ -319,7 +337,7 @@ const ManageRaffles = ({
       if (!historySentinelRef.current) {
         return;
       }
-      if (!hasUnsavedChanges()) {
+      if (!hasUnsavedChangesRef.current?.()) {
         historySentinelRef.current = false;
         closeEdit();
         return;
@@ -331,7 +349,7 @@ const ManageRaffles = ({
         document.title,
         window.location.href
       );
-      requestCloseEdit({
+      requestCloseEditRef.current?.({
         origin: "browser-back",
         onDiscard: () => {
           const { history } = window;
@@ -359,7 +377,7 @@ const ManageRaffles = ({
         }
       }
     };
-  }, [editState, hasUnsavedChanges, requestCloseEdit, closeEdit]);
+  }, [isEditing, closeEdit]);
 
   const handleEditField = (event) => {
     const { name, value, type, checked } = event.target;
