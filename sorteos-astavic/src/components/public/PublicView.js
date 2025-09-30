@@ -13,7 +13,6 @@ import { isValidEmail, sanitizeEmail } from "../../utils/validation";
 const PublicView = ({
   activeRaffles,
   finishedRaffles,
-  onStartLive,
   onMarkFinished,
   onRegisterSubscriber,
   route,
@@ -143,7 +142,6 @@ const PublicView = ({
           <RaffleGrid
             raffles={visibleRaffles}
             allowMarkFinished={!isFinishedRoute}
-            onStartLive={onStartLive}
             onMarkFinished={onMarkFinished}
             onRequestReminder={handleReminder}
             emptyState={{ title: copy.emptyTitle, subtitle: copy.emptySubtitle }}
@@ -170,7 +168,6 @@ const PublicView = ({
 PublicView.propTypes = {
   activeRaffles: PropTypes.arrayOf(rafflePropType).isRequired,
   finishedRaffles: PropTypes.arrayOf(rafflePropType).isRequired,
-  onStartLive: PropTypes.func.isRequired,
   onMarkFinished: PropTypes.func,
   onRegisterSubscriber: PropTypes.func.isRequired,
   route: PropTypes.oneOf(["public", "finished"]),

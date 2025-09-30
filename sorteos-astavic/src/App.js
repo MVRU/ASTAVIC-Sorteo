@@ -30,7 +30,7 @@ const App = () => {
     deleteRaffle,
     markFinished,
   } = useRafflesManagement(initialRaffles);
-  const { liveDraw, startLiveDraw, closeLiveDraw } = useLiveDraw(markFinished);
+  const { liveDraw, closeLiveDraw } = useLiveDraw(markFinished);
   const { registerSubscriber, subscribersCount } = useSubscribersRegistry();
   const { isAdmin, login, logout, loginError } = useAdminSession();
 
@@ -75,7 +75,6 @@ const App = () => {
           <PublicView
             activeRaffles={activeRaffles}
             finishedRaffles={finishedRaffles}
-            onStartLive={startLiveDraw}
             onMarkFinished={markFinished}
             onRegisterSubscriber={registerSubscriber}
             route={route}

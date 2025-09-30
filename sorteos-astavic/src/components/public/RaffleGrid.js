@@ -23,7 +23,6 @@ const emptyStateStyles = {
 const RaffleGrid = ({
   raffles,
   allowMarkFinished,
-  onStartLive,
   onMarkFinished,
   onRequestReminder,
   emptyState,
@@ -43,7 +42,6 @@ const RaffleGrid = ({
         <div role="listitem" key={raffle.id}>
           <RaffleCard
             raffle={raffle}
-            onLive={onStartLive}
             onMarkFinished={allowMarkFinished ? onMarkFinished : undefined}
             onRequestReminder={onRequestReminder}
           />
@@ -56,7 +54,6 @@ const RaffleGrid = ({
 RaffleGrid.propTypes = {
   raffles: PropTypes.arrayOf(rafflePropType).isRequired,
   allowMarkFinished: PropTypes.bool,
-  onStartLive: PropTypes.func.isRequired,
   onMarkFinished: PropTypes.func,
   onRequestReminder: PropTypes.func.isRequired,
   emptyState: PropTypes.shape({

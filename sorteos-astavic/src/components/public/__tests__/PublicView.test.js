@@ -25,7 +25,6 @@ const setup = (overrides = {}) => {
   const props = {
     activeRaffles: [raffleSample],
     finishedRaffles: [],
-    onStartLive: jest.fn(),
     onMarkFinished: jest.fn(),
     onRegisterSubscriber: jest.fn(),
     route: "public",

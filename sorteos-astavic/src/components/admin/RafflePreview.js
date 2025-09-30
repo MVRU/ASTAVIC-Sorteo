@@ -1,6 +1,7 @@
 // ! DECISIÓN DE DISEÑO: La vista previa queda aislada para poder reutilizarla y evitar lógica condicional en el panel.
 import PropTypes from "prop-types";
 import RaffleCard from "../public/RaffleCard";
+import rafflePropType from "../public/rafflePropType";
 
 const noop = () => {};
 
@@ -27,7 +28,6 @@ const RafflePreview = ({ preview, isDesktop }) => (
     >
       <RaffleCard
         raffle={preview.raffle}
-        onLive={noop}
         onMarkFinished={noop}
         onRequestReminder={noop}
       />
@@ -65,20 +65,7 @@ const RafflePreview = ({ preview, isDesktop }) => (
 
 RafflePreview.propTypes = {
   preview: PropTypes.shape({
-    raffle: PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      title: PropTypes.string.isRequired,
-      description: PropTypes.string,
-      datetime: PropTypes.string.isRequired,
-      winnersCount: PropTypes.number.isRequired,
-      participants: PropTypes.arrayOf(PropTypes.string).isRequired,
-      prizes: PropTypes.arrayOf(
-        PropTypes.shape({
-          title: PropTypes.string.isRequired,
-        })
-      ).isRequired,
-      finished: PropTypes.bool.isRequired,
-    }).isRequired,
+    raffle: rafflePropType.isRequired,
     participants: PropTypes.arrayOf(PropTypes.string).isRequired,
     message: PropTypes.string.isRequired,
   }).isRequired,
