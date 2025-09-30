@@ -9,16 +9,22 @@
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
  */
 
-import { useMemo, useState, useRef, useId, useCallback, useEffect } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useId,
+  useCallback,
+  useEffect,
+} from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
 import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
-import RaffleEditCard, {
-  RaffleEditCardStyles,
-} from "./manage/RaffleEditCard";
+import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
+import { createPortal } from "react-dom";
 
 // ========= Helpers =========
 const composeFormState = (raffle) => {
@@ -417,69 +423,73 @@ const ManageRaffles = ({
       </div>
 
       {/* ====== Panel lateral de edición (drawer) ====== */}
-      {Boolean(editState) && (
-        <div
-          className="drawer-layer"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-drawer-title"
-        >
-          <div className="drawer-overlay" onClick={requestCloseEdit} />
-          <aside className="drawer anim-scale-in">
-            <header className="drawer__header">
-              <div>
-                <h2 id="edit-drawer-title" className="drawer__title">
-                  Editar sorteo
-                </h2>
-                <p className="drawer__desc">
-                  Actualizá los datos y guardá los cambios cuando estés listo.
-                </p>
+      {Boolean(editState) &&
+        createPortal(
+          <div
+            className="drawer-layer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-drawer-title"
+          >
+            <div className="drawer-overlay" onClick={requestCloseEdit} />
+            <aside className="drawer anim-scale-in">
+              <header className="drawer__header">
+                <div>
+                  <h2 id="edit-drawer-title" className="drawer__title">
+                    Editar sorteo
+                  </h2>
+                  <p className="drawer__desc">
+                    Actualizá los datos y guardá los cambios cuando estés listo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  aria-label="Cerrar panel"
+                  onClick={requestCloseEdit}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </header>
+
+              <div
+                className="drawer__content"
+                role="region"
+                aria-label="Formulario de edición"
+              >
+                {editState ? (
+                  <RaffleEditCard
+                    form={editState.form}
+                    onChange={handleEditField}
+                    onSubmit={handleEditSubmit}
+                    formId={editFormId}
+                    titleRef={titleInputRef}
+                    alert={formAlert}
+                    alertId={alertId}
+                  />
+                ) : null}
               </div>
-              <button
-                type="button"
-                className="button button--ghost"
-                aria-label="Cerrar panel"
-                onClick={requestCloseEdit}
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </header>
-            <div
-              className="drawer__content"
-              role="region"
-              aria-label="Formulario de edición"
-            >
-              {editState ? (
-                <RaffleEditCard
-                  form={editState.form}
-                  onChange={handleEditField}
-                  onSubmit={handleEditSubmit}
-                  formId={editFormId}
-                  titleRef={titleInputRef}
-                  alert={formAlert}
-                  alertId={alertId}
-                />
-              ) : null}
-            </div>
-            <footer className="drawer__footer">
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={requestCloseEdit}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="button button--primary"
-                form={editFormId}
-              >
-                Guardar cambios
-              </button>
-            </footer>
-          </aside>
-        </div>
-      )}
+
+              <footer className="drawer__footer">
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  onClick={requestCloseEdit}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="button button--primary"
+                  form={editFormId}
+                >
+                  Guardar cambios
+                </button>
+              </footer>
+            </aside>
+          </div>,
+          document.body
+        )}
 
       {/* ====== Modal de confirmación ====== */}
       <AdminModal
@@ -541,7 +551,6 @@ const buildConfirmCopy = (state) => {
     cta: "Finalizar",
   };
 };
-
 
 ManageRaffles.propTypes = {
   raffles: PropTypes.array.isRequired,

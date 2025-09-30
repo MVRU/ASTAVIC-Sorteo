@@ -90,6 +90,14 @@ export const RaffleEditCardStyles = () => (
           align-items: center;
         }
       }
+
+      /* Ajustes para evitar overflow en grid */
+      .manage-edit .input { min-width: 0; }
+      .manage-edit textarea.input {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+
     `}</style>
 );
 
@@ -122,7 +130,12 @@ const RaffleEditCard = ({
       aria-describedby={describedBy}
     >
       {alert ? (
-        <div className="form-alert" role="alert" id={alertId} aria-live="assertive">
+        <div
+          className="form-alert"
+          role="alert"
+          id={alertId}
+          aria-live="assertive"
+        >
           {alert.message}
         </div>
       ) : null}
@@ -237,10 +250,8 @@ RaffleEditCard.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
     datetime: PropTypes.string.isRequired,
-    winnersCount: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.number,
-    ]).isRequired,
+    winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+      .isRequired,
     finished: PropTypes.bool.isRequired,
     prizesText: PropTypes.string.isRequired,
     participantsText: PropTypes.string.isRequired,

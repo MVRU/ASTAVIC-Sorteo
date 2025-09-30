@@ -963,6 +963,7 @@ footer {
   inset: 0;
   background: rgba(11, 25, 54, 0.5);
 }
+/* ===== Drawer lateral ===== */
 .drawer {
   position: absolute;
   right: 0;
@@ -972,13 +973,17 @@ footer {
   background: var(--surface-elevated);
   border-left: 1px solid rgba(15, 40, 105, 0.12);
   box-shadow: -20px 0 60px rgba(2, 12, 27, 0.18);
-  max-height: 100vh;
-  overflow-y: auto;
+  /* Altura fija al viewport + layout column */
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* El scroll NO va acá */
+  overflow: hidden;
 }
 @supports (height: 100dvh) {
   .drawer {
+    height: 100dvh;
     max-height: 100dvh;
   }
 }
@@ -1010,21 +1015,23 @@ footer {
   color: var(--text-secondary);
 }
 .drawer__content {
-  flex: 1 0 auto;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 0; /* CLAVE para que flex permita scroll */
+  overflow: auto; /* mueve aquí el scroll */
+  -webkit-overflow-scrolling: touch;
   padding-top: 1rem;
-  padding-right: calc(1.25rem + var(--safe-area-right));
+  padding-right: calc(1.25rem + var(--safe-area-right, 0px));
   padding-bottom: 1rem;
-  padding-left: calc(1.25rem + var(--safe-area-left));
+  padding-left: calc(1.25rem + var(--safe-area-left, 0px));
 }
 .drawer__footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
   padding-top: 0.9rem;
-  padding-right: calc(1.25rem + var(--safe-area-right));
-  padding-bottom: calc(0.9rem + var(--safe-area-bottom));
-  padding-left: calc(1.25rem + var(--safe-area-left));
+  padding-right: calc(1.25rem + var(--safe-area-right, 0px));
+  padding-bottom: calc(0.9rem + var(--safe-area-bottom, 0px));
+  padding-left: calc(1.25rem + var(--safe-area-left, 0px));
   border-top: 1px solid var(--border);
   background: #ffffff;
 }
@@ -1941,8 +1948,7 @@ footer {
   align-items: flex-start;
   width: 100%;
   box-sizing: border-box;
-  padding: clamp(1rem, 1.6vw, 1.5rem)
-    clamp(1rem, 2.2vw, 1.75rem)
+  padding: clamp(1rem, 1.6vw, 1.5rem) clamp(1rem, 2.2vw, 1.75rem)
     clamp(1.1rem, 1.8vw, 1.75rem);
   border-bottom: 1px solid rgba(15, 40, 105, 0.08);
   background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
@@ -2185,7 +2191,8 @@ footer {
 }
 @media (prefers-reduced-motion: reduce) {
   .manage-card {
-    transition: box-shadow var(--transition-base), border-color var(--transition-base);
+    transition: box-shadow var(--transition-base),
+      border-color var(--transition-base);
   }
   .manage-card:hover,
   .manage-card:focus-within {
@@ -2358,4 +2365,60 @@ footer {
   background: #f1f5ff;
   border: 1px solid rgba(13, 71, 161, 0.16);
   color: var(--brand-700, #0d47a1);
+}
+
+/* === Drawer: layout robusto, footer siempre visible === */
+.drawer-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* por encima del header */
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.drawer-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Panel lateral: header (auto) + content (flex) + footer (auto) */
+.drawer {
+  position: relative; /* dentro de .drawer-layer */
+  width: min(680px, 100%);
+  height: 100dvh; /* ocupa todo el viewport */
+  max-height: 100dvh;
+  margin-left: auto;
+  background: var(--surface, #fff);
+  border-left: 1px solid rgba(15, 40, 105, 0.12);
+  box-shadow: -20px 0 60px rgba(2, 12, 27, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* el scroll NO va en el panel */
+}
+
+.drawer__header,
+.drawer__footer {
+  flex: 0 0 auto;
+  background: #fff;
+  padding: 1rem 1.25rem;
+}
+
+.drawer__footer {
+  border-top: 1px solid var(--border);
+}
+
+.drawer__content {
+  flex: 1 1 auto;
+  min-height: 0; /* clave para scroll interno en flex */
+  overflow: auto; /* único scroll del panel */
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem calc(1.25rem + var(--safe-area-right, 0px)) 1rem
+    calc(1.25rem + var(--safe-area-left, 0px));
+}
+
+/* Ayuda si algún contenedor padre recorta */
+.admin-manage {
+  overflow: visible;
 }
