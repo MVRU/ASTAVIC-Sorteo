@@ -5,8 +5,7 @@ import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import RaffleCard from "./RaffleCard";
 import { useToast } from "../../context/ToastContext";
-
-const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+import { isValidEmail, sanitizeEmail } from "../../utils/validation";
 
 const raffleShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -36,7 +35,8 @@ const PublicView = ({
   const [reminder, setReminder] = useState({ open: false, raffle: null });
   const emailFieldRef = useRef(null);
   const { showToast } = useToast();
-  const isEmailValid = emailRegex.test(email.trim());
+  const normalizedEmail = sanitizeEmail(email);
+  const isEmailValid = isValidEmail(normalizedEmail);
   const isFinishedRoute = route === "finished";
   const visibleRaffles = isFinishedRoute ? finishedRaffles : activeRaffles;
   const visibleCount = visibleRaffles.length;
@@ -89,7 +89,7 @@ const PublicView = ({
     }
     try {
       setSubmitting(true);
-      const result = await onRegisterSubscriber(email.trim(), reminder.raffle);
+      const result = await onRegisterSubscriber(normalizedEmail, reminder.raffle);
       if (result?.ok === false) {
         showToast({
           status: "error",
