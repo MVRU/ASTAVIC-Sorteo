@@ -1317,6 +1317,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               </h2>
               <div
                 className="anim-up"
+                aria-hidden="true"
                 style={{
                   pointerEvents: "none",
                   opacity: previewParticipants.length ? 1 : 0.6,
@@ -1328,6 +1329,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   raffle={previewRaffle}
                   onMarkFinished={() => {}}
                   onRequestReminder={() => {}}
+                  interactionMode="preview"
                 />
               </div>
               <p

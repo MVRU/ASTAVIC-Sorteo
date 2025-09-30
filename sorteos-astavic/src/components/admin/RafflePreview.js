@@ -1,4 +1,5 @@
 // ! DECISIÓN DE DISEÑO: La vista previa queda aislada para poder reutilizarla y evitar lógica condicional en el panel.
+// * Usamos interactionMode="preview" en RaffleCard para evitar efectos y eventos en la vista de administración.
 import PropTypes from "prop-types";
 import RaffleCard from "../public/RaffleCard";
 import rafflePropType from "../public/rafflePropType";
@@ -19,6 +20,7 @@ const RafflePreview = ({ preview, isDesktop }) => (
     </h2>
     <div
       className="anim-up"
+      aria-hidden="true"
       style={{
         pointerEvents: "none",
         opacity: preview.participants.length ? 1 : 0.6,
@@ -30,6 +32,7 @@ const RafflePreview = ({ preview, isDesktop }) => (
         raffle={preview.raffle}
         onMarkFinished={noop}
         onRequestReminder={noop}
+        interactionMode="preview"
       />
     </div>
     <p

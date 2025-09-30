@@ -68,4 +68,37 @@ describe("AdminDashboard", () => {
       expect(titleInput).toHaveFocus();
     });
   });
+
+  test("deshabilita la interacción en la tarjeta de vista previa", () => {
+    renderWithProviders(
+      <AdminDashboard
+        onLogout={jest.fn()}
+        onCreateRaffle={jest.fn()}
+        raffles={[]}
+      />
+    );
+
+    screen.getByRole("heading", { name: /vista previa/i });
+
+    expect(screen.queryByRole("button", { name: /ver sorteo/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /avisarme por email/i })
+    ).not.toBeInTheDocument();
+
+    const previewViewButton = screen.getByText(/ver sorteo/i, {
+      selector: "button",
+      hidden: true,
+    });
+    const previewReminderButton = screen.getByText(/avisarme por email/i, {
+      selector: "button",
+      hidden: true,
+    });
+
+    expect(previewViewButton).toBeDisabled();
+    expect(previewReminderButton).toBeDisabled();
+
+    previewViewButton.click();
+    previewReminderButton.click();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });
