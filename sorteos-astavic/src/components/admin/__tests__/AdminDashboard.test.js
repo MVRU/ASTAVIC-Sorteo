@@ -1,0 +1,71 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import AdminDashboard from "../AdminDashboard";
+import { ToastProvider } from "../../../context/ToastContext";
+
+const renderWithProviders = (ui) => render(<ToastProvider>{ui}</ToastProvider>);
+const setupUser = () =>
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
+
+describe("AdminDashboard", () => {
+  test("muestra errores inline accesibles al fallar la validación", async () => {
+    const onCreateRaffle = jest.fn();
+    renderWithProviders(
+      <AdminDashboard
+        onLogout={jest.fn()}
+        onCreateRaffle={onCreateRaffle}
+        raffles={[]}
+      />
+    );
+
+    const user = setupUser();
+    await user.click(screen.getByRole("button", { name: /crear sorteo/i }));
+
+    const titleInput = screen.getByRole("textbox", {
+      name: /título del sorteo/i,
+    });
+    await waitFor(() => {
+      expect(titleInput).toHaveAttribute("aria-invalid", "true");
+    });
+    expect(titleInput.getAttribute("aria-describedby")).toMatch(
+      /raffle-title-error/
+    );
+    expect(
+      screen.getByText("El título debe tener al menos 3 caracteres.", {
+        selector: "#raffle-title-error",
+      })
+    ).toBeInTheDocument();
+
+    const prizeInput = screen.getByLabelText(/título del premio 1/i);
+    expect(prizeInput).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getByText("El título del premio 1 no puede estar vacío.", {
+        selector: "#prize-title-0-error",
+      })
+    ).toBeInTheDocument();
+
+    const manualTextarea = screen.getByRole("textbox", {
+      name: /pegalo manualmente/i,
+    });
+    expect(manualTextarea).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getByText("No se detectaron participantes (archivo o texto).", {
+        selector: "#raffle-manual-error",
+      })
+    ).toBeInTheDocument();
+    expect(manualTextarea.getAttribute("aria-describedby")).toMatch(
+      /raffle-manual-error/
+    );
+
+    const dropZone = screen.getByRole("button", {
+      name: /soltá tu archivo/i,
+    });
+    expect(dropZone.getAttribute("aria-describedby")).toMatch(
+      /raffle-manual-error/
+    );
+
+    await waitFor(() => {
+      expect(titleInput).toHaveFocus();
+    });
+  });
+});
