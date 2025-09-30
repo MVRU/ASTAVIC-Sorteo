@@ -1,14 +1,55 @@
-import { useEffect } from "react";
+// ! DECISIÓN DE DISEÑO: Modal de sorteo en vivo con gestión centralizada de foco y scroll bloqueado.
+// * Reutilizamos hooks de infraestructura para focus trap y scroll lock, garantizando experiencia consistente.
+// -!- Riesgo: La restauración del foco depende de que el disparador siga montado al cerrar el modal.
+import { useEffect, useId, useRef } from "react";
 import PropTypes from "prop-types";
+import useFocusTrap from "../hooks/useFocusTrap";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
 
 const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
+  const headingId = useId();
+  const titleId = `${headingId}-title`;
+  const descId = raffle?.description ? `${headingId}-desc` : undefined;
+  const messageId = message ? `${headingId}-message` : undefined;
+  const describedBy = [descId, messageId].filter(Boolean).join(" ") || undefined;
+  const contentRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  useBodyScrollLock(open);
+  useFocusTrap(contentRef, open);
+
   useEffect(() => {
     if (!open) return undefined;
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      previousFocusRef.current =
+        activeElement && typeof activeElement.focus === "function"
+          ? activeElement
+          : null;
+    }
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
     const handleKey = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
     };
+
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    closeButtonRef.current?.focus();
+
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      const focusTarget = previousFocusRef.current;
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus();
+      }
+      previousFocusRef.current = null;
+    };
   }, [open, onClose]);
 
   if (!open || !raffle) return null;
@@ -20,22 +61,24 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
       className="modal anim-fade-in"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="live-draw-title"
+      aria-labelledby={titleId}
+      aria-describedby={describedBy}
     >
       <div className="modal__overlay" onClick={onClose} />
-      <div className="modal__content anim-scale-in">
+      <div className="modal__content anim-scale-in" ref={contentRef}>
         <div className="modal__header">
           <div>
-            <h3 id="live-draw-title" className="modal__title">
+            <h3 id={titleId} className="modal__title">
               Sorteo &mdash; {raffle.title}
             </h3>
             {raffle.description && (
-              <p className="legend" style={{ margin: 0 }}>
+              <p id={descId} className="legend" style={{ margin: 0 }}>
                 {raffle.description}
               </p>
             )}
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             className="button button--ghost"
             aria-label="Cerrar modal"
@@ -46,7 +89,11 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
         </div>
 
         {/* Mensaje opcional (estado o info) */}
-        {message && <div className="live-stage anim-blur-in">{message}</div>}
+        {message && (
+          <div id={messageId} className="live-stage anim-blur-in">
+            {message}
+          </div>
+        )}
 
         {/* Ganadores provistos por backend */}
         {hasWinners && (

@@ -2,6 +2,8 @@
 import { useEffect, useId, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import { createPortal } from "react-dom";
+import useFocusTrap from "../../hooks/useFocusTrap";
+import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
 const AdminModal = ({
   open,
@@ -16,17 +18,35 @@ const AdminModal = ({
   const descId = description ? `${headingId}-desc` : undefined;
   const contentRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  useBodyScrollLock(open);
+  useFocusTrap(contentRef, open);
 
   useEffect(() => {
     if (!open) return undefined;
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      previousFocusRef.current =
+        activeElement && typeof activeElement.focus === "function"
+          ? activeElement
+          : null;
+    }
     const handleKey = (event) => {
       if (event.key === "Escape") {
         event.stopPropagation();
         onClose();
       }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      const focusTarget = previousFocusRef.current;
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus();
+      }
+      previousFocusRef.current = null;
+    };
   }, [open, onClose]);
 
   useEffect(() => {
