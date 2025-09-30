@@ -1,6 +1,7 @@
-// ! DECISIÓN DE DISEÑO: Modal accesible reutilizable para administración, priorizando consistencia y foco gestionado.
-import { useEffect, useId, useRef } from "react";
+// ! DECISIÓN DE DISEÑO: Modal accesible reutilizable para administración, priorizando consistencia, foco gestionado y capa dedicada.
+import { useEffect, useId, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
+import { createPortal } from "react-dom";
 
 const AdminModal = ({
   open,
@@ -52,10 +53,21 @@ const AdminModal = ({
     }
   }, [open, initialFocusRef]);
 
-  if (!open) return null;
+  const portalTarget = useMemo(
+    () => (typeof document !== "undefined" ? document.body : null),
+    []
+  );
 
-  return (
-    <div className="modal" role="dialog" aria-modal="true" aria-labelledby={headingId} aria-describedby={descId}>
+  if (!open || !portalTarget) return null;
+
+  return createPortal(
+    <div
+      className="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={headingId}
+      aria-describedby={descId}
+    >
       <div className="modal__overlay" onClick={onClose} />
       <div className="modal__content" ref={contentRef}>
         <div className="modal__header">
@@ -82,7 +94,8 @@ const AdminModal = ({
         <div className="modal__body">{children}</div>
         {footer && <div className="modal__footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    portalTarget
   );
 };
 

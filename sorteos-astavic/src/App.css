@@ -4,6 +4,7 @@
    SISTEMA DE TOKENS Y RESET
    ============================ */
 :root {
+  /* ! DECISIÓN DE DISEÑO: Definimos capas (z-index) como tokens para asegurar jerarquía consistente entre header, drawer y modal. */
   /* Paleta base (fallbacks si no existen) */
   --brand-25: #f5faff;
   --brand-50: #eaf4ff;
@@ -44,6 +45,10 @@
   --transition-slow: 0.28s ease;
 
   --container-max: 1120px;
+  --layer-header: 20;
+  --layer-drawer: 1100;
+  --layer-modal: 1200;
+  --layer-toast: 1300;
 }
 
 /* Reset esencial y tipografía */
@@ -126,7 +131,7 @@ main {
 .app-header {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: var(--layer-header);
   backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(15, 40, 105, 0.08);
@@ -714,7 +719,7 @@ main {
   display: grid;
   justify-items: end;
   gap: 0.75rem;
-  z-index: 1200;
+  z-index: var(--layer-toast);
   pointer-events: none;
 }
 
@@ -939,6 +944,7 @@ footer {
 /* ============================
    MODAL
    ============================ */
+/* ! Garantizamos que el modal supere al drawer utilizando el token de capa dedicado. */
 .modal {
   position: fixed;
   inset: 0;
@@ -946,7 +952,7 @@ footer {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  z-index: 30;
+  z-index: var(--layer-modal);
 }
 
 /* ============================
@@ -956,7 +962,7 @@ footer {
 .drawer-layer {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: var(--layer-drawer);
 }
 .drawer-overlay {
   position: absolute;
@@ -2371,7 +2377,7 @@ footer {
 .drawer-layer {
   position: fixed;
   inset: 0;
-  z-index: 1000; /* por encima del header */
+  z-index: var(--layer-drawer); /* por encima del header */
   display: flex;
   align-items: stretch;
   justify-content: flex-end;

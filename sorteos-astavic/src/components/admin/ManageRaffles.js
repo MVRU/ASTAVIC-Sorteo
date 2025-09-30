@@ -1,22 +1,9 @@
-// ManageRaffles.jsx
-// ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
-// ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
-// ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
-// ! DECISIÓN DE DISEÑO: El drawer lateral confía en un único scroll para que cabecera y acciones sigan el flujo natural del contenido.
-// ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
+// ! DECISIÓN DE DISEÑO: Se separan responsabilidades entre editor y confirmaciones para reforzar SRP y reutilizar el modal administrativo.
+// ! DECISIÓN DE DISEÑO: El bloqueo de navegación y recarga solo se activa con cambios pendientes para evitar interrupciones innecesarias.
+// ? Riesgo: La integración con backend deberá contemplar latencias y estados de error al persistir sorteos.
+// TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
 
-/**
- * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
- */
-
-import {
-  useMemo,
-  useState,
-  useRef,
-  useId,
-  useCallback,
-  useEffect,
-} from "react";
+import { useMemo, useState, useRef, useId, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
@@ -26,7 +13,9 @@ import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
 
-// ========= Helpers =========
+export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
+  "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
+
 const composeFormState = (raffle) => {
   const datetimeResult = toLocalInputValue(raffle.datetime);
   return {
@@ -35,7 +24,10 @@ const composeFormState = (raffle) => {
       title: raffle.title || "",
       description: raffle.description || "",
       datetime: datetimeResult.value,
-      winnersCount: raffle.winnersCount ?? 1,
+      winnersCount:
+        raffle.winnersCount === undefined || raffle.winnersCount === null
+          ? "1"
+          : String(raffle.winnersCount),
       finished: !!raffle.finished,
       prizesText: (Array.isArray(raffle.prizes) ? raffle.prizes : [])
         .map((prize) => (prize?.title ? prize.title : ""))
@@ -52,7 +44,23 @@ const composeFormState = (raffle) => {
   };
 };
 
-// convierte ISO a valor aceptado por input datetime-local
+const normalizeMultiline = (value) => String(value ?? "").replace(/\r\n/g, "\n");
+
+const snapshotForm = (form) => ({
+  title: form.title || "",
+  description: form.description || "",
+  datetime: form.datetime || "",
+  winnersCount:
+    form.winnersCount === undefined || form.winnersCount === null
+      ? ""
+      : String(form.winnersCount),
+  finished: Boolean(form.finished),
+  prizesText: normalizeMultiline(form.prizesText || ""),
+  participantsText: normalizeMultiline(form.participantsText || ""),
+});
+
+const serializeForm = (form) => JSON.stringify(snapshotForm(form));
+
 function toLocalInputValue(isoLike) {
   if (!isoLike) {
     return { value: "", error: null };
@@ -137,7 +145,6 @@ function buildPayloadFromForm(form) {
   };
 }
 
-// ========= Main =========
 const ManageRaffles = ({
   raffles,
   onUpdateRaffle,
@@ -148,12 +155,19 @@ const ManageRaffles = ({
   const [tab, setTab] = useState("active");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("date_desc");
-  const [editState, setEditState] = useState(null); // { raffle, form }
-  const [confirmState, setConfirmState] = useState(null); // { type, raffle }
+  const [editingRaffle, setEditingRaffle] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [confirmState, setConfirmState] = useState(null);
   const [formAlert, setFormAlert] = useState(null);
   const titleInputRef = useRef(null);
+  const historySentinelRef = useRef(false);
+  const skipPopStateRef = useRef(false);
+  const previousHistoryStateRef = useRef(null);
+  const editBaselineRef = useRef("");
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
+  const portalTarget =
+    typeof document !== "undefined" ? document.body : null;
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
       if (result?.ok === false) {
@@ -192,11 +206,12 @@ const ManageRaffles = ({
   const handleTabChange = useCallback((nextTab) => setTab(nextTab), [setTab]);
   const handleQueryChange = useCallback((value) => setQ(value), [setQ]);
   const handleSortChange = useCallback((value) => setSort(value), [setSort]);
+  const isEditing = Boolean(editingRaffle);
 
   const list = useMemo(() => {
     const src = tab === "active" ? activeAll : finishedAll;
     const query = q.trim().toLowerCase();
-    let out = !query
+    const filtered = !query
       ? src
       : src.filter((r) => {
           const bag = `${r.title || ""} ${r.description || ""}`.toLowerCase();
@@ -204,89 +219,180 @@ const ManageRaffles = ({
         });
 
     if (sort === "date_asc") {
-      out = [...out].sort(
+      return [...filtered].sort(
         (a, b) => new Date(a.datetime) - new Date(b.datetime)
       );
-    } else if (sort === "date_desc") {
-      out = [...out].sort(
+    }
+    if (sort === "date_desc") {
+      return [...filtered].sort(
         (a, b) => new Date(b.datetime) - new Date(a.datetime)
       );
-    } else if (sort === "title_asc") {
-      out = [...out].sort((a, b) =>
+    }
+    if (sort === "title_asc") {
+      return [...filtered].sort((a, b) =>
         (a.title || "").localeCompare(b.title || "")
       );
     }
-    return out;
+    return filtered;
   }, [tab, activeAll, finishedAll, q, sort]);
 
-  const startEdit = (raffle) => {
+  const startEdit = useCallback((raffle) => {
     const mapped = composeFormState(raffle);
-    setEditState({ raffle, form: mapped.form });
+    setEditingRaffle(raffle);
+    setEditForm(mapped.form);
     setFormAlert(mapped.alert);
-  };
+    editBaselineRef.current = serializeForm(mapped.form);
+  }, []);
 
-  const closeEdit = () => {
-    setEditState(null);
+  const closeEdit = useCallback(() => {
+    setEditingRaffle(null);
+    setEditForm(null);
     setFormAlert(null);
-  };
+    editBaselineRef.current = "";
+  }, []);
 
   const hasUnsavedChanges = useCallback(() => {
-    if (!editState?.form || !editState?.raffle) return false;
-    const initial = composeFormState(editState.raffle).form;
-    const pick = (f) => ({
-      title: f.title || "",
-      description: f.description || "",
-      datetime: f.datetime || "",
-      winnersCount: Number(f.winnersCount || 0),
-      finished: Boolean(f.finished),
-      prizesText: f.prizesText || "",
-      participantsText: f.participantsText || "",
-    });
-    const a = pick(initial);
-    const b = pick(editState.form);
-    return JSON.stringify(a) !== JSON.stringify(b);
-  }, [editState]);
+    if (!isEditing || !editForm) return false;
+    return editBaselineRef.current !== serializeForm(editForm);
+  }, [editForm, isEditing]);
 
-  const requestCloseEdit = useCallback(() => {
-    if (hasUnsavedChanges()) {
-      const ok = window.confirm(
-        "Hay cambios sin guardar. ¿Deseás descartarlos?"
-      );
-      if (!ok) return;
-    }
-    closeEdit();
+  const openConfirm = useCallback((type, raffle, meta = null) => {
+    setConfirmState({ type, raffle, meta });
+  }, []);
+
+  const closeConfirm = useCallback(() => {
+    setConfirmState(null);
+  }, []);
+
+  const requestCloseEdit = useCallback(
+    (meta = {}) => {
+      if (hasUnsavedChanges()) {
+        openConfirm("discardEdit", editingRaffle || null, meta);
+        return;
+      }
+      closeEdit();
+      if (meta?.onDiscard) {
+        meta.onDiscard();
+      }
+    },
+    [hasUnsavedChanges, editingRaffle, closeEdit, openConfirm]
+  );
+
+  const requestCloseEditRef = useRef(requestCloseEdit);
+  useEffect(() => {
+    requestCloseEditRef.current = requestCloseEdit;
+  }, [requestCloseEdit]);
+
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
   }, [hasUnsavedChanges]);
 
   // Drawer UX: focus management, Esc to close, body scroll lock
   useEffect(() => {
-    if (!editState) return undefined;
+    if (!isEditing) return undefined;
     const input = titleInputRef.current;
     if (input && typeof input.focus === "function") {
       input.focus();
     }
+    return undefined;
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) return undefined;
     const onKey = (e) => {
-      if (e.key === "Escape") requestCloseEdit();
+      if (e.key === "Escape") {
+        requestCloseEditRef.current?.();
+      }
+    };
+    const handleBeforeUnload = (event) => {
+      if (hasUnsavedChangesRef.current?.()) {
+        event.preventDefault();
+        event.returnValue = UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE;
+        return UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE;
+      }
     };
     const { style } = document.body;
     const prevOverflow = style.overflow;
     style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       style.overflow = prevOverflow;
     };
-  }, [editState, requestCloseEdit]);
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) return undefined;
+    if (!historySentinelRef.current) {
+      previousHistoryStateRef.current = window.history.state ?? null;
+      const baseState = window.history.state ?? {};
+      window.history.pushState(
+        { ...baseState, raffleEditModal: true },
+        document.title,
+        window.location.href
+      );
+      historySentinelRef.current = true;
+    }
+    const handlePopState = (event) => {
+      if (skipPopStateRef.current) {
+        skipPopStateRef.current = false;
+        return;
+      }
+      if (!historySentinelRef.current) {
+        return;
+      }
+      if (!hasUnsavedChangesRef.current?.()) {
+        historySentinelRef.current = false;
+        closeEdit();
+        return;
+      }
+      skipPopStateRef.current = true;
+      const baseState = event?.state ?? {};
+      window.history.pushState(
+        { ...baseState, raffleEditModal: true },
+        document.title,
+        window.location.href
+      );
+      requestCloseEditRef.current?.({
+        origin: "browser-back",
+        onDiscard: () => {
+          const { history } = window;
+          if (!history) return;
+          if (typeof history.back === "function") {
+            history.back();
+          } else if (typeof history.go === "function") {
+            history.go(-1);
+          }
+        },
+      });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (historySentinelRef.current) {
+        historySentinelRef.current = false;
+        skipPopStateRef.current = false;
+        if (typeof window.history.replaceState === "function") {
+          window.history.replaceState(
+            previousHistoryStateRef.current,
+            document.title,
+            window.location.href
+          );
+        }
+      }
+    };
+  }, [isEditing, closeEdit]);
 
   const handleEditField = (event) => {
     const { name, value, type, checked } = event.target;
-    setEditState((prev) => {
+    setEditForm((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
-        form: {
-          ...prev.form,
-          [name]: type === "checkbox" ? checked : value,
-        },
+        [name]: type === "checkbox" ? checked : value,
       };
     });
     if (formAlert && (!formAlert.field || formAlert.field === name)) {
@@ -296,8 +402,8 @@ const ManageRaffles = ({
 
   const handleEditSubmit = async (event) => {
     event.preventDefault();
-    if (!editState?.form) return;
-    const result = buildPayloadFromForm(editState.form);
+    if (!editForm) return;
+    const result = buildPayloadFromForm(editForm);
     if (!result.ok) {
       setFormAlert({ message: result.error, field: result.field });
       showToast({
@@ -325,39 +431,42 @@ const ManageRaffles = ({
     }
   };
 
-  const openConfirm = (type, raffle) => {
-    setConfirmState({ type, raffle });
-  };
-
-  const closeConfirm = () => {
-    setConfirmState(null);
-  };
-
   const confirmAction = async () => {
-    if (!confirmState?.raffle) return;
-    const label = confirmState.raffle.title || "el sorteo";
+    if (!confirmState) return;
+    const { type, raffle, meta } = confirmState;
+    const label = raffle?.title || "el sorteo";
     try {
-      if (confirmState.type === "delete") {
-        const response = await Promise.resolve(
-          onDeleteRaffle(confirmState.raffle.id)
-        );
-        const success = emitOutcomeToast(response, {
-          successMessage: `Sorteo "${label}" eliminado.`,
-          errorMessage: "No se pudo eliminar el sorteo. Intentá nuevamente.",
-        });
-        if (success) closeConfirm();
-      } else if (confirmState.type === "finish") {
-        const response = await Promise.resolve(
-          onMarkFinished(confirmState.raffle.id)
-        );
-        const success = emitOutcomeToast(response, {
-          successMessage: `Sorteo "${label}" marcado como finalizado.`,
-          errorMessage:
-            "No se pudo marcar como finalizado. Intentá nuevamente.",
-        });
-        if (success) closeConfirm();
-      } else {
-        closeConfirm();
+      switch (type) {
+        case "delete": {
+          const response = await Promise.resolve(onDeleteRaffle(raffle.id));
+          const success = emitOutcomeToast(response, {
+            successMessage: `Sorteo "${label}" eliminado.`,
+            errorMessage: "No se pudo eliminar el sorteo. Intentá nuevamente.",
+          });
+          if (success) closeConfirm();
+          break;
+        }
+        case "finish": {
+          const response = await Promise.resolve(onMarkFinished(raffle.id));
+          const success = emitOutcomeToast(response, {
+            successMessage: `Sorteo "${label}" marcado como finalizado.`,
+            errorMessage:
+              "No se pudo marcar como finalizado. Intentá nuevamente.",
+          });
+          if (success) closeConfirm();
+          break;
+        }
+        case "discardEdit": {
+          closeConfirm();
+          closeEdit();
+          if (meta?.onDiscard) {
+            meta.onDiscard();
+          }
+          break;
+        }
+        default: {
+          closeConfirm();
+        }
       }
     } catch (error) {
       showToast({
@@ -377,7 +486,6 @@ const ManageRaffles = ({
 
   return (
     <section className="section-gap admin-manage">
-      {/* ====== estilos locales para asegurar no overflow en el modal ====== */}
       <RaffleEditCardStyles />
 
       <div className="container">
@@ -422,16 +530,18 @@ const ManageRaffles = ({
         </div>
       </div>
 
-      {/* ====== Panel lateral de edición (drawer) ====== */}
-      {Boolean(editState) &&
-        createPortal(
+      {isEditing && portalTarget
+        ? createPortal(
           <div
             className="drawer-layer"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-drawer-title"
           >
-            <div className="drawer-overlay" onClick={requestCloseEdit} />
+            <div
+              className="drawer-overlay"
+              onClick={() => requestCloseEdit({ origin: "overlay" })}
+            />
             <aside className="drawer anim-scale-in">
               <header className="drawer__header">
                 <div>
@@ -446,7 +556,7 @@ const ManageRaffles = ({
                   type="button"
                   className="button button--ghost"
                   aria-label="Cerrar panel"
-                  onClick={requestCloseEdit}
+                  onClick={() => requestCloseEdit({ origin: "header" })}
                 >
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -457,9 +567,9 @@ const ManageRaffles = ({
                 role="region"
                 aria-label="Formulario de edición"
               >
-                {editState ? (
+                {editForm ? (
                   <RaffleEditCard
-                    form={editState.form}
+                    form={editForm}
                     onChange={handleEditField}
                     onSubmit={handleEditSubmit}
                     formId={editFormId}
@@ -474,7 +584,7 @@ const ManageRaffles = ({
                 <button
                   type="button"
                   className="button button--ghost"
-                  onClick={requestCloseEdit}
+                  onClick={() => requestCloseEdit({ origin: "footer" })}
                 >
                   Cancelar
                 </button>
@@ -488,10 +598,10 @@ const ManageRaffles = ({
               </footer>
             </aside>
           </div>,
-          document.body
-        )}
+          portalTarget
+        )
+        : null}
 
-      {/* ====== Modal de confirmación ====== */}
       <AdminModal
         open={Boolean(confirmState)}
         title={confirmCopy.title}
@@ -527,6 +637,14 @@ const ManageRaffles = ({
 };
 
 const buildConfirmCopy = (state) => {
+  if (state?.type === "discardEdit") {
+    return {
+      title: "Descartar cambios",
+      description: "Perderás los cambios no guardados en este sorteo.",
+      body: "¿Querés cerrar la edición sin guardar los cambios?",
+      cta: "Descartar",
+    };
+  }
   if (!state?.raffle) {
     return {
       title: "Confirmar acción",
@@ -544,16 +662,37 @@ const buildConfirmCopy = (state) => {
       cta: "Eliminar",
     };
   }
+  if (state.type === "finish") {
+    return {
+      title: "Finalizar sorteo",
+      description: "El sorteo dejará de mostrarse como activo.",
+      body: `¿Confirmás marcar como finalizado "${title}"?`,
+      cta: "Finalizar",
+    };
+  }
   return {
-    title: "Finalizar sorteo",
-    description: "El sorteo dejará de mostrarse como activo.",
-    body: `¿Confirmás marcar como finalizado "${title}"?`,
-    cta: "Finalizar",
+    title: "Confirmar acción",
+    description: "Revisá la información antes de continuar.",
+    body: `¿Confirmás la acción sobre "${title}"?`,
+    cta: "Confirmar",
   };
 };
 
+const raffleShape = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string,
+  description: PropTypes.string,
+  datetime: PropTypes.string.isRequired,
+  winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  finished: PropTypes.bool,
+  participants: PropTypes.arrayOf(PropTypes.string),
+  prizes: PropTypes.arrayOf(
+    PropTypes.shape({ title: PropTypes.string })
+  ),
+});
+
 ManageRaffles.propTypes = {
-  raffles: PropTypes.array.isRequired,
+  raffles: PropTypes.arrayOf(raffleShape).isRequired,
   onUpdateRaffle: PropTypes.func.isRequired,
   onDeleteRaffle: PropTypes.func.isRequired,
   onMarkFinished: PropTypes.func.isRequired,

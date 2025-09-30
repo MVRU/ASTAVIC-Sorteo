@@ -1,7 +1,9 @@
 // ! DECISIÓN DE DISEÑO: Cubrimos interacciones clave del panel para asegurar que los modales funcionen según lo requerido.
 import { render, screen, within, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ManageRaffles from '../ManageRaffles';
+import ManageRaffles, {
+  UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE,
+} from '../ManageRaffles';
 import { ToastProvider } from '../../../context/ToastContext';
 
 const createUser = () =>
@@ -131,6 +133,106 @@ describe('ManageRaffles', () => {
     );
     expect(feedback).toBeDefined();
     expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
+  });
+
+  test('pide confirmación antes de cerrar con cambios sin guardar', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const titleInput = await screen.findByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Título actualizado');
+
+    await user.click(
+      within(await screen.findByRole('dialog', { name: /editar sorteo/i }))
+        .getByRole('button', { name: /cancelar/i })
+    );
+
+    const confirm = await screen.findByRole('dialog', {
+      name: /descartar cambios/i,
+    });
+    expect(
+      within(confirm).getByText(/cerrar la edición sin guardar los cambios/i)
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(confirm).getByRole('button', { name: /descartar/i })
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /editar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
+  });
+
+  test('mantiene el foco en el campo que se está editando', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const descriptionInput = await screen.findByLabelText(/descripción/i);
+    descriptionInput.focus();
+    await user.type(descriptionInput, 'Nueva descripción');
+
+    await waitFor(() => {
+      expect(descriptionInput).toHaveFocus();
+    });
+
+    const winnersInput = screen.getByLabelText(/ganadores/i);
+    await user.click(winnersInput);
+    await user.clear(winnersInput);
+    await user.type(winnersInput, '3');
+
+    await waitFor(() => {
+      expect(winnersInput).toHaveFocus();
+    });
+  });
+
+  test('advierte en español antes de recargar cuando hay cambios sin guardar', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const titleInput = await screen.findByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Título de prueba');
+
+    const event = new Event('beforeunload', { cancelable: true });
+    Object.defineProperty(event, 'returnValue', {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(event.returnValue).toBe(UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE);
   });
 
   test('valida que la fecha ingresada tenga un formato correcto', async () => {
