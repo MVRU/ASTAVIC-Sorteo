@@ -4,6 +4,7 @@
 // ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
 // ! DECISIÓN DE DISEÑO: Las salidas con cambios sin guardar reutilizan el mismo modal de confirmación para mantener consistencia visual.
 // ! DECISIÓN DE DISEÑO: El drawer lateral confía en un único scroll para que cabecera y acciones sigan el flujo natural del contenido.
+// ! DECISIÓN DE DISEÑO: El guardado en el historial se controla sin navegaciones forzadas para evitar regresos inesperados.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 // ? Riesgo: Los navegadores obligan a usar diálogos nativos en beforeunload; se delega la advertencia de salida a esa interfaz.
 
@@ -156,15 +157,7 @@ const ManageRaffles = ({
   const titleInputRef = useRef(null);
   const historySentinelRef = useRef(false);
   const skipPopStateRef = useRef(false);
-  const goBackSafely = useCallback(() => {
-    const { history } = window;
-    if (!history) return;
-    if (typeof history.back === "function") {
-      history.back();
-    } else if (typeof history.go === "function") {
-      history.go(-1);
-    }
-  }, []);
+  const previousHistoryStateRef = useRef(null);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
   const emitOutcomeToast = useCallback(
@@ -270,10 +263,10 @@ const ManageRaffles = ({
         });
         return;
       }
+      closeEdit();
       if (meta?.onDiscard) {
         meta.onDiscard();
       }
-      closeEdit();
     },
     [hasUnsavedChanges, editState, closeEdit]
   );
@@ -309,14 +302,16 @@ const ManageRaffles = ({
   useEffect(() => {
     if (!editState) return undefined;
     if (!historySentinelRef.current) {
+      previousHistoryStateRef.current = window.history.state ?? null;
+      const baseState = window.history.state ?? {};
       window.history.pushState(
-        { ...(window.history.state || {}), raffleEditModal: true },
+        { ...baseState, raffleEditModal: true },
         document.title,
         window.location.href
       );
       historySentinelRef.current = true;
     }
-    const handlePopState = () => {
+    const handlePopState = (event) => {
       if (skipPopStateRef.current) {
         skipPopStateRef.current = false;
         return;
@@ -326,22 +321,26 @@ const ManageRaffles = ({
       }
       if (!hasUnsavedChanges()) {
         historySentinelRef.current = false;
-        skipPopStateRef.current = true;
-        goBackSafely();
         closeEdit();
         return;
       }
+      skipPopStateRef.current = true;
+      const baseState = event?.state ?? {};
       window.history.pushState(
-        { ...(window.history.state || {}), raffleEditModal: true },
+        { ...baseState, raffleEditModal: true },
         document.title,
         window.location.href
       );
       requestCloseEdit({
         origin: "browser-back",
         onDiscard: () => {
-          historySentinelRef.current = false;
-          skipPopStateRef.current = true;
-          goBackSafely();
+          const { history } = window;
+          if (!history) return;
+          if (typeof history.back === "function") {
+            history.back();
+          } else if (typeof history.go === "function") {
+            history.go(-1);
+          }
         },
       });
     };
@@ -350,11 +349,17 @@ const ManageRaffles = ({
       window.removeEventListener("popstate", handlePopState);
       if (historySentinelRef.current) {
         historySentinelRef.current = false;
-        skipPopStateRef.current = true;
-        goBackSafely();
+        skipPopStateRef.current = false;
+        if (typeof window.history.replaceState === "function") {
+          window.history.replaceState(
+            previousHistoryStateRef.current,
+            document.title,
+            window.location.href
+          );
+        }
       }
     };
-  }, [editState, hasUnsavedChanges, requestCloseEdit, closeEdit, goBackSafely]);
+  }, [editState, hasUnsavedChanges, requestCloseEdit, closeEdit]);
 
   const handleEditField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -437,10 +442,10 @@ const ManageRaffles = ({
         if (success) closeConfirm();
       } else if (confirmState.type === "discardEdit") {
         closeConfirm();
+        closeEdit();
         if (confirmState.meta?.onDiscard) {
           confirmState.meta.onDiscard();
         }
-        closeEdit();
       } else {
         closeConfirm();
       }

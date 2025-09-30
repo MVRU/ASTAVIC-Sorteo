@@ -939,6 +939,7 @@ footer {
 /* ============================
    MODAL
    ============================ */
+/* ! Aumentamos z-index para que el modal se superponga al drawer lateral. */
 .modal {
   position: fixed;
   inset: 0;
@@ -946,7 +947,7 @@ footer {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  z-index: 30;
+  z-index: 60;
 }
 
 /* ============================
