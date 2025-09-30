@@ -1,7 +1,9 @@
 // ! DECISIÓN DE DISEÑO: Cubrimos interacciones clave del panel para asegurar que los modales funcionen según lo requerido.
 import { render, screen, within, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ManageRaffles from '../ManageRaffles';
+import ManageRaffles, {
+  UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE,
+} from '../ManageRaffles';
 import { ToastProvider } from '../../../context/ToastContext';
 
 const createUser = () =>
@@ -202,6 +204,35 @@ describe('ManageRaffles', () => {
     await waitFor(() => {
       expect(winnersInput).toHaveFocus();
     });
+  });
+
+  test('advierte en español antes de recargar cuando hay cambios sin guardar', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const titleInput = await screen.findByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Título de prueba');
+
+    const event = new Event('beforeunload', { cancelable: true });
+    Object.defineProperty(event, 'returnValue', {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(event.returnValue).toBe(UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE);
   });
 
   test('valida que la fecha ingresada tenga un formato correcto', async () => {

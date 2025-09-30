@@ -6,7 +6,8 @@
 // ! DECISIÓN DE DISEÑO: El drawer lateral confía en un único scroll para que cabecera y acciones sigan el flujo natural del contenido.
 // ! DECISIÓN DE DISEÑO: El guardado en el historial se controla sin navegaciones forzadas para evitar regresos inesperados.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
-// ? Riesgo: Los navegadores obligan a usar diálogos nativos en beforeunload; se delega la advertencia de salida a esa interfaz.
+// ? Riesgo: Los navegadores obligan a usar diálogos nativos en beforeunload y pueden ignorar cadenas custom; se provee texto en español
+// ? para maximizar compatibilidad regional cuando el agente del usuario lo permite.
 
 /**
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
@@ -30,6 +31,9 @@ import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
 
 // ========= Helpers =========
+export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
+  "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
+
 const composeFormState = (raffle) => {
   const datetimeResult = toLocalInputValue(raffle.datetime);
   return {
@@ -302,7 +306,8 @@ const ManageRaffles = ({
     const handleBeforeUnload = (event) => {
       if (hasUnsavedChangesRef.current?.()) {
         event.preventDefault();
-        event.returnValue = "";
+        event.returnValue = UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE;
+        return UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE;
       }
     };
     const { style } = document.body;
