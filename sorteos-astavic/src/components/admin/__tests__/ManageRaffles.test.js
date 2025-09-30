@@ -133,6 +133,46 @@ describe('ManageRaffles', () => {
     expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
   });
 
+  test('pide confirmación antes de cerrar con cambios sin guardar', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const titleInput = await screen.findByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Título actualizado');
+
+    await user.click(
+      within(await screen.findByRole('dialog', { name: /editar sorteo/i }))
+        .getByRole('button', { name: /cancelar/i })
+    );
+
+    const confirm = await screen.findByRole('dialog', {
+      name: /descartar cambios/i,
+    });
+    expect(
+      within(confirm).getByText(/cerrar la edición sin guardar los cambios/i)
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(confirm).getByRole('button', { name: /descartar/i })
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /editar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
+  });
+
   test('valida que la fecha ingresada tenga un formato correcto', async () => {
     const user = createUser();
     const onUpdate = jest.fn();

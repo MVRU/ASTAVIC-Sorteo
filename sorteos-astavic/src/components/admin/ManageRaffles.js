@@ -2,8 +2,10 @@
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
 // ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
+// ! DECISIÓN DE DISEÑO: Las salidas con cambios sin guardar reutilizan el mismo modal de confirmación para mantener consistencia visual.
 // ! DECISIÓN DE DISEÑO: El drawer lateral confía en un único scroll para que cabecera y acciones sigan el flujo natural del contenido.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
+// ? Riesgo: Los navegadores obligan a usar diálogos nativos en beforeunload; se delega la advertencia de salida a esa interfaz.
 
 /**
  * TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
@@ -149,9 +151,20 @@ const ManageRaffles = ({
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("date_desc");
   const [editState, setEditState] = useState(null); // { raffle, form }
-  const [confirmState, setConfirmState] = useState(null); // { type, raffle }
+  const [confirmState, setConfirmState] = useState(null); // { type, raffle, meta }
   const [formAlert, setFormAlert] = useState(null);
   const titleInputRef = useRef(null);
+  const historySentinelRef = useRef(false);
+  const skipPopStateRef = useRef(false);
+  const goBackSafely = useCallback(() => {
+    const { history } = window;
+    if (!history) return;
+    if (typeof history.back === "function") {
+      history.back();
+    } else if (typeof history.go === "function") {
+      history.go(-1);
+    }
+  }, []);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
   const emitOutcomeToast = useCallback(
@@ -225,10 +238,10 @@ const ManageRaffles = ({
     setFormAlert(mapped.alert);
   };
 
-  const closeEdit = () => {
+  const closeEdit = useCallback(() => {
     setEditState(null);
     setFormAlert(null);
-  };
+  }, []);
 
   const hasUnsavedChanges = useCallback(() => {
     if (!editState?.form || !editState?.raffle) return false;
@@ -247,15 +260,23 @@ const ManageRaffles = ({
     return JSON.stringify(a) !== JSON.stringify(b);
   }, [editState]);
 
-  const requestCloseEdit = useCallback(() => {
-    if (hasUnsavedChanges()) {
-      const ok = window.confirm(
-        "Hay cambios sin guardar. ¿Deseás descartarlos?"
-      );
-      if (!ok) return;
-    }
-    closeEdit();
-  }, [hasUnsavedChanges]);
+  const requestCloseEdit = useCallback(
+    (meta = {}) => {
+      if (hasUnsavedChanges()) {
+        setConfirmState({
+          type: "discardEdit",
+          raffle: editState?.raffle || null,
+          meta,
+        });
+        return;
+      }
+      if (meta?.onDiscard) {
+        meta.onDiscard();
+      }
+      closeEdit();
+    },
+    [hasUnsavedChanges, editState, closeEdit]
+  );
 
   // Drawer UX: focus management, Esc to close, body scroll lock
   useEffect(() => {
@@ -267,15 +288,73 @@ const ManageRaffles = ({
     const onKey = (e) => {
       if (e.key === "Escape") requestCloseEdit();
     };
+    const handleBeforeUnload = (event) => {
+      if (hasUnsavedChanges()) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
     const { style } = document.body;
     const prevOverflow = style.overflow;
     style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       style.overflow = prevOverflow;
     };
-  }, [editState, requestCloseEdit]);
+  }, [editState, requestCloseEdit, hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!editState) return undefined;
+    if (!historySentinelRef.current) {
+      window.history.pushState(
+        { ...(window.history.state || {}), raffleEditModal: true },
+        document.title,
+        window.location.href
+      );
+      historySentinelRef.current = true;
+    }
+    const handlePopState = () => {
+      if (skipPopStateRef.current) {
+        skipPopStateRef.current = false;
+        return;
+      }
+      if (!historySentinelRef.current) {
+        return;
+      }
+      if (!hasUnsavedChanges()) {
+        historySentinelRef.current = false;
+        skipPopStateRef.current = true;
+        goBackSafely();
+        closeEdit();
+        return;
+      }
+      window.history.pushState(
+        { ...(window.history.state || {}), raffleEditModal: true },
+        document.title,
+        window.location.href
+      );
+      requestCloseEdit({
+        origin: "browser-back",
+        onDiscard: () => {
+          historySentinelRef.current = false;
+          skipPopStateRef.current = true;
+          goBackSafely();
+        },
+      });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (historySentinelRef.current) {
+        historySentinelRef.current = false;
+        skipPopStateRef.current = true;
+        goBackSafely();
+      }
+    };
+  }, [editState, hasUnsavedChanges, requestCloseEdit, closeEdit, goBackSafely]);
 
   const handleEditField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -334,8 +413,8 @@ const ManageRaffles = ({
   };
 
   const confirmAction = async () => {
-    if (!confirmState?.raffle) return;
-    const label = confirmState.raffle.title || "el sorteo";
+    if (!confirmState) return;
+    const label = confirmState.raffle?.title || "el sorteo";
     try {
       if (confirmState.type === "delete") {
         const response = await Promise.resolve(
@@ -356,6 +435,12 @@ const ManageRaffles = ({
             "No se pudo marcar como finalizado. Intentá nuevamente.",
         });
         if (success) closeConfirm();
+      } else if (confirmState.type === "discardEdit") {
+        closeConfirm();
+        if (confirmState.meta?.onDiscard) {
+          confirmState.meta.onDiscard();
+        }
+        closeEdit();
       } else {
         closeConfirm();
       }
@@ -431,7 +516,10 @@ const ManageRaffles = ({
             aria-modal="true"
             aria-labelledby="edit-drawer-title"
           >
-            <div className="drawer-overlay" onClick={requestCloseEdit} />
+            <div
+              className="drawer-overlay"
+              onClick={() => requestCloseEdit({ origin: "overlay" })}
+            />
             <aside className="drawer anim-scale-in">
               <header className="drawer__header">
                 <div>
@@ -446,7 +534,7 @@ const ManageRaffles = ({
                   type="button"
                   className="button button--ghost"
                   aria-label="Cerrar panel"
-                  onClick={requestCloseEdit}
+                  onClick={() => requestCloseEdit({ origin: "header" })}
                 >
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -474,7 +562,7 @@ const ManageRaffles = ({
                 <button
                   type="button"
                   className="button button--ghost"
-                  onClick={requestCloseEdit}
+                  onClick={() => requestCloseEdit({ origin: "footer" })}
                 >
                   Cancelar
                 </button>
@@ -544,11 +632,27 @@ const buildConfirmCopy = (state) => {
       cta: "Eliminar",
     };
   }
+  if (state.type === "finish") {
+    return {
+      title: "Finalizar sorteo",
+      description: "El sorteo dejará de mostrarse como activo.",
+      body: `¿Confirmás marcar como finalizado "${title}"?`,
+      cta: "Finalizar",
+    };
+  }
+  if (state.type === "discardEdit") {
+    return {
+      title: "Descartar cambios",
+      description: "Perderás los cambios no guardados en este sorteo.",
+      body: "¿Querés cerrar la edición sin guardar los cambios?",
+      cta: "Descartar",
+    };
+  }
   return {
-    title: "Finalizar sorteo",
-    description: "El sorteo dejará de mostrarse como activo.",
-    body: `¿Confirmás marcar como finalizado "${title}"?`,
-    cta: "Finalizar",
+    title: "Confirmar acción",
+    description: "Revisá la información antes de continuar.",
+    body: `¿Confirmás la acción sobre "${title}"?`,
+    cta: "Confirmar",
   };
 };
 
