@@ -16,7 +16,7 @@ export const TUTORIAL_STEPS = [
       "Definí título, fecha y cantidad de ganadores. Ordená los premios según el puesto.",
   },
   {
-    iconName: "rocket",
+    iconName: "megaphone",
     title: "Publicá el sorteo",
     description:
       "Se mostrará el contador y, al finalizar, todos verán los mismos ganadores.",

@@ -447,7 +447,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     });
   };
 
-  const resetForm = () => {
+  const resetFormState = useCallback(() => {
     setForm({
       title: "",
       description: "",
@@ -459,7 +459,15 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
-  };
+  }, [previewDefaultMessage]);
+
+  const handleResetClick = useCallback(() => {
+    resetFormState();
+    showToast({
+      status: "info",
+      message: "Se reinició el formulario. Podés cargar los datos nuevamente.",
+    });
+  }, [resetFormState, showToast]);
 
   /* =========================
      Validaciones robustas
@@ -565,7 +573,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
           result?.message ||
           "Sorteo creado (demo). Ya es visible en la vista pública.",
       });
-      resetForm();
+      resetFormState();
     } catch {
       showToast({
         status: "error",
@@ -906,7 +914,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 <button
                   type="button"
                   className="button button--ghost"
-                  onClick={resetForm}
+                  onClick={handleResetClick}
                   disabled={loading}
                   title="Limpiar formulario"
                 >
