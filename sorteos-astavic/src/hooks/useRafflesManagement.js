@@ -1,4 +1,5 @@
 // ! DECISIÓN DE DISEÑO: Gestionamos el ciclo de vida de sorteos desde un hook para favorecer el principio de única responsabilidad.
+// -!- Riesgo: Esta demo no persiste datos; cualquier recarga del navegador reinicia el estado local.
 import { useCallback, useMemo, useState } from "react";
 import { isFinished } from "../utils/raffleUtils";
 
@@ -31,12 +32,12 @@ export const useRafflesManagement = (initialRaffles = []) => {
           : raffle
       )
     );
-    return { ok: true };
+    return { ok: true, message: "Sorteo actualizado correctamente." };
   }, []);
 
   const deleteRaffle = useCallback((raffleId) => {
     setRaffles((prev) => prev.filter((raffle) => raffle.id !== raffleId));
-    return { ok: true };
+    return { ok: true, message: "Sorteo eliminado." };
   }, []);
 
   const markFinished = useCallback((raffleId) => {
@@ -45,6 +46,7 @@ export const useRafflesManagement = (initialRaffles = []) => {
         raffle.id === raffleId ? { ...raffle, finished: true } : raffle
       )
     );
+    return { ok: true, message: "Sorteo marcado como finalizado." };
   }, []);
 
   const { activeRaffles, finishedRaffles } = useMemo(() => {

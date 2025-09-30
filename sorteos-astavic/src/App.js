@@ -1,241 +1,62 @@
 // src/App.js
-// ! DECISIÓN DE DISEÑO: Las operaciones mutables devuelven feedback semántico para disparar toasts globales coherentes.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// ! DECISIÓN DE DISEÑO: Delegamos efectos globales a hooks especializados para mantener App como orquestador declarativo.
+import { useCallback } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LiveDrawModal from "./components/LiveDrawModal";
 import PublicView from "./components/public/PublicView";
 import AdminView from "./components/admin/AdminView";
 import initialRaffles from "./data/initialRaffles";
-import { isFinished, pickWinners } from "./utils/raffleUtils";
-import ADMIN_CREDENTIALS from "./config/adminCredentials";
-import "./App.css";
 import { useToast } from "./context/ToastContext";
-const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
-const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
+import { useHashRoute } from "./hooks/useHashRoute";
+import { useAdminSession } from "./hooks/useAdminSession";
+import { useRafflesManagement } from "./hooks/useRafflesManagement";
+import { useLiveDraw } from "./hooks/useLiveDraw";
+import { useSubscribersRegistry } from "./hooks/useSubscribersRegistry";
+import "./App.css";
 
-const parseRoute = (hash) => {
-  if (hash?.startsWith("#/admin")) return "admin";
-  if (hash?.startsWith("#/finalizados")) return "finished";
-  return "public";
-};
-
-const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-const buildInitialRaffles = () =>
-  initialRaffles.map((raffle) => ({
-    ...raffle,
-    finished: raffle.finished || isFinished(raffle),
-  }));
+const LOGIN_ERROR_MESSAGE =
+  "Credenciales inválidas. Revisá los datos e intentá nuevamente.";
 
 const App = () => {
-  const [route, setRoute] = useState(() => parseRoute(window.location.hash));
-  const [raffles, setRaffles] = useState(buildInitialRaffles);
-  const [isAdmin, setIsAdmin] = useState(
-    () => sessionStorage.getItem("adminAuth") === "1"
-  );
-  const [loginError, setLoginError] = useState(false);
-  const [subscribers, setSubscribers] = useState([]);
-  const [liveDraw, setLiveDraw] = useState({
-    open: false,
-    message: "",
-    winners: [],
-    raffle: null,
-  });
-  const timersRef = useRef([]);
   const { showToast } = useToast();
-
-  const clearLiveTimers = useCallback(() => {
-    timersRef.current.forEach((id) => window.clearTimeout(id));
-    timersRef.current = [];
-  }, []);
-
-  const handleNavigate = useCallback((target) => {
-    const nextHash =
-      target === "admin"
-        ? "#/admin"
-        : target === "finished"
-        ? "#/finalizados"
-        : "#/";
-    if (window.location.hash !== nextHash) {
-      window.location.hash = nextHash;
-    } else {
-      setRoute(target);
-    }
-  }, []);
-
-  useEffect(() => {
-    const onHashChange = () => {
-      setRoute(parseRoute(window.location.hash));
-    };
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  const handleMarkFinished = useCallback((raffleId) => {
-    setRaffles((prev) =>
-      prev.map((raffle) =>
-        raffle.id === raffleId ? { ...raffle, finished: true } : raffle
-      )
-    );
-    return { ok: true, message: "Sorteo marcado como finalizado." };
-  }, []);
-
-  const handleStartLive = useCallback(
-    (raffle) => {
-      handleMarkFinished(raffle.id);
-      clearLiveTimers();
-      const winners = pickWinners(raffle.participants, raffle.winnersCount);
-      setLiveDraw({
-        open: true,
-        raffle,
-        message: MIXING_MESSAGE,
-        winners: [],
-      });
-      const stageTimer = window.setTimeout(() => {
-        setLiveDraw((prev) => ({ ...prev, message: DRAWING_MESSAGE }));
-        winners.forEach((winner, index) => {
-          const revealTimer = window.setTimeout(() => {
-            setLiveDraw((prev) => ({
-              ...prev,
-              winners: prev.winners.includes(winner)
-                ? prev.winners
-                : [...prev.winners, winner],
-            }));
-          }, 700 * index);
-          timersRef.current.push(revealTimer);
-        });
-      }, 800);
-      timersRef.current.push(stageTimer);
-    },
-    [clearLiveTimers, handleMarkFinished]
-  );
-
-  const handleCloseLive = useCallback(() => {
-    clearLiveTimers();
-    setLiveDraw({ open: false, message: "", winners: [], raffle: null });
-  }, [clearLiveTimers]);
-
-  useEffect(() => () => clearLiveTimers(), [clearLiveTimers]);
-
-  const handleRegisterSubscriber = useCallback(
-    (email, raffle) => {
-      const normalized = (email || "").trim().toLowerCase();
-      if (!emailRegex.test(normalized)) {
-        return { ok: false, message: "Ingresa un correo valido." };
-      }
-      const alreadyExists = subscribers.includes(normalized);
-      if (!alreadyExists) {
-        setSubscribers((prev) => [...prev, normalized]);
-      }
-      return {
-        ok: true,
-        reuse: alreadyExists,
-        message: alreadyExists
-          ? "Ya estabas suscripto. Mantendremos tu recordatorio."
-          : raffle
-          ? `Te avisaremos para "${raffle.title}".`
-          : "Registro exitoso. Te escribiremos antes del sorteo.",
-      };
-    },
-    [subscribers]
-  );
+  const { route, navigate } = useHashRoute();
+  const {
+    raffles,
+    activeRaffles,
+    finishedRaffles,
+    createRaffle,
+    updateRaffle,
+    deleteRaffle,
+    markFinished,
+  } = useRafflesManagement(initialRaffles);
+  const { liveDraw, closeLiveDraw } = useLiveDraw(markFinished);
+  const { registerSubscriber, subscribersCount } = useSubscribersRegistry();
+  const { isAdmin, login, logout, loginError } = useAdminSession();
 
   const handleLogin = useCallback(
     (email, password) => {
-      const expectedEmail = (ADMIN_CREDENTIALS.email || "").trim().toLowerCase();
-      const expectedPassword = (ADMIN_CREDENTIALS.password || "").trim();
-      const normalizedEmail = (email || "").trim().toLowerCase();
-      const sanitizedPassword = (password || "").trim();
-
-      const isValid =
-        normalizedEmail === expectedEmail && sanitizedPassword === expectedPassword;
-
-      if (!isValid) {
-        setLoginError(true);
-        showToast({
-          status: "error",
-          message:
-            "Credenciales inválidas. Revisá los datos e intentá nuevamente.",
-        });
-        return { ok: false };
+      const result = login(email, password);
+      if (!result?.ok) {
+        showToast({ status: "error", message: LOGIN_ERROR_MESSAGE });
+        return result;
       }
-      sessionStorage.setItem("adminAuth", "1");
-      setIsAdmin(true);
-      setLoginError(false);
-      handleNavigate("admin");
-      showToast({
-        status: "success",
-        message: "Sesión iniciada correctamente.",
-      });
-      return { ok: true };
+      navigate("admin");
+      showToast({ status: "success", message: "Sesión iniciada correctamente." });
+      return result;
     },
-    [handleNavigate, showToast]
+    [login, navigate, showToast]
   );
 
   const handleLogout = useCallback(() => {
-    sessionStorage.removeItem("adminAuth");
-    setIsAdmin(false);
-    handleNavigate("public");
-    showToast({
-      status: "info",
-      message: "Sesión cerrada correctamente.",
-    });
-  }, [handleNavigate, showToast]);
-
-  const handleCreateRaffle = useCallback((raffle) => {
-    const prepared = {
-      ...raffle,
-      finished: raffle.finished || isFinished(raffle),
-    };
-    setRaffles((prev) => [...prev, prepared]);
-    return {
-      ok: true,
-      message: "Sorteo creado (demo). Ya es visible en la vista publica.",
-    };
-  }, []);
-
-  // >>> NUEVOS: actualizar y eliminar
-  const handleUpdateRaffle = useCallback((updated) => {
-    setRaffles((prev) =>
-      prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
-    );
-    return { ok: true, message: "Sorteo actualizado correctamente." };
-  }, []);
-
-  const handleDeleteRaffle = useCallback((raffleId) => {
-    setRaffles((prev) => prev.filter((r) => r.id !== raffleId));
-    return { ok: true, message: "Sorteo eliminado." };
-  }, []);
-  // <<<
-
-  const { activeRaffles, finishedRaffles } = useMemo(() => {
-    const now = new Date();
-    const active = [];
-    const finished = [];
-    raffles.forEach((raffle) => {
-      const item = {
-        ...raffle,
-        finished: raffle.finished || isFinished(raffle, now),
-      };
-      if (item.finished) {
-        finished.push(item);
-      } else {
-        active.push(item);
-      }
-    });
-    active.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-    finished.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
-    return { activeRaffles: active, finishedRaffles: finished };
-  }, [raffles]);
+    logout();
+    navigate("public");
+    showToast({ status: "info", message: "Sesión cerrada correctamente." });
+  }, [logout, navigate, showToast]);
 
   return (
     <div className="app-shell">
-      <Header
-        currentRoute={route}
-        onNavigate={handleNavigate}
-        isAdmin={isAdmin}
-      />
+      <Header currentRoute={route} onNavigate={navigate} isAdmin={isAdmin} />
       <main key={route} className="anim-fade-in">
         {route === "admin" ? (
           <AdminView
@@ -244,19 +65,18 @@ const App = () => {
             onLogout={handleLogout}
             loginError={loginError}
             raffles={raffles}
-            subscribersCount={subscribers.length}
-            onCreateRaffle={handleCreateRaffle}
-            onUpdateRaffle={handleUpdateRaffle} // ⇐ nuevo
-            onDeleteRaffle={handleDeleteRaffle} // ⇐ nuevo
-            onMarkFinished={handleMarkFinished} // útil desde gestionar
+            subscribersCount={subscribersCount}
+            onCreateRaffle={createRaffle}
+            onUpdateRaffle={updateRaffle}
+            onDeleteRaffle={deleteRaffle}
+            onMarkFinished={markFinished}
           />
         ) : (
           <PublicView
             activeRaffles={activeRaffles}
             finishedRaffles={finishedRaffles}
-            onStartLive={handleStartLive}
-            onMarkFinished={handleMarkFinished}
-            onRegisterSubscriber={handleRegisterSubscriber}
+            onMarkFinished={markFinished}
+            onRegisterSubscriber={registerSubscriber}
             route={route}
           />
         )}
@@ -267,7 +87,7 @@ const App = () => {
         raffle={liveDraw.raffle}
         message={liveDraw.message}
         winners={liveDraw.winners}
-        onClose={handleCloseLive}
+        onClose={closeLiveDraw}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import RaffleCard from "../public/RaffleCard";
+import rafflePropType from "../public/rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import Icon, { ICON_NAMES } from "../ui/Icon";
 import AdminTutorial from "./AdminTutorial";
@@ -987,7 +988,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               >
                 <RaffleCard
                   raffle={previewRaffle}
-                  onLive={() => {}}
                   onMarkFinished={() => {}}
                   onRequestReminder={() => {}}
                 />
@@ -1031,12 +1031,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 AdminDashboard.propTypes = {
   onLogout: PropTypes.func.isRequired,
   onCreateRaffle: PropTypes.func.isRequired,
-  raffles: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      finished: PropTypes.bool,
-    })
-  ).isRequired,
+  raffles: PropTypes.arrayOf(rafflePropType).isRequired,
 };
 
 export default AdminDashboard;
