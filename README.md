@@ -4,12 +4,12 @@
 </p>
 
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,50:1e293b,100:3b82f6&height=200&section=header&text=ASTAVIC%20Sorteo&fontSize=46&fontColor=ffffff&animation=twinkling&fontAlignY=35" alt="ASTAVIC Sorteo banner" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,50:1e293b,100:3b82f6&height=200&section=header&text=Sorteos%20de%20ASTAVIC&fontSize=46&fontColor=ffffff&animation=twinkling&fontAlignY=35" alt="ASTAVIC Sorteo banner" />
 </p>
 
 <p align="center">
-  <em>🎟️ Plataforma institucional para sorteos solidarios de ASTAVIC</em><br/>
-  <sub>Gestión transparente de campañas, panel administrativo modular y experiencias accesibles para participantes.</sub>
+  <em>🎟️ Plataforma para gestiónar sorteos de ASTAVIC</em><br/>
+  <sub>Gestión transparente de sorteos, panel administrativo modular y experiencias accesibles para afiliados.</sub>
 </p>
 
 <p align="center">
@@ -30,28 +30,31 @@
   <img src="https://img.shields.io/badge/Pruebas-RTL%20%2B%20Jest-9333ea?style=for-the-badge&logo=jest&logoColor=white" alt="Pruebas" />
 </p>
 
-> **DECISIÓN DE DISEÑO · Centralización de documentación:** Este README se trasladó a la raíz del repositorio para garantizar visibilidad inmediata en GitHub y consolidar la guía funcional y técnica en un único punto de referencia.
-
 ---
 
 ## Tabla de contenido
 
-1. [Visión general](#visión-general)
-2. [Arquitectura funcional](#arquitectura-funcional)
-3. [Características destacadas](#características-destacadas)
-4. [Tecnologías y buenas prácticas](#tecnologías-y-buenas-prácticas)
-5. [Estructura de carpetas](#estructura-de-carpetas)
-6. [Puesta en marcha](#puesta-en-marcha)
-7. [Variables de entorno](#variables-de-entorno)
-8. [Pruebas y control de calidad](#pruebas-y-control-de-calidad)
-9. [Accesibilidad, UX y rendimiento](#accesibilidad-ux-y-rendimiento)
-10. [Limitaciones conocidas](#limitaciones-conocidas)
-11. [Próximos pasos sugeridos](#próximos-pasos-sugeridos)
-12. [DECISIÓN DE DISEÑO](#decisión-de-diseño)
+- [✨ Highlights](#-highlights)
+- [Tabla de contenido](#tabla-de-contenido)
+- [Visión general](#visión-general)
+  - [Objetivos clave](#objetivos-clave)
+- [Arquitectura funcional](#arquitectura-funcional)
+- [Características destacadas](#características-destacadas)
+  - [Experiencia pública](#experiencia-pública)
+  - [Panel administrativo](#panel-administrativo)
+- [Tecnologías y buenas prácticas](#tecnologías-y-buenas-prácticas)
+- [Estructura de carpetas](#estructura-de-carpetas)
+- [Puesta en marcha](#puesta-en-marcha)
+- [Variables de entorno](#variables-de-entorno)
+- [Pruebas y control de calidad](#pruebas-y-control-de-calidad)
+- [Accesibilidad, UX y rendimiento](#accesibilidad-ux-y-rendimiento)
+- [Limitaciones conocidas](#limitaciones-conocidas)
+- [Próximos pasos sugeridos](#próximos-pasos-sugeridos)
+- [DECISIÓN DE DISEÑO](#decisión-de-diseño)
 
 ## Visión general
 
-ASTAVIC Sorteo es una **plataforma demo en proceso** que centraliza la organización de sorteos temáticos y campañas de fidelización. Combina una experiencia pública pensada para participantes con un panel administrativo modular que permite operar sorteos en vivo, mantener listados actualizados y comunicar novedades de forma transparente.
+Sorteos de ASTAVIC es una **plataforma demo en proceso** que centraliza la organización de sorteos temáticos y campañas de fidelización. Combina una experiencia pública pensada para participantes con un panel administrativo modular que permite operar sorteos en vivo, mantener listados actualizados y comunicar novedades de forma transparente.
 
 ### Objetivos clave
 
@@ -63,7 +66,7 @@ ASTAVIC Sorteo es una **plataforma demo en proceso** que centraliza la organizac
 
 El proyecto se apoya en componentes funcionales de React 19 y una colección de hooks personalizados que encapsulan reglas de negocio:
 
-- `App` orquesta el ruteo por *hash*, el estado global del sorteo en vivo y delega la lógica de negocio en hooks (SRP + KISS).
+- `App` orquesta el ruteo por _hash_, el estado global del sorteo en vivo y delega la lógica de negocio en hooks (SRP + KISS).
 - `useHashRoute` resuelve la navegación `#/public`, `#/admin` y `#/finalizados` sin dependencias externas.
 - `useRafflesManagement` concentra el ciclo de vida de los sorteos (crear, actualizar, eliminar, finalizar) con normalización de datos.
 - `useLiveDraw` controla el sorteo en vivo con animaciones temporizadas y selección aleatoria de ganadores.
@@ -135,8 +138,6 @@ REACT_APP_ADMIN_EMAIL=admin@astavic.org
 REACT_APP_ADMIN_PASSWORD=TuClaveSegura123
 ```
 
-> *Las credenciales quedan embebidas en el bundle; para producción se recomienda un backend seguro con autenticación robusta.*
-
 ## Pruebas y control de calidad
 
 - Ejecutar pruebas unitarias y de integración:
@@ -161,19 +162,12 @@ REACT_APP_ADMIN_PASSWORD=TuClaveSegura123
 - Las credenciales del panel admin solo brindan acceso demo; no hay gestión de roles ni auditoría.
 - El envío de correos electrónicos y la asignación de recordatorios se simula localmente.
 
-## Próximos pasos sugeridos
+## Próximos pasos
 
 1. Integrar un backend (REST o GraphQL) para persistencia, registro de ganadores y métricas históricas.
 2. Implementar doble opt-in y confirmaciones reales de correo para cumplir normativas anti-spam.
-3. Añadir soporte multi-idioma (i18n) y personalización de plantillas de correo.
-4. Incorporar pruebas end-to-end (Playwright o Cypress) para cubrir flujos críticos del panel administrativo.
-5. Desplegar pipelines CI/CD con ejecución automática de lint, pruebas y análisis estático.
-
-## DECISIÓN DE DISEÑO
-
-- Centralizar el README en la raíz del repositorio mejora la experiencia de descubrimiento y alinea la documentación con las expectativas de la comunidad.
-- Mantener la denominación "demo en proceso" comunica el estado real del proyecto y evita falsas expectativas sobre la disponibilidad en producción.
-- El uso de insignias visuales estandarizadas facilita una lectura rápida sobre el stack, estado y enfoque del proyecto.
+3. Incorporar pruebas end-to-end (Playwright o Cypress) para cubrir flujos críticos del panel administrativo.
+4. Desplegar pipelines CI/CD con ejecución automática de lint, pruebas y análisis estático.
 
 ---
 
