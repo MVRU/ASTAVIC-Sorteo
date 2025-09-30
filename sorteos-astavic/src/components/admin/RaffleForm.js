@@ -1,10 +1,12 @@
-// ! DECISIÓN DE DISEÑO: El formulario gestiona su propio estado y expone cambios relevantes mediante callbacks puros.
+// ! DECISIÓN DE DISEÑO: El formulario gestiona su propio estado, expone cambios relevantes mediante callbacks puros y delega el
+// ! feedback global en toasts accesibles.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import FileDropzone from "./ui/FileDropzone";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import { validateRaffleDraft } from "../../utils/raffleValidation";
 import { PREVIEW_DEFAULT_MESSAGE } from "./adminConstants";
+import { useToast } from "../../context/ToastContext";
 
 const noop = () => {};
 
@@ -31,6 +33,7 @@ const RaffleForm = ({
   status,
   isDesktop,
 }) => {
+  const { showToast } = useToast();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -196,7 +199,7 @@ const RaffleForm = ({
     });
   };
 
-  const resetForm = () => {
+  const resetFormState = useCallback(() => {
     setForm({
       title: "",
       description: "",
@@ -209,7 +212,15 @@ const RaffleForm = ({
     setPreviewParticipants([]);
     setPreviewMessage(PREVIEW_DEFAULT_MESSAGE);
     onStatusChange(null);
-  };
+  }, [onStatusChange]);
+
+  const handleResetClick = useCallback(() => {
+    resetFormState();
+    showToast({
+      status: "info",
+      message: "Formulario restablecido. Podés empezar desde cero.",
+    });
+  }, [resetFormState, showToast]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -253,7 +264,7 @@ const RaffleForm = ({
       const result = onCreateRaffle(newRaffle);
       onStatusChange(result);
       if (result?.ok) {
-        resetForm();
+        resetFormState();
       }
     } catch {
       onStatusChange({
@@ -441,7 +452,7 @@ const RaffleForm = ({
           <button
             type="button"
             className="button button--ghost"
-            onClick={resetForm}
+            onClick={handleResetClick}
             disabled={loading}
             title="Limpiar formulario"
           >

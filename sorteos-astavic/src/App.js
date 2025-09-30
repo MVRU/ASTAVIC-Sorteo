@@ -8,10 +8,9 @@ import PublicView from "./components/public/PublicView";
 import AdminView from "./components/admin/AdminView";
 import initialRaffles from "./data/initialRaffles";
 import { isFinished, pickWinners } from "./utils/raffleUtils";
+import ADMIN_CREDENTIALS from "./config/adminCredentials";
 import "./App.css";
-
-const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || "astavic@gmail.com";
-const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "Colon 3115";
+import { useToast } from "./context/ToastContext";
 const MIXING_MESSAGE = "\u{1F504} Revolviendo nombres.";
 const DRAWING_MESSAGE = "\u{1F5F3}\u{FE0F} Extrayendo.";
 
@@ -44,6 +43,7 @@ const App = () => {
     raffle: null,
   });
   const timersRef = useRef([]);
+  const { showToast } = useToast();
 
   const clearLiveTimers = useCallback(() => {
     timersRef.current.forEach((id) => window.clearTimeout(id));
@@ -143,24 +143,45 @@ const App = () => {
 
   const handleLogin = useCallback(
     (email, password) => {
-      const valid = email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
-      if (!valid) {
+      const expectedEmail = (ADMIN_CREDENTIALS.email || "").trim().toLowerCase();
+      const expectedPassword = (ADMIN_CREDENTIALS.password || "").trim();
+      const normalizedEmail = (email || "").trim().toLowerCase();
+      const sanitizedPassword = (password || "").trim();
+
+      const isValid =
+        normalizedEmail === expectedEmail && sanitizedPassword === expectedPassword;
+
+      if (!isValid) {
         setLoginError(true);
-        return;
+        showToast({
+          status: "error",
+          message:
+            "Credenciales inválidas. Revisá los datos e intentá nuevamente.",
+        });
+        return { ok: false };
       }
       sessionStorage.setItem("adminAuth", "1");
       setIsAdmin(true);
       setLoginError(false);
       handleNavigate("admin");
+      showToast({
+        status: "success",
+        message: "Sesión iniciada correctamente.",
+      });
+      return { ok: true };
     },
-    [handleNavigate]
+    [handleNavigate, showToast]
   );
 
   const handleLogout = useCallback(() => {
     sessionStorage.removeItem("adminAuth");
     setIsAdmin(false);
     handleNavigate("public");
-  }, [handleNavigate]);
+    showToast({
+      status: "info",
+      message: "Sesión cerrada correctamente.",
+    });
+  }, [handleNavigate, showToast]);
 
   const handleCreateRaffle = useCallback((raffle) => {
     const prepared = {

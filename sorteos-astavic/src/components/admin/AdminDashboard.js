@@ -5,6 +5,8 @@ import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import RaffleCard from "../public/RaffleCard";
 import { useToast } from "../../context/ToastContext";
+import Icon, { ICON_NAMES } from "../ui/Icon";
+import AdminTutorial from "./AdminTutorial";
 
 /* =========================
    Hook simple de media query
@@ -65,7 +67,7 @@ Chip.defaultProps = { onClick: undefined, active: false };
 /* =========================
    StatCard (solo desktop)
    ========================= */
-const StatCard = ({ label, value, icon }) => (
+const StatCard = ({ label, value, iconName }) => (
   <div
     className="card anim-fade-in"
     role="status"
@@ -86,10 +88,9 @@ const StatCard = ({ label, value, icon }) => (
         "transform var(--transition-base), box-shadow var(--transition-base)",
     }}
   >
-    {icon && (
+    {iconName && (
       <div
         style={{
-          fontSize: "1.4rem",
           color: "var(--brand-700)",
           display: "flex",
           alignItems: "center",
@@ -99,9 +100,8 @@ const StatCard = ({ label, value, icon }) => (
           borderRadius: "10px",
           background: "var(--brand-50)",
         }}
-        aria-hidden="true"
       >
-        {icon}
+        <Icon name={iconName} decorative size={24} strokeWidth={1.8} />
       </div>
     )}
     <div>
@@ -131,9 +131,9 @@ const StatCard = ({ label, value, icon }) => (
 StatCard.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  icon: PropTypes.node,
+  iconName: PropTypes.oneOf(ICON_NAMES),
 };
-StatCard.defaultProps = { icon: "📊" };
+StatCard.defaultProps = { iconName: "chart" };
 
 /* =========================
    Dropzone accesible
@@ -219,12 +219,10 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
           justifyContent: "center",
           background: "var(--surface)",
           color: "var(--brand-700)",
-          fontSize: "1.4rem",
           boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         }}
-        aria-hidden="true"
       >
-        📎
+        <Icon name="paperclip" decorative size={26} strokeWidth={1.9} />
       </div>
       <div>
         <div
@@ -449,7 +447,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     });
   };
 
-  const resetForm = () => {
+  const resetFormState = useCallback(() => {
     setForm({
       title: "",
       description: "",
@@ -461,7 +459,15 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
-  };
+  }, [previewDefaultMessage]);
+
+  const handleResetClick = useCallback(() => {
+    resetFormState();
+    showToast({
+      status: "info",
+      message: "Se reinició el formulario. Podés cargar los datos nuevamente.",
+    });
+  }, [resetFormState, showToast]);
 
   /* =========================
      Validaciones robustas
@@ -567,7 +573,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
           result?.message ||
           "Sorteo creado (demo). Ya es visible en la vista pública.",
       });
-      resetForm();
+      resetFormState();
     } catch {
       showToast({
         status: "error",
@@ -635,7 +641,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "total" ? null : "total"))
                   }
                 >
-                  🗂️ {metrics.total}
+                  <Icon name="collection" decorative size={16} strokeWidth={2} />
+                  {metrics.total}
                 </Chip>
                 <Chip
                   active={chipHint === "active"}
@@ -643,7 +650,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "active" ? null : "active"))
                   }
                 >
-                  ⏳ {metrics.active}
+                  <Icon name="hourglass" decorative size={16} strokeWidth={2} />
+                  {metrics.active}
                 </Chip>
                 <Chip
                   active={chipHint === "finished"}
@@ -651,7 +659,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "finished" ? null : "finished"))
                   }
                 >
-                  ✅ {metrics.finished}
+                  <Icon name="checkCircle" decorative size={16} strokeWidth={2} />
+                  {metrics.finished}
                 </Chip>
 
                 {/* Hint (solo uno a la vez) */}
@@ -905,7 +914,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 <button
                   type="button"
                   className="button button--ghost"
-                  onClick={resetForm}
+                  onClick={handleResetClick}
                   disabled={loading}
                   title="Limpiar formulario"
                 >
@@ -929,98 +938,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               alignContent: "start",
             }}
           >
-            {/* Tutorial */}
-            <div className="card anim-fade-in">
-              <h2
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: 700,
-                  margin: 0,
-                  marginBottom: "1rem",
-                }}
-              >
-                Cómo crear un sorteo
-              </h2>
-              <ol
-                className="stagger is-on"
-                style={{
-                  listStyle: "none",
-                  margin: 0,
-                  padding: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.875rem",
-                }}
-              >
-                {[
-                  {
-                    icon: "📥",
-                    title: "Cargá participantes",
-                    desc: "Subí un CSV/TSV o pegá la lista (uno por línea). Eliminamos duplicados automáticamente.",
-                  },
-                  {
-                    icon: "🗓️",
-                    title: "Configurá detalles",
-                    desc: "Definí título, fecha y cantidad de ganadores. Ordená los premios según el puesto.",
-                  },
-                  {
-                    icon: "🚀",
-                    title: "Publicá el sorteo",
-                    desc: "Se mostrará el contador y, al finalizar, todos verán los mismos ganadores.",
-                  },
-                ].map((step, i) => (
-                  <li
-                    key={step.title}
-                    className="anim-up"
-                    style={{
-                      display: "flex",
-                      gap: "1rem",
-                      padding: "0.875rem",
-                      borderRadius: "12px",
-                      border: "1px solid var(--border)",
-                      background: "var(--surface)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "var(--brand-50)",
-                        color: "var(--brand-700)",
-                        fontSize: "1.1rem",
-                        flexShrink: 0,
-                      }}
-                      aria-hidden
-                    >
-                      {step.icon}
-                    </div>
-                    <div>
-                      <strong
-                        style={{
-                          display: "block",
-                          marginBottom: "0.25rem",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {i + 1}. {step.title}
-                      </strong>
-                      <span
-                        style={{
-                          fontSize: "0.925rem",
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        {step.desc}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <AdminTutorial />
 
             {/* Métricas (solo desktop) */}
             {isDesktop && (
@@ -1035,13 +953,13 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 <StatCard
                   label="Sorteos totales"
                   value={metrics.total}
-                  icon="📂"
+                  iconName="collection"
                 />
-                <StatCard label="Activos" value={metrics.active} icon="⏳" />
+                <StatCard label="Activos" value={metrics.active} iconName="hourglass" />
                 <StatCard
                   label="Finalizados"
                   value={metrics.finished}
-                  icon="✅"
+                  iconName="checkCircle"
                 />
               </div>
             )}

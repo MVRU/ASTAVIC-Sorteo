@@ -1,5 +1,6 @@
-// ! DECISIÓN DE DISEÑO: Movemos el tutorial a un componente dedicado para poder reutilizarlo y probarlo aisladamente.
+// ! DECISIÓN DE DISEÑO: Movemos el tutorial a un componente dedicado y usamos iconografía vectorial consistente.
 import { TUTORIAL_STEPS } from "./adminConstants";
+import Icon from "../ui/Icon";
 
 const AdminTutorial = () => (
   <div className="card anim-fade-in">
@@ -47,12 +48,10 @@ const AdminTutorial = () => (
               justifyContent: "center",
               background: "var(--brand-50)",
               color: "var(--brand-700)",
-              fontSize: "1.1rem",
               flexShrink: 0,
             }}
-            aria-hidden="true"
           >
-            {step.icon}
+            <Icon name={step.iconName} decorative size={22} strokeWidth={1.8} />
           </div>
           <div>
             <strong

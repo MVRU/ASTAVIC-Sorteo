@@ -2,12 +2,20 @@
  * TODOS:
  * - [ ] Admin, luego de iniciar sesión, debe tener dos vistas: crear un nuevo sorteo y gestionar los sorteos existentes (editar o borrar).
  */
+// ! DECISIÓN DE DISEÑO: El formulario expone las credenciales demo para reducir fricción en la evaluación.
 
 import { useState } from "react";
 import PropTypes from "prop-types";
+import {
+  ADMIN_CREDENTIALS,
+  ADMIN_DEMO_MESSAGE,
+} from "../../config/adminCredentials";
 
 const AdminLogin = ({ onLogin, error }) => {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: ADMIN_CREDENTIALS.email,
+    password: ADMIN_CREDENTIALS.password,
+  });
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -33,6 +41,18 @@ const AdminLogin = ({ onLogin, error }) => {
           <p className="section-subtitle" style={{ marginBottom: "1.5rem" }}>
             Acceso restringido. Usá las credenciales provistas por ASTAVIC.
           </p>
+          <div
+            className="demo-notice"
+            role="status"
+            aria-live="polite"
+            data-testid="admin-demo-notice"
+          >
+            <span className="demo-notice__message">{ADMIN_DEMO_MESSAGE}</span>
+            <span className="demo-notice__credentials">
+              <span>Email: <strong>{ADMIN_CREDENTIALS.email}</strong></span>
+              <span>Contraseña: <strong>{ADMIN_CREDENTIALS.password}</strong></span>
+            </span>
+          </div>
           <form className="form-card" onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="admin-email">Email</label>
@@ -43,7 +63,7 @@ const AdminLogin = ({ onLogin, error }) => {
                 type="email"
                 autoComplete="username"
                 required
-                placeholder="astavic@gmail.com"
+                placeholder={ADMIN_CREDENTIALS.email}
                 value={form.email}
                 onChange={handleChange}
               />
@@ -57,7 +77,7 @@ const AdminLogin = ({ onLogin, error }) => {
                 type="password"
                 autoComplete="current-password"
                 required
-                placeholder="Colon 3115"
+                placeholder={ADMIN_CREDENTIALS.password}
                 value={form.password}
                 onChange={handleChange}
               />

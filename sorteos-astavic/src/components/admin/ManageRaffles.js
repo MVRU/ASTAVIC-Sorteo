@@ -2,7 +2,7 @@
 // ! DECISIÓN DE DISEÑO: El flujo de edición/confirmación migra a modales reutilizables para mejorar accesibilidad y consistencia.
 // ! DECISIÓN DE DISEÑO: Las fechas se validan localmente para evitar enviar payloads inconsistentes y proveer feedback accesible.
 // ! DECISIÓN DE DISEÑO: Las acciones críticas disparan toasts globales para alinear el feedback entre vistas públicas y administrativas.
-// ! DECISIÓN DE DISEÑO: El drawer lateral calcula offsets dinámicos para garantizar visibilidad constante de cabecera y acciones.
+// ! DECISIÓN DE DISEÑO: El drawer lateral confía en un único scroll para que cabecera y acciones sigan el flujo natural del contenido.
 // ? Riesgo: La capa demo asume respuestas sincrónicas; al conectar backend será necesario manejar estados de carga y error.
 
 /**
@@ -15,15 +15,16 @@ import {
   useRef,
   useId,
   useCallback,
-  useLayoutEffect,
+  useEffect,
 } from "react";
-import { useEffect } from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
 import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
+import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
+import { createPortal } from "react-dom";
 
 // ========= Helpers =========
 const composeFormState = (raffle) => {
@@ -153,73 +154,6 @@ const ManageRaffles = ({
   const titleInputRef = useRef(null);
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
-  const drawerHeaderRef = useRef(null);
-  const drawerContentRef = useRef(null);
-  const drawerFooterRef = useRef(null);
-
-  useLayoutEffect(() => {
-    if (!editState) {
-      return undefined;
-    }
-
-    const contentEl = drawerContentRef.current;
-    if (!contentEl) {
-      return undefined;
-    }
-
-    const applyMetrics = () => {
-      const headerHeight = drawerHeaderRef.current?.offsetHeight ?? 0;
-      const footerHeight = drawerFooterRef.current?.offsetHeight ?? 0;
-
-      if (headerHeight > 0) {
-        contentEl.style.setProperty(
-          "--drawer-header-offset",
-          `${headerHeight}px`
-        );
-      } else {
-        contentEl.style.removeProperty("--drawer-header-offset");
-      }
-
-      if (footerHeight > 0) {
-        contentEl.style.setProperty(
-          "--drawer-footer-offset",
-          `${footerHeight}px`
-        );
-      } else {
-        contentEl.style.removeProperty("--drawer-footer-offset");
-      }
-    };
-
-    applyMetrics();
-
-    const isBrowser = typeof window !== "undefined";
-    const hasResizeObserver =
-      isBrowser && typeof window.ResizeObserver === "function";
-    let cleanup = () => {};
-
-    if (hasResizeObserver) {
-      const observer = new window.ResizeObserver(applyMetrics);
-      if (drawerHeaderRef.current) {
-        observer.observe(drawerHeaderRef.current);
-      }
-      if (drawerFooterRef.current) {
-        observer.observe(drawerFooterRef.current);
-      }
-      cleanup = () => observer.disconnect();
-    } else if (isBrowser) {
-      window.addEventListener("resize", applyMetrics);
-      cleanup = () => window.removeEventListener("resize", applyMetrics);
-    }
-
-    return () => {
-      cleanup();
-      if (contentEl) {
-        contentEl.style.removeProperty("--drawer-header-offset");
-        contentEl.style.removeProperty("--drawer-footer-offset");
-      }
-    };
-  }, [editState]);
-
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
       if (result?.ok === false) {
@@ -444,7 +378,7 @@ const ManageRaffles = ({
   return (
     <section className="section-gap admin-manage">
       {/* ====== estilos locales para asegurar no overflow en el modal ====== */}
-      <LocalStyles />
+      <RaffleEditCardStyles />
 
       <div className="container">
         <ManageRafflesToolbar
@@ -489,70 +423,73 @@ const ManageRaffles = ({
       </div>
 
       {/* ====== Panel lateral de edición (drawer) ====== */}
-      {Boolean(editState) && (
-        <div
-          className="drawer-layer"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-drawer-title"
-        >
-          <div className="drawer-overlay" onClick={requestCloseEdit} />
-          <aside className="drawer anim-scale-in">
-            <header ref={drawerHeaderRef} className="drawer__header">
-              <div>
-                <h2 id="edit-drawer-title" className="drawer__title">
-                  Editar sorteo
-                </h2>
-                <p className="drawer__desc">
-                  Actualizá los datos y guardá los cambios cuando estés listo.
-                </p>
+      {Boolean(editState) &&
+        createPortal(
+          <div
+            className="drawer-layer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-drawer-title"
+          >
+            <div className="drawer-overlay" onClick={requestCloseEdit} />
+            <aside className="drawer anim-scale-in">
+              <header className="drawer__header">
+                <div>
+                  <h2 id="edit-drawer-title" className="drawer__title">
+                    Editar sorteo
+                  </h2>
+                  <p className="drawer__desc">
+                    Actualizá los datos y guardá los cambios cuando estés listo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  aria-label="Cerrar panel"
+                  onClick={requestCloseEdit}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </header>
+
+              <div
+                className="drawer__content"
+                role="region"
+                aria-label="Formulario de edición"
+              >
+                {editState ? (
+                  <RaffleEditCard
+                    form={editState.form}
+                    onChange={handleEditField}
+                    onSubmit={handleEditSubmit}
+                    formId={editFormId}
+                    titleRef={titleInputRef}
+                    alert={formAlert}
+                    alertId={alertId}
+                  />
+                ) : null}
               </div>
-              <button
-                type="button"
-                className="button button--ghost"
-                aria-label="Cerrar panel"
-                onClick={requestCloseEdit}
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </header>
-            <div
-              ref={drawerContentRef}
-              className="drawer__content"
-              role="region"
-              aria-label="Formulario de edición"
-            >
-              {editState ? (
-                <RaffleEditForm
-                  form={editState.form}
-                  onChange={handleEditField}
-                  onSubmit={handleEditSubmit}
-                  formId={editFormId}
-                  titleRef={titleInputRef}
-                  alert={formAlert}
-                  alertId={alertId}
-                />
-              ) : null}
-            </div>
-            <footer ref={drawerFooterRef} className="drawer__footer">
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={requestCloseEdit}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="button button--primary"
-                form={editFormId}
-              >
-                Guardar cambios
-              </button>
-            </footer>
-          </aside>
-        </div>
-      )}
+
+              <footer className="drawer__footer">
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  onClick={requestCloseEdit}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="button button--primary"
+                  form={editFormId}
+                >
+                  Guardar cambios
+                </button>
+              </footer>
+            </aside>
+          </div>,
+          document.body
+        )}
 
       {/* ====== Modal de confirmación ====== */}
       <AdminModal
@@ -613,238 +550,6 @@ const buildConfirmCopy = (state) => {
     body: `¿Confirmás marcar como finalizado "${title}"?`,
     cta: "Finalizar",
   };
-};
-
-// ========= Formulario =========
-const RaffleEditForm = ({
-  form,
-  onChange,
-  onSubmit,
-  formId,
-  titleRef,
-  alert,
-  alertId,
-}) => {
-  const titleDescribedBy = [
-    `${formId}-title-hint`,
-    alert?.field === "title" ? alertId : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const datetimeDescribedBy = [alert?.field === "datetime" ? alertId : null]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <form onSubmit={onSubmit} className="manage-edit" id={formId} noValidate>
-      {alert ? (
-        <div
-          className="form-alert"
-          role="alert"
-          id={alertId}
-          aria-live="assertive"
-        >
-          {alert.message}
-        </div>
-      ) : null}
-      <div className="form-group">
-        <label htmlFor={`${formId}-title`}>Título</label>
-        <input
-          className="input"
-          id={`${formId}-title`}
-          name="title"
-          value={form.title}
-          onChange={onChange}
-          required
-          ref={titleRef}
-          data-modal-autofocus="true"
-          aria-describedby={titleDescribedBy || undefined}
-          aria-invalid={alert?.field === "title" ? "true" : undefined}
-        />
-        <small id={`${formId}-title-hint`} className="hint">
-          Un nombre claro facilita la búsqueda.
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor={`${formId}-description`}>Descripción</label>
-        <textarea
-          className="input"
-          id={`${formId}-description`}
-          name="description"
-          value={form.description}
-          onChange={onChange}
-          rows={3}
-        />
-      </div>
-
-      <div className="form-row form-row--3">
-        <div className="form-group">
-          <label htmlFor={`${formId}-datetime`}>Fecha y hora</label>
-          <input
-            className="input"
-            type="datetime-local"
-            id={`${formId}-datetime`}
-            name="datetime"
-            value={form.datetime}
-            onChange={onChange}
-            required
-            aria-describedby={datetimeDescribedBy || undefined}
-            aria-invalid={alert?.field === "datetime" ? "true" : undefined}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor={`${formId}-winners`}>Ganadores</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            id={`${formId}-winners`}
-            name="winnersCount"
-            value={form.winnersCount}
-            onChange={onChange}
-          />
-        </div>
-      </div>
-
-      <div className="form-row form-row--2">
-        <div className="form-group">
-          <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
-          <textarea
-            className="input"
-            id={`${formId}-prizes`}
-            name="prizesText"
-            value={form.prizesText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor={`${formId}-participants`}>
-            Participantes (uno por línea)
-          </label>
-          <textarea
-            className="input"
-            id={`${formId}-participants`}
-            name="participantsText"
-            value={form.participantsText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
-      </div>
-    </form>
-  );
-};
-// ! DECISIÓN DE DISEÑO: Estilos críticos en línea para garantizar scroll controlado y evitar overflow responsivo del modal.
-function LocalStyles() {
-  return (
-    <style>{`
-      .modal-scroll-area{
-        max-height: min(70vh, 720px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 4px; /* evita salto por scrollbar */
-      }
-
-      .manage-edit{
-        display: grid;
-        gap: 12px;
-        max-width: 100%;
-        box-sizing: border-box;
-      }
-
-      .manage-edit .form-group{
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 0; /* clave para que no se expanda y cause overflow */
-      }
-
-      .manage-edit .input{
-        width: 100%;
-        min-width: 0; /* evita overflow en grid */
-        box-sizing: border-box;
-      }
-
-      .manage-edit textarea.input{
-        resize: vertical;
-        overflow-wrap: anywhere; /* por si pegan líneas larguísimas */
-        white-space: pre-wrap;
-      }
-
-      .form-alert{
-        background: var(--alert-danger-bg, #fee2e2);
-        border-radius: 8px;
-        color: var(--alert-danger-fg, #991b1b);
-        padding: 12px;
-        font-size: .9rem;
-      }
-
-      .form-row{
-        display: grid;
-        gap: 12px;
-        grid-auto-rows: minmax(0, auto);
-      }
-
-      /* 2 columnas fluidas */
-      .form-row--2{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      /* 3 columnas fluidas para fecha/ganadores/checkbox */
-      .form-row--3{
-        grid-template-columns: 2fr 1fr auto;
-        align-items: end;
-      }
-
-      .form-group--checkbox{
-        display: flex;
-        align-items: flex-end;
-        min-width: 0;
-      }
-
-      .checkbox{
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        user-select: none;
-        white-space: nowrap;
-      }
-
-      .hint{
-        font-size: .8rem;
-        color: var(--text-muted, #6b7280);
-      }
-
-      /* Responsivo: colapsar a una columna en pantallas angostas */
-      @media (max-width: 720px){
-        .form-row--2,
-        .form-row--3{
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .form-group--checkbox{
-          align-items: center;
-        }
-      }
-    `}</style>
-  );
-}
-
-RaffleEditForm.propTypes = {
-  form: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  formId: PropTypes.string.isRequired,
-  titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
-    .isRequired,
-  alert: PropTypes.shape({
-    message: PropTypes.string.isRequired,
-    field: PropTypes.string,
-  }),
-  alertId: PropTypes.string.isRequired,
 };
 
 ManageRaffles.propTypes = {
