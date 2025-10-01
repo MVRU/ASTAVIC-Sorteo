@@ -2040,6 +2040,69 @@ footer {
 .raffle-card--finished .card-actions {
   grid-template-columns: 1fr;
 }
+
+.raffle-card--finished[role="button"] {
+  cursor: pointer;
+}
+
+.raffle-card--finished[role="button"]:focus-visible {
+  outline: 3px solid rgba(185, 141, 35, 0.45);
+  outline-offset: 4px;
+}
+
+.raffle-card--finished .raffle-card__flip {
+  position: relative;
+  min-height: 100%;
+  perspective: 1200px;
+}
+
+.raffle-card--finished .raffle-card__flip-inner {
+  position: relative;
+  min-height: 100%;
+  transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+.raffle-card--finished.raffle-card--show-prizes .raffle-card__flip-inner {
+  transform: rotateY(180deg);
+}
+
+.raffle-card--finished .raffle-card__side {
+  position: relative;
+  backface-visibility: hidden;
+}
+
+.raffle-card--finished .raffle-card__side--back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+.raffle-card--finished .raffle-card__side-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.raffle-card--finished .raffle-card__info {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.raffle-card--finished .raffle-card__cta {
+  flex: 0 0 180px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.raffle-card--finished .raffle-card__cta .button {
+  width: 100%;
+}
 /* ==== Gestionar sorteos: UI premium y responsive ==== */
 
 .admin-manage {
