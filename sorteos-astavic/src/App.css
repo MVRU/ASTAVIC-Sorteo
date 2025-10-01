@@ -599,108 +599,6 @@ main {
   box-shadow: var(--shadow-2);
 }
 
-/* -------- Raffle Card premium -------- */
-.raffle-card {
-  background: var(--surface-raffle);
-  border: 1px solid rgba(78, 164, 234, 0.18);
-  box-shadow: 0 18px 36px rgba(2, 12, 27, 0.1);
-  padding: 1.35rem 1.25rem 1.25rem;
-  overflow: hidden;
-}
-.raffle-card::after {
-  /* acento diagonal azul translúcido */
-  content: "";
-  position: absolute;
-  right: -40%;
-  top: -55%;
-  width: 120%;
-  height: 120%;
-  background: radial-gradient(
-    60% 60% at 60% 40%,
-    rgba(78, 164, 234, 0.16) 0%,
-    rgba(78, 164, 234, 0) 60%
-  );
-  transform: rotate(8deg);
-  pointer-events: none;
-}
-.raffle-card:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f2f8ff 100%);
-}
-
-/* Fecha / badge */
-.raffle-card__badge {
-  display: inline-block;
-  font-size: 0.78rem;
-  line-height: 1.2;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(3, 23, 53, 0.06);
-  color: #031735;
-  border: 1px solid rgba(3, 23, 53, 0.16);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-  margin-bottom: 0.25rem;
-}
-.raffle-card__badge--finished {
-  background: rgba(46, 160, 67, 0.12);
-  border-color: rgba(46, 160, 67, 0.25);
-  color: #1d6f36;
-}
-
-/* Título */
-.raffle-card__title {
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: var(--brand-700);
-  letter-spacing: 0.01em;
-  margin-top: 0.2rem;
-}
-
-/* Countdown estilo “pills” */
-.countdown {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
-  text-align: center;
-  margin-top: 0.35rem;
-}
-.countdown__item {
-  min-width: 3.6rem;
-  background: #fff;
-  border: 1px solid rgba(15, 40, 105, 0.08);
-  box-shadow: 0 6px 16px rgba(2, 12, 27, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  padding: 0.55rem 0.35rem;
-}
-.countdown__value {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  font-size: clamp(1.6rem, 3.1vw + 0.5rem, 2.35rem);
-  font-weight: 800;
-  color: var(--brand-700);
-  line-height: 1.1;
-}
-.countdown__label {
-  margin-top: 0.1rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--text-secondary);
-}
-
-@media (max-width: 480px) {
-  .countdown {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-  }
-}
-
-/* Estado finalizado */
-.raffle-card--finished {
-  border-color: rgba(78, 164, 234, 0.6);
-  background: linear-gradient(180deg, #ffffff 0%, var(--brand-50) 100%);
-}
-
 /* ============================
    BOTONES
    ============================ */
@@ -728,6 +626,21 @@ main {
 }
 .button--primary:hover {
   background: linear-gradient(180deg, #2c78ca 0%, #1b5ca6 100%);
+}
+
+.button--gold {
+  background: linear-gradient(180deg, #f7d774 0%, #e9b949 100%);
+  color: #3b2f0b;
+  box-shadow: 0 10px 24px rgba(233, 185, 73, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  border: 1px solid rgba(185, 141, 35, 0.35);
+}
+.button--gold:hover {
+  background: linear-gradient(180deg, #f4cd5d 0%, #dca53a 100%);
+}
+.button--gold:focus-visible {
+  outline: 3px solid rgba(185, 141, 35, 0.45);
+  outline-offset: 3px;
 }
 
 .button--ghost {
@@ -1450,10 +1363,6 @@ footer {
 }
 
 /* Estados semánticos */
-.raffle-card--finished {
-  border-color: rgba(46, 160, 67, 0.28);
-  background: linear-gradient(180deg, #ffffff 0%, #f5fff6 100%);
-}
 .raffle-card--soon {
   /* < 60 min */
   --raffle-accent: #e59b2f; /* ámbar */
@@ -1475,11 +1384,6 @@ footer {
   border: 1px solid rgba(3, 23, 53, 0.16);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   margin-bottom: 0.35rem;
-}
-.raffle-card__badge--finished {
-  background: rgba(46, 160, 67, 0.12);
-  border-color: rgba(46, 160, 67, 0.25);
-  color: #1d6f36;
 }
 
 /* Título */
@@ -1868,15 +1772,17 @@ footer {
   will-change: transform, opacity;
 }
 
-/* Finalizado — estilo dorado/premium coherente */
+/* Finalizado — el marco dorado vive en la "shell" para evitar duplicados */
 .raffle-card--finished {
-  border-color: rgba(218, 165, 32, 0.35); /* goldenrod */
-  background: radial-gradient(
-      60% 80% at 70% -10%,
-      rgba(255, 215, 0, 0.18) 0%,
-      rgba(255, 255, 255, 0) 60%
-    ),
-    linear-gradient(180deg, #ffffff 0%, #fff7df 100%); /* blanco → marfil dorado */
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+}
+.raffle-card--finished::before,
+.raffle-card--finished::after {
+  content: none;
 }
 
 /* Badge cuando está finalizado: dorado suave */
@@ -1925,46 +1831,6 @@ footer {
   }
 }
 
-.raffle-card--finished-horizontal {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: linear-gradient(
-    90deg,
-    rgba(247, 215, 116, 0.15) 0%,
-    rgba(255, 255, 255, 0.9) 100%
-  );
-  border: 1px solid rgba(185, 141, 35, 0.28);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.raffle-card--finished-horizontal h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-/* Evita que el contenido se recorte en el borde de la card */
-.card,
-.raffle-card {
-  overflow: visible; /* <- si hoy está en hidden, cámbialo a visible */
-  height: auto; /* <- asegúrate de no tener un alto fijo */
-}
-
-/* Si usaste contain para optimizar pintura, quítalo en finalizados */
-.raffle-card--finished {
-  contain: none; /* <- si existía contain: content/layout/paint */
-}
-
-.raffle-card--finished .card__body,
-.raffle-card--finished .raffle-card__content {
-  max-height: none; /* <- anula cualquier límite anterior */
-}
-
 /* Hace que el texto del ganador pueda truncar con elipsis */
 .winner-row {
   display: grid;
@@ -1998,7 +1864,6 @@ footer {
 .card,
 .raffle-card {
   height: auto !important; /* anula height:100% / min-height fijos */
-  overflow: hidden; /* contenido contenido dentro de la card */
   box-sizing: border-box;
 }
 
@@ -2039,6 +1904,104 @@ footer {
 /* Botón dorado ocupa su línea y no se superpone */
 .raffle-card--finished .card-actions {
   grid-template-columns: 1fr;
+}
+
+.raffle-card--finished[role="button"] {
+  cursor: pointer;
+}
+
+.raffle-card--finished[role="button"]:focus-visible {
+  outline: 3px solid rgba(185, 141, 35, 0.45);
+  outline-offset: 4px;
+}
+
+.raffle-card__shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.raffle-card__shell--finished {
+  --raffle-finished-shell-padding-block: clamp(1rem, 2vw, 1.25rem);
+  --raffle-finished-shell-padding-inline: clamp(1rem, 2vw, 1.2rem);
+  --raffle-finished-shell-padding-bottom: clamp(1.65rem, 3vw, 2.35rem);
+  background: linear-gradient(
+    90deg,
+    rgba(247, 215, 116, 0.14) 0%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  border: 1px solid rgba(185, 141, 35, 0.28);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  min-height: 100%;
+  padding: var(--raffle-finished-shell-padding-block)
+    var(--raffle-finished-shell-padding-inline);
+  padding-bottom: var(--raffle-finished-shell-padding-bottom);
+  /* * Este colchón extra evita que el botón "Ver sorteo" choque con el borde. */
+}
+
+.raffle-card--finished .raffle-card__flip {
+  position: relative;
+  min-height: 100%;
+  perspective: 1200px;
+  overflow: visible;
+  transition: height var(--transition-slow, 0.28s ease);
+}
+
+.raffle-card--finished .raffle-card__flip-inner {
+  position: relative;
+  min-height: 100%;
+  transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+.raffle-card--finished.raffle-card--show-prizes .raffle-card__flip-inner {
+  transform: rotateY(180deg);
+}
+
+.raffle-card--finished .raffle-card__side {
+  position: relative;
+  backface-visibility: hidden;
+  display: flex;
+}
+
+.raffle-card--finished .raffle-card__side--back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+.raffle-card--finished .raffle-card__side-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.raffle-card--finished .raffle-card__info {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.raffle-card--finished .raffle-card__cta {
+  flex: 0 0 180px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.6rem;
+  width: min(100%, 18rem);
+  margin-inline: auto;
+}
+
+.raffle-card--finished .raffle-card__cta .button {
+  width: 100%;
+  max-width: 16rem;
+  margin-inline: auto;
 }
 /* ==== Gestionar sorteos: UI premium y responsive ==== */
 
