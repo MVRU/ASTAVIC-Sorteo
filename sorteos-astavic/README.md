@@ -1,5 +1,9 @@
 # Getting Started with Create React App
 
+## Accesibilidad
+
+La interfaz incorpora un enlace visible de "Saltar al contenido principal" que aparece al usar el teclado, alineado con la pauta WCAG 2.4.1 para acelerar la navegación de lectoras y lectores de pantalla.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
