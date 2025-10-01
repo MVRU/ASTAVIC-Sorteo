@@ -136,16 +136,31 @@ const guessSeparator = (text) => {
   return ","; // por defecto CSV
 };
 
+const normalizeManualEntries = (manualInput) => {
+  if (Array.isArray(manualInput)) {
+    return manualInput
+      .flat()
+      .map((value) => String(value ?? "").trim())
+      .filter(Boolean);
+  }
+  const manualText = String(manualInput ?? "").trim();
+  if (!manualText) return [];
+  return manualText
+    .split(/\r?\n/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+};
+
 /**
  * Parsea lista de participantes desde texto de archivo y/o manual.
  * @param {string} [fileText='']
- * @param {string} [manualText='']
+ * @param {string|string[]} [manualInput='']
  * @returns {string[]}
  */
-export const parseParticipants = (fileText = "", manualText = "") => {
+export const parseParticipants = (fileText = "", manualInput = "") => {
   let participants = [];
   const trimmedFile = fileText.trim();
-  const trimmedManual = manualText.trim();
+  const manualEntries = normalizeManualEntries(manualInput);
 
   if (trimmedFile) {
     const separator = guessSeparator(trimmedFile);
@@ -171,12 +186,8 @@ export const parseParticipants = (fileText = "", manualText = "") => {
     }
   }
 
-  if (trimmedManual) {
-    const extra = trimmedManual
-      .split(/\r?\n/)
-      .map((v) => v.trim())
-      .filter(Boolean);
-    participants = participants.concat(extra);
+  if (manualEntries.length > 0) {
+    participants = participants.concat(manualEntries);
   }
 
   // normalización + únicos

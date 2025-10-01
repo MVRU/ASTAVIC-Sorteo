@@ -19,8 +19,15 @@ describe("RaffleForm", () => {
       />
     );
 
-    const manualTextarea = screen.getByLabelText(/pegalo manualmente/i);
-    await userEvent.type(manualTextarea, "Ana\nBruno");
+    const user = setupUser();
+    const inputsBefore = screen.getAllByPlaceholderText(/ana@correo.com/i);
+    const firstInput = inputsBefore[0];
+    await user.type(firstInput, "Ana");
+    await user.keyboard("{Enter}");
+    const [, secondInput] = await screen.findAllByPlaceholderText(
+      /ana@correo.com/i
+    );
+    await user.type(secondInput, "Bruno");
 
     await waitFor(() => {
       expect(onPreviewChange).toHaveBeenCalledWith(
@@ -45,12 +52,18 @@ describe("RaffleForm", () => {
     );
 
     const user = setupUser();
-    await userEvent.type(screen.getByLabelText(/título del sorteo/i), "Nuevo sorteo");
+    await user.type(screen.getByLabelText(/título del sorteo/i), "Nuevo sorteo");
     fireEvent.change(screen.getByLabelText(/fecha y hora/i), {
       target: { value: "2099-05-01T12:00" },
     });
-    await userEvent.type(screen.getByLabelText(/título del premio 1/i), "Primer premio");
-    await userEvent.type(screen.getByLabelText(/pegalo manualmente/i), "ana@example.com");
+    await user.type(
+      screen.getByPlaceholderText(/gift card/i),
+      "Primer premio"
+    );
+    await user.type(
+      screen.getByPlaceholderText(/ana@correo.com/i),
+      "ana@example.com"
+    );
 
     await user.click(screen.getByRole("button", { name: /crear sorteo/i }));
 
