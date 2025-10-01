@@ -1,6 +1,7 @@
 // src/components/public/PublicView.js
 // ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
 // * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
+// * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
 // -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
 import { useCallback, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
@@ -15,6 +16,7 @@ const PublicView = ({
   finishedRaffles,
   onMarkFinished,
   onRegisterSubscriber,
+  onRouteChange,
   route,
 }) => {
   const [email, setEmail] = useState("");
@@ -28,6 +30,13 @@ const PublicView = ({
     [normalizedEmail]
   );
   const isFinishedRoute = route === "finished";
+  const segmentOptions = useMemo(
+    () => [
+      { label: "Activos", value: "public" },
+      { label: "Finalizados", value: "finished" },
+    ],
+    []
+  );
   const visibleRaffles = useMemo(
     () => (isFinishedRoute ? finishedRaffles : activeRaffles),
     [isFinishedRoute, finishedRaffles, activeRaffles]
@@ -71,6 +80,16 @@ const PublicView = ({
   const handleGeneralReminder = useCallback(() => {
     handleReminder(null);
   }, [handleReminder]);
+
+  const handleRouteSelection = useCallback(
+    (targetRoute) => {
+      if (targetRoute === route) return;
+      if (onRouteChange) {
+        onRouteChange(targetRoute);
+      }
+    },
+    [onRouteChange, route]
+  );
 
   const reminderRaffle = reminder.raffle;
 
@@ -127,6 +146,29 @@ const PublicView = ({
               </p>
             </div>
             <div className="public-toolbar__actions anim-up">
+              <div
+                className="public-toolbar__segments"
+                role="group"
+                aria-label="Filtrar sorteos por estado"
+              >
+                {segmentOptions.map((option) => {
+                  const isActive = option.value === route;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`segmented-button${
+                        isActive ? " segmented-button--active" : ""
+                      }`}
+                      onClick={() => handleRouteSelection(option.value)}
+                      aria-pressed={isActive}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
               <span className="section-subtitle">
                 Hay {visibleCount} {visibleCount === 1 ? "sorteo" : "sorteos"}
               </span>
@@ -170,11 +212,13 @@ PublicView.propTypes = {
   finishedRaffles: PropTypes.arrayOf(rafflePropType).isRequired,
   onMarkFinished: PropTypes.func,
   onRegisterSubscriber: PropTypes.func.isRequired,
+  onRouteChange: PropTypes.func,
   route: PropTypes.oneOf(["public", "finished"]),
 };
 
 PublicView.defaultProps = {
   onMarkFinished: undefined,
+  onRouteChange: undefined,
   route: "public",
 };
 

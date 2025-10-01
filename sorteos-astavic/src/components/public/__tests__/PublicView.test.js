@@ -27,11 +27,12 @@ const setup = (overrides = {}) => {
     finishedRaffles: [],
     onMarkFinished: jest.fn(),
     onRegisterSubscriber: jest.fn(),
+    onRouteChange: jest.fn(),
     route: "public",
     ...overrides,
   };
-  render(<PublicView {...props} />);
-  return props;
+  const view = render(<PublicView {...props} />);
+  return { props, ...view };
 };
 
 beforeEach(() => {
@@ -46,6 +47,30 @@ test("muestra copy de sorteos activos y contador accesible", () => {
   expect(
     screen.getByText(/hay 1 sorteo/i)
   ).toBeInTheDocument();
+});
+
+test("permite alternar entre sorteos activos y finalizados desde el segmento", async () => {
+  const onRouteChange = jest.fn();
+  const { props, rerender } = setup({ onRouteChange });
+
+  const finishedTab = screen.getByRole("button", { name: /finalizados/i });
+  expect(finishedTab).toHaveAttribute("aria-pressed", "false");
+
+  await userEvent.click(finishedTab);
+
+  expect(onRouteChange).toHaveBeenCalledWith("finished");
+
+  rerender(<PublicView {...props} route="finished" />);
+
+  expect(
+    screen.getByRole("button", { name: /finalizados/i })
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    screen.getByRole("button", { name: /finalizados/i })
+  ).toHaveAttribute("aria-current", "page");
+  expect(
+    screen.getByRole("button", { name: /activos/i })
+  ).not.toHaveAttribute("aria-current");
 });
 
 test("valida correo antes de registrar suscripción", async () => {

@@ -99,6 +99,7 @@ const App = () => {
             finishedRaffles={finishedRaffles}
             onMarkFinished={markFinished}
             onRegisterSubscriber={registerSubscriber}
+            onRouteChange={navigate}
             route={route}
           />
         )}
