@@ -43,6 +43,9 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   const shells = screen.getAllByTestId("raffle-card-shell");
   const [frontSide, backSide] = screen.getAllByRole("group", { hidden: true });
 
+  expect(cardToggle).toHaveClass("raffle-card--finished");
+  expect(cardToggle).not.toHaveClass("card");
+
   expect(shells).toHaveLength(2);
   expect(flipWrapper).toHaveAttribute("data-active-face", "front");
   expect(frontSide).toHaveAttribute(
