@@ -5,18 +5,21 @@ const ROUTES = {
   PUBLIC: "public",
   ADMIN: "admin",
   FINISHED: "finished",
+  ALL: "all",
 };
 
 const HASH_BY_ROUTE = {
   [ROUTES.PUBLIC]: "#/",
   [ROUTES.ADMIN]: "#/admin",
   [ROUTES.FINISHED]: "#/finalizados",
+  [ROUTES.ALL]: "#/todos",
 };
 
 const parseRouteFromHash = (hash) => {
   if (!hash) return ROUTES.PUBLIC;
   if (hash.startsWith("#/admin")) return ROUTES.ADMIN;
   if (hash.startsWith("#/finalizados")) return ROUTES.FINISHED;
+  if (hash.startsWith("#/todos")) return ROUTES.ALL;
   return ROUTES.PUBLIC;
 };
 
@@ -59,6 +62,7 @@ export const useHashRoute = () => {
       isAdminRoute: route === ROUTES.ADMIN,
       isFinishedRoute: route === ROUTES.FINISHED,
       isPublicRoute: route === ROUTES.PUBLIC,
+      isAllRoute: route === ROUTES.ALL,
     }),
     [route]
   );

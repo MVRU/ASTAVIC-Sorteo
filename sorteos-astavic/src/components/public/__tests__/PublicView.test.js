@@ -49,12 +49,16 @@ test("muestra copy de sorteos activos y contador accesible", () => {
   ).toBeInTheDocument();
 });
 
-test("permite alternar entre sorteos activos y finalizados desde el segmento", async () => {
+test("permite alternar entre vistas desde el segmento", async () => {
   const onRouteChange = jest.fn();
   const { props, rerender } = setup({ onRouteChange });
 
+  const allTab = screen.getByRole("button", { name: /todos/i });
   const finishedTab = screen.getByRole("button", { name: /finalizados/i });
   expect(finishedTab).toHaveAttribute("aria-pressed", "false");
+
+  await userEvent.click(allTab);
+  expect(onRouteChange).toHaveBeenCalledWith("all");
 
   await userEvent.click(finishedTab);
 
@@ -71,6 +75,30 @@ test("permite alternar entre sorteos activos y finalizados desde el segmento", a
   expect(
     screen.getByRole("button", { name: /activos/i })
   ).not.toHaveAttribute("aria-current");
+
+  rerender(<PublicView {...props} route="all" />);
+
+  expect(screen.getByRole("button", { name: /todos/i })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  expect(screen.getByRole("button", { name: /todos/i })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+});
+
+test("muestra copy combinado y conteo acumulado en pestaña todos", () => {
+  setup({
+    route: "all",
+    activeRaffles: [raffleSample],
+    finishedRaffles: [{ ...raffleSample, id: "raffle-2", finished: true }],
+  });
+
+  expect(
+    screen.getByRole("heading", { name: /todos los sorteos/i })
+  ).toBeInTheDocument();
+  expect(screen.getByText(/hay 2 sorteos/i)).toBeInTheDocument();
 });
 
 test("valida correo antes de registrar suscripción", async () => {

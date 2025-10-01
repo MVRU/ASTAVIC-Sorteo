@@ -30,16 +30,23 @@ const PublicView = ({
     [normalizedEmail]
   );
   const isFinishedRoute = route === "finished";
+  const isAllRoute = route === "all";
   const segmentOptions = useMemo(
     () => [
+      { label: "Todos", value: "all" },
       { label: "Activos", value: "public" },
       { label: "Finalizados", value: "finished" },
     ],
     []
   );
   const visibleRaffles = useMemo(
-    () => (isFinishedRoute ? finishedRaffles : activeRaffles),
-    [isFinishedRoute, finishedRaffles, activeRaffles]
+    () => {
+      if (isAllRoute) {
+        return [...activeRaffles, ...finishedRaffles];
+      }
+      return isFinishedRoute ? finishedRaffles : activeRaffles;
+    },
+    [activeRaffles, finishedRaffles, isAllRoute, isFinishedRoute]
   );
   const visibleCount = visibleRaffles.length;
 
@@ -53,13 +60,22 @@ const PublicView = ({
           "Ni bien cerremos un sorteo, vas a ver el listado completo acá.",
       };
     }
+    if (isAllRoute) {
+      return {
+        title: "Todos los sorteos",
+        subtitle: "Explorá el historial completo de sorteos y sus resultados.",
+        emptyTitle: "No encontramos sorteos publicados todavía.",
+        emptySubtitle:
+          "Cuando publiquemos sorteos vas a verlos acá, activos o finalizados.",
+      };
+    }
     return {
       title: "Sorteos activos",
       subtitle: "Participá en los sorteos vigentes y pedí recordatorios por correo.",
       emptyTitle: "No hay sorteos publicados en este momento.",
       emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
     };
-  }, [isFinishedRoute]);
+  }, [isAllRoute, isFinishedRoute]);
 
   const handleCloseReminder = useCallback(() => {
     setReminder({ open: false, raffle: null });
@@ -213,7 +229,7 @@ PublicView.propTypes = {
   onMarkFinished: PropTypes.func,
   onRegisterSubscriber: PropTypes.func.isRequired,
   onRouteChange: PropTypes.func,
-  route: PropTypes.oneOf(["public", "finished"]),
+  route: PropTypes.oneOf(["public", "finished", "all"]),
 };
 
 PublicView.defaultProps = {

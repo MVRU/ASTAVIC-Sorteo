@@ -7,8 +7,9 @@ import PropTypes from "prop-types";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
 
-const NAV_ITEMS = [
+const MOBILE_NAV_ITEMS = [
   { target: "public", href: "#/", label: "Inicio" },
+  { target: "all", href: "#/todos", label: "Todos los sorteos" },
   { target: "finished", href: "#/finalizados", label: "Sorteos finalizados" },
   // "Administración" ya no se lista acá para desktop; en mobile se maneja aparte según isAdmin
 ];
@@ -35,8 +36,6 @@ const Header = ({
   const burgerButtonRef = useRef(null);
   const menuWasOpenRef = useRef(false);
   const menuId = "primary-menu";
-
-  const DESKTOP_ITEMS = NAV_ITEMS; // sin admin aquí
 
   const handleNavigate = (target) => (event) => {
     event.preventDefault();
@@ -137,7 +136,7 @@ const Header = ({
                 </button>
               </div>
               <nav aria-label="Navegación móvil" className="app-header__mobile-nav">
-                {NAV_ITEMS.map(({ target, href, label }) => (
+                {MOBILE_NAV_ITEMS.map(({ target, href, label }) => (
                   <a
                     key={`mobile-${target}`}
                     href={href}
@@ -199,26 +198,7 @@ const Header = ({
         </a>
 
         {/* Desktop nav */}
-        {!isMobile && (
-          <nav
-            className="app-header__nav app-nav"
-            aria-label="Navegación principal"
-          >
-            {DESKTOP_ITEMS.map(({ target, href, label }) => (
-              <a
-                key={target}
-                href={href}
-                className={`nav-link${
-                  currentRoute === target ? " is-active" : ""
-                }`}
-                aria-current={currentRoute === target ? "page" : undefined}
-                onClick={handleNavigate(target)}
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-        )}
+        {/* Desktop: sin enlaces redundantes cuando los controla PublicView */}
 
         <div className="app-header__actions">
           {/* Desktop: acciones admin a la derecha */}
@@ -286,7 +266,7 @@ BurgerIcon.propTypes = { open: PropTypes.bool };
 BurgerIcon.defaultProps = { open: false };
 
 Header.propTypes = {
-  currentRoute: PropTypes.oneOf(["public", "finished", "admin"]).isRequired,
+  currentRoute: PropTypes.oneOf(["public", "finished", "admin", "all"]).isRequired,
   onNavigate: PropTypes.func.isRequired,
   logoSrc: PropTypes.string,
   isAdmin: PropTypes.bool, // <- NUEVO
