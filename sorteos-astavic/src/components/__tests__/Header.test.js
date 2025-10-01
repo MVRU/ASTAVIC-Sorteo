@@ -51,9 +51,13 @@ describe("Header - menú móvil accesible", () => {
     const toggleButton = screen.getByRole("button", { name: /abrir menú/i });
     await user.click(toggleButton);
 
-    const dialog = await screen.findByRole("dialog", {
+    const dialog = await within(document.body).findByRole("dialog", {
       name: /menú de navegación móvil/i,
     });
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).queryByRole("dialog", { name: /menú de navegación móvil/i })
+    ).toBeNull();
     const closeButton = within(dialog).getByRole("button", {
       name: /cerrar menú/i,
     });
@@ -92,7 +96,12 @@ describe("Header - menú móvil accesible", () => {
     expect(document.body.style.overflow).toBe("hidden");
     expect(document.body.style.position).toBe("fixed");
 
-    const overlay = screen.getByTestId("header-mobile-overlay");
+    const layer = screen.getByTestId("header-mobile-layer");
+    expect(layer).toBeInTheDocument();
+    const header = screen.getByRole("banner");
+    expect(within(header).queryByTestId("header-mobile-layer")).toBeNull();
+
+    const overlay = within(document.body).getByTestId("header-mobile-overlay");
     await user.click(overlay);
 
     expect(document.body.style.overflow).toBe("");
