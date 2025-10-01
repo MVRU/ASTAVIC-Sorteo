@@ -25,23 +25,25 @@ const ParticipationGuide = ({
         Cómo participar en los sorteos
       </h2>
       <p className="participation-guide__intro">
-        Seguí estos pasos para inscribirte, recibir alertas oportunas y enterarte
-        de los resultados sin perderte ninguna instancia.
+        Seguí estos pasos para mantenerte informado: ASTAVIC gestiona las
+        inscripciones y avisos oficiales, vos podés consultar fechas, premios y
+        resultados sin perderte ninguna instancia.
       </p>
     </div>
     <ol className="participation-guide__steps">
       <li className="participation-guide__step">
-        <h3 className="participation-guide__step-title">Explorá y elegí</h3>
+        <h3 className="participation-guide__step-title">Explorá los sorteos</h3>
         <p className="participation-guide__step-copy">
-          Revisá la fecha, los premios y los requisitos de cada sorteo antes de
-          sumarte para confirmar que se ajusta a lo que buscás.
+          Revisá fecha, premios y participantes designados para cada sorteo. No
+          necesitás inscribirte: el equipo de ASTAVIC administra la selección de
+          personas participantes.
         </p>
       </li>
       <li className="participation-guide__step">
-        <h3 className="participation-guide__step-title">Solicitá un recordatorio</h3>
+        <h3 className="participation-guide__step-title">Activá recordatorios</h3>
         <p className="participation-guide__step-copy">
-          Configurá un aviso por correo para recibir una alerta previa al cierre
-          de inscripciones y preparar tu participación con tiempo.
+          Configurá un aviso por correo para que te notifiquemos antes del
+          sorteo y estés listo para seguir la transmisión o revisar novedades.
         </p>
         <button
           type="button"
@@ -54,15 +56,15 @@ const ParticipationGuide = ({
       <li className="participation-guide__step">
         <h3 className="participation-guide__step-title">Seguí el sorteo en vivo</h3>
         <p className="participation-guide__step-copy">
-          Volvé el día y horario indicados para acompañar la transmisión o la
-          actualización en vivo y conocer a las personas ganadoras.
+          Volvé el día y horario indicados para acompañar la transmisión o las
+          actualizaciones en vivo que compartimos en la plataforma.
         </p>
       </li>
       <li className="participation-guide__step">
         <h3 className="participation-guide__step-title">Revisá los resultados</h3>
         <p className="participation-guide__step-copy">
-          Consultá el historial para confirmar si fuiste seleccionado y ver los
-          detalles de entrega publicados por el equipo organizador.
+          Consultá el historial para ver ganadores y detalles de entrega que
+          publica ASTAVIC una vez finalizada cada instancia.
         </p>
         {showFinishedShortcut ? (
           <button

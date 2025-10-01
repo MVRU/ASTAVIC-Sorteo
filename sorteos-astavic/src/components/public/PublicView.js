@@ -75,7 +75,8 @@ const PublicView = ({
     }
     return {
       title: "Sorteos activos",
-      subtitle: "Participá en los sorteos vigentes y pedí recordatorios por correo.",
+      subtitle:
+        "Informate sobre los sorteos vigentes, sus premios y participantes confirmados. Pedí recordatorios por correo.",
       emptyTitle: "No hay sorteos publicados en este momento.",
       emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
     };
