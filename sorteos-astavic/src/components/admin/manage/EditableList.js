@@ -135,6 +135,7 @@ const EditableList = ({
                   placeholder={placeholder}
                   onChange={(event) => handleItemChange(index, event.target.value)}
                   onKeyDown={(event) => handleKeyDown(event, index)}
+                  aria-describedby={descriptionIds}
                   aria-invalid={isInvalid ? "true" : undefined}
                 />
                 <button

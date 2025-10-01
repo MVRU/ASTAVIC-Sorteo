@@ -36,32 +36,30 @@ describe("AdminDashboard", () => {
       })
     ).toBeInTheDocument();
 
-    const prizeInput = screen.getByLabelText(/título del premio 1/i);
+    const prizeInput = screen.getByRole("textbox", { name: /premio 1/i });
     expect(prizeInput).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByText("El título del premio 1 no puede estar vacío.", {
-        selector: "#prize-title-0-error",
+        selector: "#create-prizes-error",
       })
     ).toBeInTheDocument();
 
-    const manualTextarea = screen.getByRole("textbox", {
-      name: /pegalo manualmente/i,
-    });
-    expect(manualTextarea).toHaveAttribute("aria-invalid", "true");
+    const manualInput = screen.getByRole("textbox", { name: /participante 1/i });
+    expect(manualInput).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByText("No se detectaron participantes (archivo o texto).", {
-        selector: "#raffle-manual-error",
+        selector: "#create-manual-error",
       })
     ).toBeInTheDocument();
-    expect(manualTextarea.getAttribute("aria-describedby")).toMatch(
-      /raffle-manual-error/
+    expect(manualInput.getAttribute("aria-describedby")).toMatch(
+      /create-manual-error/
     );
 
     const dropZone = screen.getByRole("button", {
       name: /soltá tu archivo/i,
     });
     expect(dropZone.getAttribute("aria-describedby")).toMatch(
-      /raffle-manual-error/
+      /create-manual-error/
     );
 
     await waitFor(() => {
