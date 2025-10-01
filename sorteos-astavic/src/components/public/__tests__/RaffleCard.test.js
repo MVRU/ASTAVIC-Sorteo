@@ -45,6 +45,7 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
 
   expect(cardToggle).toHaveClass("raffle-card--finished");
   expect(cardToggle).not.toHaveClass("card");
+  expect(cardToggle).not.toHaveClass("raffle-card--finished-horizontal");
 
   expect(shells).toHaveLength(2);
   expect(flipWrapper).toHaveAttribute("data-active-face", "front");

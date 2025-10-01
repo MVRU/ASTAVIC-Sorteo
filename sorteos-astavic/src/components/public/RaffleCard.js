@@ -2,7 +2,7 @@
 // ! DECISIÓN DE DISEÑO: Centralizamos la tarjeta y su modal para mantener consistencia entre público y administración.
 // * Separamos efectos intensivos (countdown, transición y modal) en helpers locales para mejorar legibilidad y mantenimiento.
 // * La cara trasera alterna premios con animación accesible y sincroniza su altura para evitar cortes.
-// * Las tarjetas finalizadas omiten la clase `.card` para evitar bordes o sombras duplicadas en el contenedor giratorio.
+// * Encapsulamos el marco dorado en la "shell" interna para que rote con el contenido sin duplicar bordes ni sombras.
 // * El modo "preview" evita efectos y llamadas externas para ofrecer una representación segura en contextos administrativos.
 // -!- Riesgo: Los temporizadores dependen de window; en SSR deben aislarse antes de montar en cliente.
 import {
@@ -215,7 +215,7 @@ const RaffleCard = ({
       classes.unshift("card");
     }
     if (isFinished) {
-      classes.push("raffle-card--finished", "raffle-card--finished-horizontal");
+      classes.push("raffle-card--finished");
     } else if (isSoon) {
       classes.push("raffle-card--soon");
     }
