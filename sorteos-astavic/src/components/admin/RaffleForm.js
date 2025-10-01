@@ -8,7 +8,7 @@ import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import { validateRaffleDraft } from "../../utils/raffleValidation";
 import { PREVIEW_DEFAULT_MESSAGE } from "./adminConstants";
 import { useToast } from "../../context/ToastContext";
-import EditableList from "./manage/EditableList";
+import EditableList, { EditableListStyles } from "./manage/EditableList";
 
 const noop = () => {};
 
@@ -276,8 +276,10 @@ const RaffleForm = ({
   };
 
   return (
-    <form className="card anim-scale-in" onSubmit={handleSubmit} noValidate>
-      <fieldset disabled={loading} style={{ border: 0, padding: 0, margin: 0 }}>
+    <>
+      <EditableListStyles />
+      <form className="card anim-scale-in" onSubmit={handleSubmit} noValidate>
+        <fieldset disabled={loading} style={{ border: 0, padding: 0, margin: 0 }}>
         <legend className="visually-hidden">Crear sorteo</legend>
 
         <div className="form-group" style={{ marginBottom: "1.25rem" }}>
@@ -424,8 +426,9 @@ const RaffleForm = ({
             {status.message}
           </p>
         )}
-      </fieldset>
-    </form>
+        </fieldset>
+      </form>
+    </>
   );
 };
 

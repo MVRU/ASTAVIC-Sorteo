@@ -17,7 +17,7 @@ import rafflePropType from "../public/rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import Icon, { ICON_NAMES } from "../ui/Icon";
 import AdminTutorial from "./AdminTutorial";
-import EditableList from "./manage/EditableList";
+import EditableList, { EditableListStyles } from "./manage/EditableList";
 
 /* =========================
    Hook simple de media query
@@ -804,6 +804,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 
   return (
     <section className="section-gap anim-fade-in" aria-labelledby="admin-panel">
+      <EditableListStyles />
       <div className="container" style={{ display: "grid", gap: "1.5rem" }}>
         {/* Toolbar */}
         <div
