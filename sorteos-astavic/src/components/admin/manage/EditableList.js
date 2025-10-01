@@ -1,7 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Este componente abstrae la edición de colecciones en formularios manteniendo control externo del estado.
-// ! DECISIÓN DE DISEÑO: La superficie adopta los tokens claros del panel para respetar el fondo blanco predominante.
-// * Normaliza entradas, anima las tarjetas y gestiona el foco para balancear UX atractiva con accesibilidad WCAG.
-// ? Riesgo: Navegadores sin soporte de requestAnimationFrame podrían degradar el enfoque automático; se cae de forma segura.
+// src/components/admin/manage/EditableList.js
+
 import { useId, useMemo, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 
@@ -375,7 +373,10 @@ const EditableList = ({
                   {index + 1}
                 </span>
                 <div className="editable-list__field">
-                  <label className="editable-list__item-label" htmlFor={inputId}>
+                  <label
+                    className="editable-list__item-label"
+                    htmlFor={inputId}
+                  >
                     {itemLabel} {index + 1}
                   </label>
                   <input
@@ -386,7 +387,9 @@ const EditableList = ({
                     }`}
                     value={value}
                     placeholder={placeholder}
-                    onChange={(event) => handleItemChange(index, event.target.value)}
+                    onChange={(event) =>
+                      handleItemChange(index, event.target.value)
+                    }
                     onKeyDown={(event) => handleKeyDown(event, index)}
                     aria-describedby={descriptionIds}
                     aria-invalid={isInvalid ? "true" : undefined}
@@ -397,7 +400,9 @@ const EditableList = ({
                     type="button"
                     className="editable-list__remove"
                     onClick={() => handleRemove(index)}
-                    aria-label={`Eliminar ${itemLabel.toLowerCase()} ${index + 1}`}
+                    aria-label={`Eliminar ${itemLabel.toLowerCase()} ${
+                      index + 1
+                    }`}
                   >
                     ×
                   </button>

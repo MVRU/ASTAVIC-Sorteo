@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Encapsulamos la lógica del sorteo en vivo para aislar temporizadores y evitar fugas de memoria.
+// src/hooks/useLiveDraw.js
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pickWinners } from "../utils/raffleUtils";
 
@@ -66,7 +67,14 @@ export const useLiveDraw = (
 
       timersRef.current.push(stageTimer);
     },
-    [clearTimers, markFinished, messages.drawing, messages.mixing, revealDelay, stageDelay]
+    [
+      clearTimers,
+      markFinished,
+      messages.drawing,
+      messages.mixing,
+      revealDelay,
+      stageDelay,
+    ]
   );
 
   useEffect(() => () => clearTimers(), [clearTimers]);

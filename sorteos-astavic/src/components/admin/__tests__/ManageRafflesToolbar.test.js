@@ -1,10 +1,11 @@
-// ! DECISIÓN DE DISEÑO: Garantizamos que la toolbar responda a interacciones básicas y mantenga accesibilidad.
-import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import ManageRafflesToolbar from '../manage/ManageRafflesToolbar';
+// src/components/admin/__tests__/ManageRafflesToolbar.test.js
+
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import ManageRafflesToolbar from "../manage/ManageRafflesToolbar";
 
 const createUser = () =>
-  typeof userEvent.setup === 'function'
+  typeof userEvent.setup === "function"
     ? userEvent.setup()
     : {
         click: (...args) => userEvent.click(...args),
@@ -12,8 +13,8 @@ const createUser = () =>
         selectOptions: (...args) => userEvent.selectOptions(...args),
       };
 
-describe('ManageRafflesToolbar', () => {
-  test('renderiza indicadores y propaga las acciones de filtrado', async () => {
+describe("ManageRafflesToolbar", () => {
+  test("renderiza indicadores y propaga las acciones de filtrado", async () => {
     const user = createUser();
     const onTabChange = jest.fn();
     const onQueryChange = jest.fn();
@@ -38,9 +39,9 @@ describe('ManageRafflesToolbar', () => {
         <ManageRafflesToolbar
           tab="active"
           onTabChange={onTabChange}
-          query={overrides.query ?? ''}
+          query={overrides.query ?? ""}
           onQueryChange={onQueryChange}
-          sort={overrides.sort ?? 'date_desc'}
+          sort={overrides.sort ?? "date_desc"}
           onSortChange={onSortChange}
           stats={stats}
         />
@@ -50,20 +51,20 @@ describe('ManageRafflesToolbar', () => {
     expect(screen.getByText(/finalizados: 2/i)).toBeInTheDocument();
 
     const searchInput = screen.getByLabelText(/buscar sorteos/i);
-    fireEvent.change(searchInput, { target: { value: 'promo' } });
-    expect(onQueryChange).toHaveBeenCalledWith('promo');
+    fireEvent.change(searchInput, { target: { value: "promo" } });
+    expect(onQueryChange).toHaveBeenCalledWith("promo");
     renderToolbar({ query: onQueryChange.mock.calls.at(-1)?.[0] });
-    expect(screen.getByLabelText(/buscar sorteos/i)).toHaveValue('promo');
+    expect(screen.getByLabelText(/buscar sorteos/i)).toHaveValue("promo");
 
     const sortSelect = screen.getByLabelText(/ordenar resultados/i);
-    await user.selectOptions(sortSelect, 'title_asc');
-    expect(onSortChange).toHaveBeenLastCalledWith('title_asc');
+    await user.selectOptions(sortSelect, "title_asc");
+    expect(onSortChange).toHaveBeenLastCalledWith("title_asc");
 
-    await user.click(screen.getByRole('button', { name: /finalizados/i }));
-    expect(onTabChange).toHaveBeenCalledWith('finished');
+    await user.click(screen.getByRole("button", { name: /finalizados/i }));
+    expect(onTabChange).toHaveBeenCalledWith("finished");
   });
 
-  test('sincroniza el estado aria-pressed de las pestañas con la pestaña activa', () => {
+  test("sincroniza el estado aria-pressed de las pestañas con la pestaña activa", () => {
     const onTabChange = jest.fn();
     const { rerender } = render(
       <ManageRafflesToolbar
@@ -77,14 +78,13 @@ describe('ManageRafflesToolbar', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /activos/i })).toHaveAttribute(
-      'aria-pressed',
-      'true'
+    expect(screen.getByRole("button", { name: /activos/i })).toHaveAttribute(
+      "aria-pressed",
+      "true"
     );
-    expect(screen.getByRole('button', { name: /finalizados/i })).toHaveAttribute(
-      'aria-pressed',
-      'false'
-    );
+    expect(
+      screen.getByRole("button", { name: /finalizados/i })
+    ).toHaveAttribute("aria-pressed", "false");
 
     rerender(
       <ManageRafflesToolbar
@@ -98,13 +98,12 @@ describe('ManageRafflesToolbar', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /activos/i })).toHaveAttribute(
-      'aria-pressed',
-      'false'
+    expect(screen.getByRole("button", { name: /activos/i })).toHaveAttribute(
+      "aria-pressed",
+      "false"
     );
-    expect(screen.getByRole('button', { name: /finalizados/i })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expect(
+      screen.getByRole("button", { name: /finalizados/i })
+    ).toHaveAttribute("aria-pressed", "true");
   });
 });

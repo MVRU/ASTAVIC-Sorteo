@@ -1,7 +1,5 @@
 // src/components/public/RaffleDetailsModal.js
-// ! DECISIÓN DE DISEÑO: Extraemos el modal de detalles para reutilizarlo y contener efectos de foco y scroll.
-// * Encapsulamos los side-effects para que RaffleCard quede libre de detalles de portales y bloqueo de body.
-// -!- Riesgo: Este componente depende de window/document; en SSR debe renderizarse de forma condicional.
+
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
@@ -197,12 +195,20 @@ const RaffleDetailsModal = ({
                   gap: "0.4rem",
                 }}
               >
-                <Icon name="calendarCheck" decorative size={18} strokeWidth={1.9} />
+                <Icon
+                  name="calendarCheck"
+                  decorative
+                  size={18}
+                  strokeWidth={1.9}
+                />
                 <time dateTime={new Date(raffle.datetime).toISOString()}>
                   {formatDateEs(raffle.datetime)}
                 </time>
               </span>
-              <span className="legend" style={{ color: "var(--text-secondary)" }}>
+              <span
+                className="legend"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 Participantes: {participantsCount}
               </span>
             </div>
@@ -221,7 +227,12 @@ const RaffleDetailsModal = ({
         <div
           className="modal__body"
           id={descId}
-          style={{ display: "grid", gap: "0.9rem", paddingTop: "0.75rem", ...MODAL_SCROLL_STYLE }}
+          style={{
+            display: "grid",
+            gap: "0.9rem",
+            paddingTop: "0.75rem",
+            ...MODAL_SCROLL_STYLE,
+          }}
         >
           <section className="modal__section">
             <h4 style={{ marginTop: 0 }}>Descripción</h4>
@@ -249,7 +260,12 @@ const RaffleDetailsModal = ({
                           <span style={PRIZE_PILL_STYLE}>{prizeTitle}</span>
                         )}
                       </div>
-                      <Icon name="trophy" decorative size={22} strokeWidth={1.6} />
+                      <Icon
+                        name="trophy"
+                        decorative
+                        size={22}
+                        strokeWidth={1.6}
+                      />
                     </div>
                   );
                 })}
@@ -270,7 +286,9 @@ const RaffleDetailsModal = ({
               <h4 style={{ margin: 0 }}>
                 Participantes ({filteredParticipants.length})
               </h4>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <div
+                style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+              >
                 <input
                   className="input"
                   type="search"
@@ -284,7 +302,9 @@ const RaffleDetailsModal = ({
                   <button
                     type="button"
                     className="button button--subtle"
-                    onClick={() => setShowAllParticipants((current) => !current)}
+                    onClick={() =>
+                      setShowAllParticipants((current) => !current)
+                    }
                     aria-pressed={showAllParticipants}
                     aria-label={
                       showAllParticipants
@@ -329,7 +349,11 @@ const RaffleDetailsModal = ({
           className="modal__footer"
           style={{ ...STICKY_FOOTER_STYLE, justifyContent: "flex-end" }}
         >
-          <button type="button" className="button button--primary" onClick={onClose}>
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={onClose}
+          >
             Cerrar
           </button>
         </div>

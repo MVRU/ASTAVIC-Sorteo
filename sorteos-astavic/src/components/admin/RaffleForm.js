@@ -1,6 +1,5 @@
-// ! DECISIÓN DE DISEÑO: El formulario gestiona su propio estado, expone cambios relevantes mediante callbacks puros y delega el
-// ! feedback global en toasts accesibles.
-// ! DECISIÓN DE DISEÑO: Se reutilizan listas editables controladas para premios y participantes manuales, manteniendo consistencia con la edición.
+// src/components/admin/RaffleForm.js
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import FileDropzone from "./ui/FileDropzone";
@@ -63,8 +62,7 @@ const RaffleForm = ({
   );
 
   const fileToken = useMemo(
-    () =>
-      file ? `${file.name}-${file.size}-${file.lastModified}` : "",
+    () => (file ? `${file.name}-${file.size}-${file.lastModified}` : ""),
     [file]
   );
 
@@ -154,7 +152,10 @@ const RaffleForm = ({
     setPrizes((prev) => {
       if (safeCount === prev.length) return prev;
       if (safeCount > prev.length) {
-        const additions = Array.from({ length: safeCount - prev.length }, () => "");
+        const additions = Array.from(
+          { length: safeCount - prev.length },
+          () => ""
+        );
         return [...prev, ...additions];
       }
       return prev.slice(0, safeCount);
@@ -279,153 +280,175 @@ const RaffleForm = ({
     <>
       <EditableListStyles />
       <form className="card anim-scale-in" onSubmit={handleSubmit} noValidate>
-        <fieldset disabled={loading} style={{ border: 0, padding: 0, margin: 0 }}>
-        <legend className="visually-hidden">Crear sorteo</legend>
-
-        <div className="form-group" style={{ marginBottom: "1.25rem" }}>
-          <label htmlFor="raffle-title">Título del sorteo</label>
-          <input
-            id="raffle-title"
-            className="input"
-            name="title"
-            placeholder="Ej.: Sorteo de Aniversario"
-            required
-            minLength={3}
-            value={form.title}
-            onChange={handleChange}
-          />
-          <span className="legend" style={{ marginTop: "0.375rem", display: "block" }}>
-            Usá un título claro y breve.
-          </span>
-        </div>
-
-        <div className="form-group" style={{ marginBottom: "1.25rem" }}>
-          <label htmlFor="raffle-description">Descripción (opcional)</label>
-          <textarea
-            id="raffle-description"
-            className="textarea"
-            name="description"
-            placeholder="Breve detalle del sorteo"
-            value={form.description}
-            onChange={handleChange}
-            rows={3}
-          />
-          <span className="legend" style={{ marginTop: "0.375rem", display: "block" }}>
-            Incluí condiciones o mensajes importantes.
-          </span>
-        </div>
-
-        <div
-          className="form-grid split"
-          style={{
-            display: "grid",
-            gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr",
-            gap: "1rem",
-            marginBottom: "1.25rem",
-          }}
+        <fieldset
+          disabled={loading}
+          style={{ border: 0, padding: 0, margin: 0 }}
         >
-          <div className="form-group">
-            <label htmlFor="raffle-datetime">Fecha y hora</label>
+          <legend className="visually-hidden">Crear sorteo</legend>
+
+          <div className="form-group" style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="raffle-title">Título del sorteo</label>
             <input
-              id="raffle-datetime"
+              id="raffle-title"
               className="input"
-              name="datetime"
-              type="datetime-local"
+              name="title"
+              placeholder="Ej.: Sorteo de Aniversario"
               required
-              value={form.datetime}
+              minLength={3}
+              value={form.title}
               onChange={handleChange}
             />
-            <span className="legend" style={{ marginTop: "0.375rem", display: "block" }}>
-              Se mostrará en formato latino.
+            <span
+              className="legend"
+              style={{ marginTop: "0.375rem", display: "block" }}
+            >
+              Usá un título claro y breve.
             </span>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="raffle-winners">Número de ganadores</label>
-            <input
-              id="raffle-winners"
-              className="input"
-              name="winners"
-              type="number"
-              min="1"
-              required
-              value={form.winners}
+          <div className="form-group" style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="raffle-description">Descripción (opcional)</label>
+            <textarea
+              id="raffle-description"
+              className="textarea"
+              name="description"
+              placeholder="Breve detalle del sorteo"
+              value={form.description}
               onChange={handleChange}
-              inputMode="numeric"
-              pattern="[0-9]*"
+              rows={3}
+            />
+            <span
+              className="legend"
+              style={{ marginTop: "0.375rem", display: "block" }}
+            >
+              Incluí condiciones o mensajes importantes.
+            </span>
+          </div>
+
+          <div
+            className="form-grid split"
+            style={{
+              display: "grid",
+              gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr",
+              gap: "1rem",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <div className="form-group">
+              <label htmlFor="raffle-datetime">Fecha y hora</label>
+              <input
+                id="raffle-datetime"
+                className="input"
+                name="datetime"
+                type="datetime-local"
+                required
+                value={form.datetime}
+                onChange={handleChange}
+              />
+              <span
+                className="legend"
+                style={{ marginTop: "0.375rem", display: "block" }}
+              >
+                Se mostrará en formato latino.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="raffle-winners">Número de ganadores</label>
+              <input
+                id="raffle-winners"
+                className="input"
+                name="winners"
+                type="number"
+                min="1"
+                required
+                value={form.winners}
+                onChange={handleChange}
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: "1.25rem" }}>
+            <EditableList
+              label="Premios"
+              helperText="Definí un título por premio. El orden determina el puesto."
+              values={prizes}
+              onChange={handlePrizesChange}
+              addButtonLabel="+ Agregar premio"
+              placeholder="Ej.: Gift card"
             />
           </div>
-        </div>
 
-        <div className="form-group" style={{ marginBottom: "1.25rem" }}>
-          <EditableList
-            label="Premios"
-            helperText="Definí un título por premio. El orden determina el puesto."
-            values={prizes}
-            onChange={handlePrizesChange}
-            addButtonLabel="+ Agregar premio"
-            placeholder="Ej.: Gift card"
-          />
-        </div>
-
-        <div className="form-group anim-up" style={{ marginBottom: "1.25rem" }}>
-          <label>Participantes</label>
-          <FileDropzone onFile={handleFile} disabled={loading} fileToken={fileToken} />
-        </div>
-
-        <div className="form-group anim-up" style={{ marginBottom: "1.25rem" }}>
-          <EditableList
-            label="Participantes manuales"
-            helperText="Se combinan con el archivo y se eliminan duplicados automáticamente."
-            values={manualParticipants}
-            onChange={handleManualParticipantsChange}
-            addButtonLabel="+ Agregar participante"
-            placeholder="ana@correo.com"
-          />
-        </div>
-
-        <div
-          className="card-actions anim-up"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            flexWrap: "wrap",
-            paddingTop: "0.5rem",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          <button
-            type="submit"
-            className="button button--primary"
-            aria-live="polite"
-            disabled={loading}
+          <div
+            className="form-group anim-up"
+            style={{ marginBottom: "1.25rem" }}
           >
-            {loading ? "Creando..." : "Crear sorteo"}
-          </button>
-          <button
-            type="button"
-            className="button button--ghost"
-            onClick={handleResetClick}
-            disabled={loading}
-            title="Limpiar formulario"
-          >
-            Limpiar
-          </button>
-          <span className="legend" style={{ marginLeft: "auto" }}>
-            Previsualizá antes de publicar.
-          </span>
-        </div>
+            <label>Participantes</label>
+            <FileDropzone
+              onFile={handleFile}
+              disabled={loading}
+              fileToken={fileToken}
+            />
+          </div>
 
-        {status && (
-          <p
-            className={`toast${status.ok ? "" : " toast--error"} anim-pop`}
-            role={status.ok ? "status" : "alert"}
-            style={{ marginTop: "1rem" }}
+          <div
+            className="form-group anim-up"
+            style={{ marginBottom: "1.25rem" }}
           >
-            {status.message}
-          </p>
-        )}
+            <EditableList
+              label="Participantes manuales"
+              helperText="Se combinan con el archivo y se eliminan duplicados automáticamente."
+              values={manualParticipants}
+              onChange={handleManualParticipantsChange}
+              addButtonLabel="+ Agregar participante"
+              placeholder="ana@correo.com"
+            />
+          </div>
+
+          <div
+            className="card-actions anim-up"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              flexWrap: "wrap",
+              paddingTop: "0.5rem",
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <button
+              type="submit"
+              className="button button--primary"
+              aria-live="polite"
+              disabled={loading}
+            >
+              {loading ? "Creando..." : "Crear sorteo"}
+            </button>
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={handleResetClick}
+              disabled={loading}
+              title="Limpiar formulario"
+            >
+              Limpiar
+            </button>
+            <span className="legend" style={{ marginLeft: "auto" }}>
+              Previsualizá antes de publicar.
+            </span>
+          </div>
+
+          {status && (
+            <p
+              className={`toast${status.ok ? "" : " toast--error"} anim-pop`}
+              role={status.ok ? "status" : "alert"}
+              style={{ marginTop: "1rem" }}
+            >
+              {status.message}
+            </p>
+          )}
         </fieldset>
       </form>
     </>

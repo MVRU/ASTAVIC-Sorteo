@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Componente dedicado para mejorar la semántica del estado vacío.
+// src/components/admin/manage/EmptyHint.js
+
 import PropTypes from "prop-types";
 
 const EmptyHint = ({ text }) => <div className="empty-hint">{text}</div>;

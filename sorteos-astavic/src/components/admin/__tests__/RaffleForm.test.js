@@ -1,3 +1,5 @@
+// src/components/admin/__tests__/RaffleForm.test.js
+
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RaffleForm from "../RaffleForm";
@@ -52,14 +54,14 @@ describe("RaffleForm", () => {
     );
 
     const user = setupUser();
-    await user.type(screen.getByLabelText(/título del sorteo/i), "Nuevo sorteo");
+    await user.type(
+      screen.getByLabelText(/título del sorteo/i),
+      "Nuevo sorteo"
+    );
     fireEvent.change(screen.getByLabelText(/fecha y hora/i), {
       target: { value: "2099-05-01T12:00" },
     });
-    await user.type(
-      screen.getByPlaceholderText(/gift card/i),
-      "Primer premio"
-    );
+    await user.type(screen.getByPlaceholderText(/gift card/i), "Primer premio");
     await user.type(
       screen.getByPlaceholderText(/ana@correo.com/i),
       "ana@example.com"
@@ -102,7 +104,9 @@ describe("RaffleForm", () => {
     await user.click(screen.getByRole("button", { name: /limpiar/i }));
 
     expect(
-      await screen.findByText(/Formulario restablecido\. Podés empezar desde cero\./i)
+      await screen.findByText(
+        /Formulario restablecido\. Podés empezar desde cero\./i
+      )
     ).toBeInTheDocument();
   });
 });

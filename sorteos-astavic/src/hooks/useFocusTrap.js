@@ -1,6 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Hook reutilizable para encapsular el focus trap en modales y paneles superpuestos.
-// * Mantiene la navegación con Tab dentro del contenedor activo sin introducir dependencias externas.
-// -!- Riesgo: Requiere nodos focusables presentes; si el contenedor queda vacío, delega al foco existente.
+// src/hooks/useFocusTrap.js
+
 import { useEffect } from "react";
 
 const FOCUSABLE_SELECTOR = [
@@ -18,7 +17,9 @@ const getFocusableElements = (container) => {
   if (!container) return [];
   const nodeList = container.querySelectorAll(FOCUSABLE_SELECTOR);
   return Array.from(nodeList).filter((element) => {
-    const isDisabled = element.hasAttribute("disabled") || element.getAttribute("aria-disabled") === "true";
+    const isDisabled =
+      element.hasAttribute("disabled") ||
+      element.getAttribute("aria-disabled") === "true";
     const tabIndex = element.getAttribute("tabindex");
     return !isDisabled && tabIndex !== "-1";
   });
@@ -43,7 +44,10 @@ const useFocusTrap = (containerRef, active) => {
       const activeElement = document.activeElement;
 
       if (event.shiftKey) {
-        if (!container.contains(activeElement) || activeElement === firstElement) {
+        if (
+          !container.contains(activeElement) ||
+          activeElement === firstElement
+        ) {
           event.preventDefault();
           lastElement.focus();
         }

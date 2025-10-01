@@ -1,5 +1,5 @@
 // src/components/public/__tests__/PublicView.test.js
-// ! DECISIÓN DE DISEÑO: Garantizamos que la vista pública respete flujos de validación y renderizados derivados tras la refactorización modular.
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PublicView from "../PublicView";
@@ -44,13 +44,13 @@ test("muestra copy de sorteos activos y mantiene la guía plegada", () => {
   expect(
     screen.getByRole("heading", { name: /sorteos activos/i })
   ).toBeInTheDocument();
-  expect(
-    screen.getByText(/hay 1 sorteo/i)
-  ).toBeInTheDocument();
+  expect(screen.getByText(/hay 1 sorteo/i)).toBeInTheDocument();
   expect(
     screen.queryByRole("heading", { name: /cómo participar en los sorteos/i })
   ).not.toBeInTheDocument();
-  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  const toggle = screen.getByRole("button", {
+    name: /ver guía de participación/i,
+  });
   expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -71,15 +71,17 @@ test("permite alternar entre vistas desde el segmento", async () => {
 
   rerender(<PublicView {...props} route="finished" />);
 
-  expect(
-    screen.getByRole("button", { name: /finalizados/i })
-  ).toHaveAttribute("aria-pressed", "true");
-  expect(
-    screen.getByRole("button", { name: /finalizados/i })
-  ).toHaveAttribute("aria-current", "page");
-  expect(
-    screen.getByRole("button", { name: /activos/i })
-  ).not.toHaveAttribute("aria-current");
+  expect(screen.getByRole("button", { name: /finalizados/i })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+  expect(screen.getByRole("button", { name: /finalizados/i })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  expect(screen.getByRole("button", { name: /activos/i })).not.toHaveAttribute(
+    "aria-current"
+  );
 
   rerender(<PublicView {...props} route="all" />);
 
@@ -140,7 +142,9 @@ test("permite desplegar la guía y ofrece accesos directos", async () => {
     onRouteChange,
   });
 
-  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  const toggle = screen.getByRole("button", {
+    name: /ver guía de participación/i,
+  });
   await userEvent.click(toggle);
 
   expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -156,7 +160,9 @@ test("permite desplegar la guía y ofrece accesos directos", async () => {
   );
 
   expect(
-    await screen.findByRole("dialog", { name: /recibí recordatorios y resultados/i })
+    await screen.findByRole("dialog", {
+      name: /recibí recordatorios y resultados/i,
+    })
   ).toBeInTheDocument();
 
   const finishedShortcut = screen.getByRole("button", {
@@ -171,7 +177,9 @@ test("permite desplegar la guía y ofrece accesos directos", async () => {
 test("colapsa la guía al ocultarla y restablece aria-hidden", async () => {
   setup();
 
-  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  const toggle = screen.getByRole("button", {
+    name: /ver guía de participación/i,
+  });
   const guideSection = () => screen.getByTestId("participation-guide");
   const initialGuide = guideSection();
 
@@ -202,12 +210,19 @@ test("valida correo antes de registrar suscripción", async () => {
   const registerSpy = jest.fn();
   setup({ onRegisterSubscriber: registerSpy });
 
-  await userEvent.click(screen.getByRole("button", { name: /recordatorios por email/i }));
-  await userEvent.click(screen.getByRole("button", { name: /quiero recibir novedades/i }));
+  await userEvent.click(
+    screen.getByRole("button", { name: /recordatorios por email/i })
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: /quiero recibir novedades/i })
+  );
 
   expect(registerSpy).not.toHaveBeenCalled();
   expect(mockShowToast).toHaveBeenCalledWith(
-    expect.objectContaining({ message: "Ingresá un correo válido.", status: "error" })
+    expect.objectContaining({
+      message: "Ingresá un correo válido.",
+      status: "error",
+    })
   );
 });
 
@@ -217,17 +232,24 @@ test("registra correo sanitizado y cierra modal en éxito", async () => {
     .mockResolvedValue({ ok: true, message: "Registro completado." });
   setup({ onRegisterSubscriber: registerSpy });
 
-  await userEvent.click(screen.getByRole("button", { name: /recordatorios por email/i }));
+  await userEvent.click(
+    screen.getByRole("button", { name: /recordatorios por email/i })
+  );
   const emailInput = screen.getByLabelText(/correo electrónico/i);
   await userEvent.type(emailInput, " Usuario@Test.COM  ");
-  await userEvent.click(screen.getByRole("button", { name: /quiero recibir novedades/i }));
+  await userEvent.click(
+    screen.getByRole("button", { name: /quiero recibir novedades/i })
+  );
 
   await waitFor(() => {
     expect(registerSpy).toHaveBeenCalledWith("usuario@test.com", null);
   });
 
   expect(mockShowToast).toHaveBeenCalledWith(
-    expect.objectContaining({ status: "success", message: "Registro completado." })
+    expect.objectContaining({
+      status: "success",
+      message: "Registro completado.",
+    })
   );
   await waitFor(() => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

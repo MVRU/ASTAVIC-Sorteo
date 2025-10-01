@@ -1,6 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Hook reutilizable para bloquear el scroll del body cuando un overlay está activo.
-// * Conserva el desplazamiento previo y los estilos inline para restaurarlos al desmontar sin fugas.
-// -!- Riesgo: En escenarios con múltiples locks simultáneos depende de la disciplina en el montaje/desmontaje.
+// src/hooks/useBodyScrollLock.js
+
 import { useEffect, useRef } from "react";
 
 const DEFAULT_STYLES = Object.freeze({

@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: El formulario delega cabecera y acciones al contenedor para sostener la visibilidad del drawer.
+// src/components/admin/manage/RaffleEditCard.js
+
 import PropTypes from "prop-types";
 import EditableList from "./EditableList";
 
@@ -117,7 +118,8 @@ const RaffleEditCard = ({
     .filter(Boolean)
     .join(" ");
 
-  const prizesInvalidIndexes = alert?.field === "prizes" ? alert.indexes || [] : [];
+  const prizesInvalidIndexes =
+    alert?.field === "prizes" ? alert.indexes || [] : [];
   const participantsInvalidIndexes =
     alert?.field === "participants" ? alert.indexes || [] : [];
 

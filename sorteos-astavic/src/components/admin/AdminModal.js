@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Modal accesible reutilizable para administración, priorizando consistencia, foco gestionado y capa dedicada.
+// src/components/admin/AdminModal.js
+
 import { useEffect, useId, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import { createPortal } from "react-dom";

@@ -1,5 +1,5 @@
 // src/App.js
-// ! DECISIÓN DE DISEÑO: Delegamos efectos globales a hooks especializados y garantizamos accesibilidad con un enlace para saltar al contenido principal.
+
 import { useCallback, useRef } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -44,7 +44,10 @@ const App = () => {
         return result;
       }
       navigate("admin");
-      showToast({ status: "success", message: "Sesión iniciada correctamente." });
+      showToast({
+        status: "success",
+        message: "Sesión iniciada correctamente.",
+      });
       return result;
     },
     [login, navigate, showToast]

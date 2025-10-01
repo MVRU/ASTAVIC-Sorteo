@@ -1,4 +1,5 @@
 // src/components/admin/AdminView.js
+
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import AdminDashboard from "./AdminDashboard";

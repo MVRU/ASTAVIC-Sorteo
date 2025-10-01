@@ -1,6 +1,5 @@
 // src/components/public/rafflePropType.js
-// ! DECISIÓN DE DISEÑO: Compartimos la definición de la entidad Raffle para evitar duplicaciones y mantener validaciones coherentes.
-// -!- Riesgo: Esta forma de PropTypes no valida campos anidados opcionales con lógica personalizada; validar en formularios críticos.
+
 import PropTypes from "prop-types";
 
 export const rafflePropType = PropTypes.shape({

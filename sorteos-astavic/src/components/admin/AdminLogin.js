@@ -1,8 +1,4 @@
-/**
- * TODOS:
- * - [ ] Admin, luego de iniciar sesión, debe tener dos vistas: crear un nuevo sorteo y gestionar los sorteos existentes (editar o borrar).
- */
-// ! DECISIÓN DE DISEÑO: El formulario expone las credenciales demo para reducir fricción en la evaluación.
+// src/components/admin/AdminLogin.js
 
 import { useState } from "react";
 import PropTypes from "prop-types";
@@ -49,8 +45,12 @@ const AdminLogin = ({ onLogin, error }) => {
           >
             <span className="demo-notice__message">{ADMIN_DEMO_MESSAGE}</span>
             <span className="demo-notice__credentials">
-              <span>Email: <strong>{ADMIN_CREDENTIALS.email}</strong></span>
-              <span>Contraseña: <strong>{ADMIN_CREDENTIALS.password}</strong></span>
+              <span>
+                Email: <strong>{ADMIN_CREDENTIALS.email}</strong>
+              </span>
+              <span>
+                Contraseña: <strong>{ADMIN_CREDENTIALS.password}</strong>
+              </span>
             </span>
           </div>
           <form className="form-card" onSubmit={handleSubmit}>

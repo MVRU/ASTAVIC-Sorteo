@@ -1,6 +1,14 @@
 // src/context/ToastContext.js
-// ! DECISIÓN DE DISEÑO: Centralizamos los toasts para reutilizar lógica de feedback y mantener un patrón accesible único.
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 import Toast from "../components/ui/Toast";
 
@@ -25,7 +33,12 @@ const resolveStatus = (payload) => {
 const normalizeToast = (input) => {
   if (input == null) return null;
   if (typeof input === "string") {
-    return { id: Date.now(), status: "info", message: input, duration: INFO_DURATION };
+    return {
+      id: Date.now(),
+      status: "info",
+      message: input,
+      duration: INFO_DURATION,
+    };
   }
   const status = resolveStatus(input);
   const duration =

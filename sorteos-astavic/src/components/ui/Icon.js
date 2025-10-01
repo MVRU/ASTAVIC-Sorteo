@@ -1,9 +1,5 @@
-// icons/Icon.js
-// ! DECISIÓN DE DISEÑO: Sistema de iconos SVG escalable y accesible
-// - Geometría consistente 24x24, trazos redondeados, coordenadas .5 para nitidez
-// - Variantes: outline (por defecto), duotone, filled
-// - Semántica por CSS vars (--icon-color, --icon-secondary, etc.)
-// - Gradiente opcional sin colisiones con useId
+// src/components/ui/Icon.js
+
 import PropTypes from "prop-types";
 import { useId } from "react";
 

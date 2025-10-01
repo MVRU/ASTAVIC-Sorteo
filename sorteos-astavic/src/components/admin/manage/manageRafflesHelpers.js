@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Centralizamos transformaciones de datos del editor para reutilizarlas entre componentes.
+// src/components/admin/manage/manageRafflesHelpers.js
+
 const pad = (value) => String(value).padStart(2, "0");
 
 const splitLines = (text) =>

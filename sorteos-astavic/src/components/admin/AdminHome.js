@@ -1,4 +1,5 @@
 // src/components/admin/AdminHome.js
+
 import PropTypes from "prop-types";
 
 const AdminHome = ({ onLogout }) => {

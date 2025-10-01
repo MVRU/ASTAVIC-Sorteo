@@ -1,5 +1,5 @@
 // src/components/__tests__/App.skipLink.test.js
-// ! DECISIÓN DE DISEÑO: Verificamos el flujo de lazo de foco del enlace de salto para prevenir regresiones de accesibilidad.
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App";
@@ -13,7 +13,7 @@ const renderWithProviders = () =>
   );
 
 const setupUser = () =>
-  (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
 describe("App skip link", () => {
   test("permite saltar al contenido principal con el teclado", async () => {

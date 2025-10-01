@@ -1,5 +1,4 @@
 // src/utils/raffleValidation.js
-// ! DECISIÓN DE DISEÑO: Centralizamos la validación de sorteos para evitar duplicar reglas y garantizar consistencia entre flujos de alta y edición.
 
 const MIN_TITLE_LENGTH = 3;
 const MIN_WINNERS = 1;

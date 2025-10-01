@@ -1,18 +1,22 @@
-// ! DECISIÓN DE DISEÑO: Confirmamos que RaffleDetailsModal mantenga el focus trap y devuelva el foco al botón invocador.
+// src/components/public/__tests__/RaffleDetailsModal.test.js
+
 import { createRef } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RaffleDetailsModal from "../RaffleDetailsModal";
 
 const setupUser = () =>
-  (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
 const raffle = {
   id: "raffle-1",
   title: "Sorteo solidario",
   description: "Apoyamos a la comunidad",
   datetime: new Date().toISOString(),
-  participants: Array.from({ length: 30 }, (_, index) => `Participante ${index + 1}`),
+  participants: Array.from(
+    { length: 30 },
+    (_, index) => `Participante ${index + 1}`
+  ),
   winners: ["Ganador 1"],
   prizes: [{ title: "Premio mayor" }],
 };
@@ -40,9 +44,15 @@ describe("RaffleDetailsModal", () => {
       />
     );
 
-    const closeButton = screen.getByRole("button", { name: /cerrar detalles del sorteo/i });
-    const searchInput = screen.getByRole("searchbox", { name: /buscar participante/i });
-    const toggleButton = screen.getByRole("button", { name: /mostrar todos los participantes/i });
+    const closeButton = screen.getByRole("button", {
+      name: /cerrar detalles del sorteo/i,
+    });
+    const searchInput = screen.getByRole("searchbox", {
+      name: /buscar participante/i,
+    });
+    const toggleButton = screen.getByRole("button", {
+      name: /mostrar todos los participantes/i,
+    });
     const footerButton = screen.getByRole("button", { name: /^cerrar$/i });
 
     expect(closeButton).toHaveFocus();
@@ -86,11 +96,15 @@ describe("RaffleDetailsModal", () => {
 
     const { rerender } = render(<Wrapper open={false} />);
 
-    const triggerButton = screen.getByRole("button", { name: /abrir detalles/i });
+    const triggerButton = screen.getByRole("button", {
+      name: /abrir detalles/i,
+    });
     triggerButton.focus();
 
     rerender(<Wrapper open />);
-    expect(screen.getByRole("button", { name: /cerrar detalles del sorteo/i })).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: /cerrar detalles del sorteo/i })
+    ).toHaveFocus();
 
     rerender(<Wrapper open={false} />);
 

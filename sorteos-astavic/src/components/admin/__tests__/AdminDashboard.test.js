@@ -1,3 +1,5 @@
+// src/components/admin/__tests__/AdminDashboard.test.js
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AdminDashboard from "../AdminDashboard";
@@ -44,7 +46,9 @@ describe("AdminDashboard", () => {
       })
     ).toBeInTheDocument();
 
-    const manualInput = screen.getByRole("textbox", { name: /participante 1/i });
+    const manualInput = screen.getByRole("textbox", {
+      name: /participante 1/i,
+    });
     expect(manualInput).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByText("No se detectaron participantes (archivo o texto).", {
@@ -78,7 +82,9 @@ describe("AdminDashboard", () => {
 
     screen.getByRole("heading", { name: /vista previa/i });
 
-    expect(screen.queryByRole("button", { name: /ver sorteo/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /ver sorteo/i })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /avisarme por email/i })
     ).not.toBeInTheDocument();

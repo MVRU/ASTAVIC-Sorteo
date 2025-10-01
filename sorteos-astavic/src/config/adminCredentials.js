@@ -1,5 +1,4 @@
 // src/config/adminCredentials.js
-// ! DECISIÓN DE DISEÑO: Centralizamos las credenciales demo para evitar duplicaciones y facilitar su sustitución por variables de entorno seguras.
 
 const DEFAULT_ADMIN_CREDENTIALS = Object.freeze({
   email: "demo@astavic.org",

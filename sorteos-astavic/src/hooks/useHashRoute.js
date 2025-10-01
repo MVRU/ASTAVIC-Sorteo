@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Centralizamos el ruteo por hash para aislar efectos globales y simplificar App.
+// src/hooks/useHashRoute.js
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ROUTES = {
@@ -27,7 +28,9 @@ const getCurrentHash = () =>
   typeof window !== "undefined" ? window.location.hash || "" : "";
 
 export const useHashRoute = () => {
-  const [route, setRoute] = useState(() => parseRouteFromHash(getCurrentHash()));
+  const [route, setRoute] = useState(() =>
+    parseRouteFromHash(getCurrentHash())
+  );
 
   const syncFromLocation = useCallback(() => {
     setRoute(parseRouteFromHash(getCurrentHash()));

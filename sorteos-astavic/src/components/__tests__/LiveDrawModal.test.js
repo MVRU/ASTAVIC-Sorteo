@@ -1,10 +1,11 @@
-// ! DECISIÓN DE DISEÑO: Cubrimos el focus trap y la restauración de foco del LiveDrawModal para evitar regresiones de accesibilidad.
+// src/components/__tests__/LiveDrawModal.test.js
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LiveDrawModal from "../LiveDrawModal";
 
 const setupUser = () =>
-  (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
 const raffle = {
   title: "Sorteo aniversario",

@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Toolbar segregada, semántica y con layout fluido para mantener controles visibles en cualquier viewport.
+// src/components/admin/manage/ManageRafflesToolbar.js
+
 import { useId } from "react";
 import PropTypes from "prop-types";
 
@@ -39,7 +40,11 @@ const ManageRafflesToolbar = ({
       </div>
 
       <div className="manage-toolbar__right">
-        <div className="tabs manage-toolbar__tabs" role="group" aria-label="Estado de los sorteos">
+        <div
+          className="tabs manage-toolbar__tabs"
+          role="group"
+          aria-label="Estado de los sorteos"
+        >
           <button
             className={`tab${tab === "active" ? " is-active" : ""}`}
             onClick={() => onTabChange("active")}

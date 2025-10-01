@@ -1,9 +1,7 @@
 /* eslint-env es2020, browser, node */
 
 // src/utils/raffleUtils.js
-// Utilidades robustas para sorteos (JS puro, sin TypeScript).
 
-// Objeto global sin usar 'self' (que tu ESLint restringe).
 const getRoot = () => {
   if (typeof globalThis !== "undefined") return globalThis; // moderno: browser/Node/worker
   if (typeof window !== "undefined") return window; // browser

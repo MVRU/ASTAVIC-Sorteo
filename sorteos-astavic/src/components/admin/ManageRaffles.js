@@ -1,10 +1,13 @@
-// ! DECISIÓN DE DISEÑO: Se separan responsabilidades entre editor y confirmaciones para reforzar SRP y reutilizar el modal administrativo.
-// ! DECISIÓN DE DISEÑO: El bloqueo de navegación y recarga solo se activa con cambios pendientes para evitar interrupciones innecesarias.
-// * El drawer reutiliza useFocusTrap y useBodyScrollLock para garantizar aislamiento visual y de foco sin repetir lógica.
-// ? Riesgo: La integración con backend deberá contemplar latencias y estados de error al persistir sorteos.
-// TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
+// src/components/admin/ManageRaffles.js
 
-import { useMemo, useState, useRef, useId, useCallback, useEffect } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useId,
+  useCallback,
+  useEffect,
+} from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
@@ -31,7 +34,8 @@ const normalizeListForForm = (entries) => {
   return entries
     .map((entry) => {
       if (typeof entry === "string") return compactWhitespace(entry);
-      if (entry && typeof entry.title === "string") return compactWhitespace(entry.title);
+      if (entry && typeof entry.title === "string")
+        return compactWhitespace(entry.title);
       return "";
     })
     .filter((entry) => entry !== "");
@@ -121,9 +125,7 @@ function fromLocalInputValue(local) {
 }
 
 const formatIndexes = (indexes) =>
-  indexes
-    .map((index) => `#${index + 1}`)
-    .join(", ");
+  indexes.map((index) => `#${index + 1}`).join(", ");
 
 function buildPayloadFromForm(form) {
   const title = form.title.trim();
@@ -217,8 +219,7 @@ const ManageRaffles = ({
   const editBaselineRef = useRef("");
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
-  const portalTarget =
-    typeof document !== "undefined" ? document.body : null;
+  const portalTarget = typeof document !== "undefined" ? document.body : null;
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
       if (result?.ok === false) {
@@ -308,11 +309,17 @@ const ManageRaffles = ({
     if (!node || typeof node.focus !== "function") return;
     if (typeof document === "undefined") return;
     const ownerDocument = node.ownerDocument || document;
-    if (typeof ownerDocument.contains === "function" && !ownerDocument.contains(node)) {
+    if (
+      typeof ownerDocument.contains === "function" &&
+      !ownerDocument.contains(node)
+    ) {
       return;
     }
     const scheduleFocus = () => node.focus();
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.requestAnimationFrame === "function"
+    ) {
       window.requestAnimationFrame(scheduleFocus);
     } else {
       scheduleFocus();
@@ -639,76 +646,77 @@ const ManageRaffles = ({
 
       {isEditing && portalTarget
         ? createPortal(
-          <div
-            className="drawer-layer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-drawer-title"
-          >
             <div
-              className="drawer-overlay"
-              onClick={() => requestCloseEdit({ origin: "overlay" })}
-            />
-            <aside ref={drawerRef} className="drawer anim-scale-in">
-              <header className="drawer__header">
-                <div>
-                  <h2 id="edit-drawer-title" className="drawer__title">
-                    Editar sorteo
-                  </h2>
-                  <p className="drawer__desc">
-                    Actualizá los datos y guardá los cambios cuando estés listo.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="button button--ghost"
-                  aria-label="Cerrar panel"
-                  onClick={() => requestCloseEdit({ origin: "header" })}
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </header>
-
+              className="drawer-layer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-drawer-title"
+            >
               <div
-                className="drawer__content"
-                role="region"
-                aria-label="Formulario de edición"
-              >
-                {editForm ? (
-                  <RaffleEditCard
-                    form={editForm}
-                    onChange={handleEditField}
-                    onSubmit={handleEditSubmit}
-                    onPrizesChange={handlePrizesChange}
-                    onParticipantsChange={handleParticipantsChange}
-                    formId={editFormId}
-                    titleRef={titleInputRef}
-                    alert={formAlert}
-                    alertId={alertId}
-                  />
-                ) : null}
-              </div>
+                className="drawer-overlay"
+                onClick={() => requestCloseEdit({ origin: "overlay" })}
+              />
+              <aside ref={drawerRef} className="drawer anim-scale-in">
+                <header className="drawer__header">
+                  <div>
+                    <h2 id="edit-drawer-title" className="drawer__title">
+                      Editar sorteo
+                    </h2>
+                    <p className="drawer__desc">
+                      Actualizá los datos y guardá los cambios cuando estés
+                      listo.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    aria-label="Cerrar panel"
+                    onClick={() => requestCloseEdit({ origin: "header" })}
+                  >
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </header>
 
-              <footer className="drawer__footer">
-                <button
-                  type="button"
-                  className="button button--ghost"
-                  onClick={() => requestCloseEdit({ origin: "footer" })}
+                <div
+                  className="drawer__content"
+                  role="region"
+                  aria-label="Formulario de edición"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="button button--primary"
-                  form={editFormId}
-                >
-                  Guardar cambios
-                </button>
-              </footer>
-            </aside>
-          </div>,
-          portalTarget
-        )
+                  {editForm ? (
+                    <RaffleEditCard
+                      form={editForm}
+                      onChange={handleEditField}
+                      onSubmit={handleEditSubmit}
+                      onPrizesChange={handlePrizesChange}
+                      onParticipantsChange={handleParticipantsChange}
+                      formId={editFormId}
+                      titleRef={titleInputRef}
+                      alert={formAlert}
+                      alertId={alertId}
+                    />
+                  ) : null}
+                </div>
+
+                <footer className="drawer__footer">
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    onClick={() => requestCloseEdit({ origin: "footer" })}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="button button--primary"
+                    form={editFormId}
+                  >
+                    Guardar cambios
+                  </button>
+                </footer>
+              </aside>
+            </div>,
+            portalTarget
+          )
         : null}
 
       <AdminModal
@@ -795,9 +803,7 @@ const raffleShape = PropTypes.shape({
   winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   finished: PropTypes.bool,
   participants: PropTypes.arrayOf(PropTypes.string),
-  prizes: PropTypes.arrayOf(
-    PropTypes.shape({ title: PropTypes.string })
-  ),
+  prizes: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string })),
 });
 
 ManageRaffles.propTypes = {

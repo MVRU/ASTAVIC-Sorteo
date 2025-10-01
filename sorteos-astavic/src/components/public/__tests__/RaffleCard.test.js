@@ -1,5 +1,5 @@
 // src/components/public/__tests__/RaffleCard.test.js
-// ! DECISIÓN DE DISEÑO: Validamos la interacción de volteo para asegurar accesibilidad y evitar regresiones visuales.
+
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
@@ -75,7 +75,9 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   expect(frontSide).toHaveAttribute("aria-hidden", "true");
   expect(backSide).toHaveAttribute("aria-hidden", "false");
   expect(flipWrapper).toHaveAttribute("data-active-face", "back");
-  expect(within(backSide).getByText("Notebook Lenovo IdeaPad")).toBeInTheDocument();
+  expect(
+    within(backSide).getByText("Notebook Lenovo IdeaPad")
+  ).toBeInTheDocument();
   const backCtaButton = within(backSide).getByRole("button", {
     name: /ver detalles del sorteo sorteo aniversario/i,
   });

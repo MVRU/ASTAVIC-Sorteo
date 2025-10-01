@@ -1,5 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Gestionamos el ciclo de vida de sorteos desde un hook para favorecer el principio de única responsabilidad.
-// -!- Riesgo: Esta demo no persiste datos; cualquier recarga del navegador reinicia el estado local.
+// src/hooks/useRafflesManagement.js
+
 import { useCallback, useMemo, useState } from "react";
 import { isFinished } from "../utils/raffleUtils";
 

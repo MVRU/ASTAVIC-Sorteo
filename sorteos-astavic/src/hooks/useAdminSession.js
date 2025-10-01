@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Este hook abstrae la autenticación demo basada en sessionStorage.
+// src/hooks/useAdminSession.js
+
 import { useCallback, useMemo, useState } from "react";
 import { ADMIN_CREDENTIALS } from "../config/adminCredentials";
 
@@ -19,7 +20,8 @@ export const useAdminSession = (credentials = ADMIN_CREDENTIALS) => {
       const sanitizedPassword = password || "";
 
       const isValid =
-        normalizedEmail === expectedEmail && sanitizedPassword === expectedPassword;
+        normalizedEmail === expectedEmail &&
+        sanitizedPassword === expectedPassword;
 
       if (!isValid) {
         setLoginError(true);

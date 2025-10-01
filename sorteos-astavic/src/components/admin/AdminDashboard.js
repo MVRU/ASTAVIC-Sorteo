@@ -1,7 +1,5 @@
 // src/components/admin/AdminDashboard.js
-// ! DECISIÓN DE DISEÑO: Los toasts globales sustituyen feedback locales para mantener consistencia y accesibilidad en el panel.
-// ! DECISIÓN DE DISEÑO: Las validaciones ahora generan mensajes inline accesibles para acelerar la corrección de errores críticos.
-// ! DECISIÓN DE DISEÑO: Se reutilizan listas editables controladas para premios y participantes manuales, manteniendo consistencia con la edición y evitando entradas multilinea.
+
 import {
   forwardRef,
   useCallback,
@@ -436,7 +434,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setPrizes((prev) => {
       if (safeCount === prev.length) return prev;
       if (safeCount > prev.length) {
-        const additions = Array.from({ length: safeCount - prev.length }, () => "");
+        const additions = Array.from(
+          { length: safeCount - prev.length },
+          () => ""
+        );
         return [...prev, ...additions];
       }
       return prev.slice(0, safeCount);
@@ -487,56 +488,63 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     [setFormErrors]
   );
 
-  const focusFirstError = useCallback(
-    (fieldErrors) => {
-      if (!fieldErrors) return;
-      const order = ["title", "description", "datetime", "winners", "prizes", "manual"];
-      for (const key of order) {
-        if (key === "prizes") {
-          if (!Array.isArray(fieldErrors.prizes)) continue;
-          const firstPrize = fieldErrors.prizes.findIndex((value) => Boolean(value));
-          if (firstPrize >= 0) {
-            const input = document.getElementById(
-              `${prizesListId}-item-${firstPrize}`
-            );
-            if (input && typeof input.focus === "function") {
-              input.focus();
-              return;
-            }
-            return;
-          }
-          continue;
-        }
-        if (key === "manual") {
-          const manualError = fieldErrors.manual;
-          const manualIndexes = Array.isArray(manualError?.indexes)
-            ? manualError.indexes
-            : [];
-          const firstManualIndex = manualIndexes.length > 0 ? manualIndexes[0] : 0;
+  const focusFirstError = useCallback((fieldErrors) => {
+    if (!fieldErrors) return;
+    const order = [
+      "title",
+      "description",
+      "datetime",
+      "winners",
+      "prizes",
+      "manual",
+    ];
+    for (const key of order) {
+      if (key === "prizes") {
+        if (!Array.isArray(fieldErrors.prizes)) continue;
+        const firstPrize = fieldErrors.prizes.findIndex((value) =>
+          Boolean(value)
+        );
+        if (firstPrize >= 0) {
           const input = document.getElementById(
-            `${manualListId}-item-${firstManualIndex}`
+            `${prizesListId}-item-${firstPrize}`
           );
           if (input && typeof input.focus === "function") {
             input.focus();
             return;
           }
-          const dropTarget = fieldRefs.current.participants;
-          if (dropTarget && typeof dropTarget.focus === "function") {
-            dropTarget.focus();
-            return;
-          }
-          continue;
-        }
-        if (!fieldErrors[key]) continue;
-        const node = fieldRefs.current[key];
-        if (node && typeof node.focus === "function") {
-          node.focus();
           return;
         }
+        continue;
       }
-    },
-    []
-  );
+      if (key === "manual") {
+        const manualError = fieldErrors.manual;
+        const manualIndexes = Array.isArray(manualError?.indexes)
+          ? manualError.indexes
+          : [];
+        const firstManualIndex =
+          manualIndexes.length > 0 ? manualIndexes[0] : 0;
+        const input = document.getElementById(
+          `${manualListId}-item-${firstManualIndex}`
+        );
+        if (input && typeof input.focus === "function") {
+          input.focus();
+          return;
+        }
+        const dropTarget = fieldRefs.current.participants;
+        if (dropTarget && typeof dropTarget.focus === "function") {
+          dropTarget.focus();
+          return;
+        }
+        continue;
+      }
+      if (!fieldErrors[key]) continue;
+      const node = fieldRefs.current[key];
+      if (node && typeof node.focus === "function") {
+        node.focus();
+        return;
+      }
+    }
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -636,7 +644,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       fieldErrors.winners = message;
     }
 
-    if (!Array.isArray(payload.prizes) || payload.prizes.length !== winnersNum) {
+    if (
+      !Array.isArray(payload.prizes) ||
+      payload.prizes.length !== winnersNum
+    ) {
       const message = PRIZE_COUNT_ERROR;
       generalErrors.push(message);
       fieldErrors.winners = fieldErrors.winners || message;
@@ -650,7 +661,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       payload.prizes.forEach((prize, index) => {
         const title = String(prize ?? "").trim();
         if (!title) {
-          const message = `El título del premio ${index + 1} no puede estar vacío.`;
+          const message = `El título del premio ${
+            index + 1
+          } no puede estar vacío.`;
           generalErrors.push(message);
           if (!fieldErrors.prizes) fieldErrors.prizes = [];
           fieldErrors.prizes[index] = message;
@@ -849,7 +862,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "total" ? null : "total"))
                   }
                 >
-                  <Icon name="collection" decorative size={16} strokeWidth={2} />
+                  <Icon
+                    name="collection"
+                    decorative
+                    size={16}
+                    strokeWidth={2}
+                  />
                   {metrics.total}
                 </Chip>
                 <Chip
@@ -867,7 +885,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "finished" ? null : "finished"))
                   }
                 >
-                  <Icon name="checkCircle" decorative size={16} strokeWidth={2} />
+                  <Icon
+                    name="checkCircle"
+                    decorative
+                    size={16}
+                    strokeWidth={2}
+                  />
                   {metrics.finished}
                 </Chip>
 
@@ -1149,7 +1172,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   id={participantsHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
-                  Acepta archivos .csv, .tsv o .txt con un participante por línea.
+                  Acepta archivos .csv, .tsv o .txt con un participante por
+                  línea.
                 </p>
               </div>
 
@@ -1157,6 +1181,13 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 className="form-group anim-up"
                 style={{ marginBottom: "1.25rem" }}
               >
+                <p
+                  className="legend"
+                  id={participantsHintId}
+                  style={{ marginTop: "0.375rem", display: "block" }}
+                >
+                  O cárgalos manualmente:
+                </p>
                 <EditableList
                   id={manualListId}
                   label="Participante"
@@ -1215,7 +1246,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   Previsualizá antes de publicar.
                 </span>
               </div>
-
             </fieldset>
           </form>
 
@@ -1246,7 +1276,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   value={metrics.total}
                   iconName="collection"
                 />
-                <StatCard label="Activos" value={metrics.active} iconName="hourglass" />
+                <StatCard
+                  label="Activos"
+                  value={metrics.active}
+                  iconName="hourglass"
+                />
                 <StatCard
                   label="Finalizados"
                   value={metrics.finished}
