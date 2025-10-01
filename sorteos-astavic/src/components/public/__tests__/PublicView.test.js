@@ -106,6 +106,33 @@ test("muestra copy combinado y conteo acumulado en pestaña todos", () => {
   expect(screen.getByText(/hay 2 sorteos/i)).toBeInTheDocument();
 });
 
+test("mantiene layout y acciones principales entre pestañas", () => {
+  const { props, rerender } = setup({
+    activeRaffles: [raffleSample],
+    finishedRaffles: [{ ...raffleSample, id: "raffle-4", finished: true }],
+  });
+
+  const expectCommonElements = (headingPattern) => {
+    expect(
+      screen.getByRole("button", { name: /recordatorios por email/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /ver guía de participación/i })
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.getByRole("heading", { name: headingPattern })
+    ).toBeInTheDocument();
+  };
+
+  expectCommonElements(/sorteos activos/i);
+
+  rerender(<PublicView {...props} route="all" />);
+  expectCommonElements(/todos los sorteos/i);
+
+  rerender(<PublicView {...props} route="finished" />);
+  expectCommonElements(/sorteos finalizados/i);
+});
+
 test("permite desplegar la guía y ofrece accesos directos", async () => {
   const onRouteChange = jest.fn();
   setup({
@@ -139,6 +166,36 @@ test("permite desplegar la guía y ofrece accesos directos", async () => {
   await userEvent.click(finishedShortcut);
 
   expect(onRouteChange).toHaveBeenCalledWith("finished");
+});
+
+test("colapsa la guía al ocultarla y restablece aria-hidden", async () => {
+  setup();
+
+  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  const guideSection = () => screen.getByTestId("participation-guide");
+  const initialGuide = guideSection();
+
+  expect(initialGuide).not.toBeNull();
+  expect(initialGuide).toHaveAttribute("data-state", "collapsed");
+  expect(initialGuide).toHaveAttribute("aria-hidden", "true");
+
+  await userEvent.click(toggle);
+
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const expandedGuide = guideSection();
+  expect(expandedGuide).not.toBeNull();
+  expect(expandedGuide).toHaveAttribute("data-state", "expanded");
+  expect(expandedGuide).toHaveAttribute("aria-hidden", "false");
+
+  await userEvent.click(
+    screen.getByRole("button", { name: /ocultar guía de participación/i })
+  );
+
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  const collapsedGuide = guideSection();
+  expect(collapsedGuide).not.toBeNull();
+  expect(collapsedGuide).toHaveAttribute("data-state", "collapsed");
+  expect(collapsedGuide).toHaveAttribute("aria-hidden", "true");
 });
 
 test("valida correo antes de registrar suscripción", async () => {

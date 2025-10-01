@@ -3,8 +3,9 @@
 // * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
 // * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
 // * Integramos una guía plegable para educar a nuevas personas participantes sin sobrecargar el layout.
+// * Uniformamos el layout entre pestañas con una configuración centralizada que cambia solo los filtros y mensajes.
 // -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import RaffleGrid from "./RaffleGrid";
 import ReminderDialog from "./ReminderDialog";
@@ -12,6 +13,47 @@ import ParticipationGuide from "./ParticipationGuide";
 import rafflePropType from "./rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import { isValidEmail, sanitizeEmail } from "../../utils/validation";
+
+const SEGMENT_DEFINITIONS = {
+  all: {
+    value: "all",
+    label: "Todos",
+    selectRaffles: (active, finished) => [...active, ...finished],
+    copy: {
+      title: "Todos los sorteos",
+      subtitle: "Explorá el historial completo de sorteos y sus resultados.",
+      emptyTitle: "No encontramos sorteos publicados todavía.",
+      emptySubtitle:
+        "Cuando publiquemos sorteos vas a verlos acá, activos o finalizados.",
+    },
+  },
+  public: {
+    value: "public",
+    label: "Activos",
+    selectRaffles: (active) => active,
+    copy: {
+      title: "Sorteos activos",
+      subtitle:
+        "Informate sobre los sorteos vigentes, sus premios y participantes confirmados. Pedí recordatorios por correo.",
+      emptyTitle: "No hay sorteos publicados en este momento.",
+      emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
+    },
+  },
+  finished: {
+    value: "finished",
+    label: "Finalizados",
+    selectRaffles: (_, finished) => finished,
+    copy: {
+      title: "Sorteos finalizados",
+      subtitle: "Revisá premios y ganadores de sorteos anteriores.",
+      emptyTitle: "Todavía no hay sorteos finalizados.",
+      emptySubtitle:
+        "Ni bien cerremos un sorteo, vas a ver el listado completo acá.",
+    },
+  },
+};
+
+const SEGMENT_ORDER = ["all", "public", "finished"];
 
 const PublicView = ({
   activeRaffles,
@@ -32,55 +74,27 @@ const PublicView = ({
     () => isValidEmail(normalizedEmail),
     [normalizedEmail]
   );
-  const isFinishedRoute = route === "finished";
-  const isAllRoute = route === "all";
+  const currentSegment = useMemo(
+    () => SEGMENT_DEFINITIONS[route] || SEGMENT_DEFINITIONS.public,
+    [route]
+  );
+  const isFinishedRoute = currentSegment.value === "finished";
   const hasFinishedRaffles = finishedRaffles.length > 0;
   const segmentOptions = useMemo(
-    () => [
-      { label: "Todos", value: "all" },
-      { label: "Activos", value: "public" },
-      { label: "Finalizados", value: "finished" },
-    ],
+    () => SEGMENT_ORDER.map((key) => SEGMENT_DEFINITIONS[key]),
     []
   );
   const visibleRaffles = useMemo(
-    () => {
-      if (isAllRoute) {
-        return [...activeRaffles, ...finishedRaffles];
-      }
-      return isFinishedRoute ? finishedRaffles : activeRaffles;
-    },
-    [activeRaffles, finishedRaffles, isAllRoute, isFinishedRoute]
+    () => currentSegment.selectRaffles(activeRaffles, finishedRaffles),
+    [activeRaffles, currentSegment, finishedRaffles]
   );
   const visibleCount = visibleRaffles.length;
 
-  const copy = useMemo(() => {
-    if (isFinishedRoute) {
-      return {
-        title: "Sorteos finalizados",
-        subtitle: "Revisá premios y ganadores de sorteos anteriores.",
-        emptyTitle: "Todavía no hay sorteos finalizados.",
-        emptySubtitle:
-          "Ni bien cerremos un sorteo, vas a ver el listado completo acá.",
-      };
-    }
-    if (isAllRoute) {
-      return {
-        title: "Todos los sorteos",
-        subtitle: "Explorá el historial completo de sorteos y sus resultados.",
-        emptyTitle: "No encontramos sorteos publicados todavía.",
-        emptySubtitle:
-          "Cuando publiquemos sorteos vas a verlos acá, activos o finalizados.",
-      };
-    }
-    return {
-      title: "Sorteos activos",
-      subtitle:
-        "Informate sobre los sorteos vigentes, sus premios y participantes confirmados. Pedí recordatorios por correo.",
-      emptyTitle: "No hay sorteos publicados en este momento.",
-      emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
-    };
-  }, [isAllRoute, isFinishedRoute]);
+  const copy = currentSegment.copy;
+
+  useEffect(() => {
+    setGuideVisible(false);
+  }, [route]);
 
   const handleCloseReminder = useCallback(() => {
     setReminder({ open: false, raffle: null });
@@ -185,7 +199,7 @@ const PublicView = ({
                 aria-label="Filtrar sorteos por estado"
               >
                 {segmentOptions.map((option) => {
-                  const isActive = option.value === route;
+                  const isActive = option.value === currentSegment.value;
                   return (
                     <button
                       key={option.value}

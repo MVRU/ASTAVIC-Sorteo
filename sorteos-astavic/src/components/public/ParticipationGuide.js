@@ -2,6 +2,7 @@
 // ! DECISIÓN DE DISEÑO: Guiamos el flujo de participación con pasos accionables para reducir fricción y mejorar conversión.
 // * El bloque refuerza accesibilidad usando lista ordenada y encabezados jerárquicos.
 // * Permitimos plegar el contenido por defecto para reducir ruido visual sin sacrificar orientación.
+// * Mantenemos el nodo en DOM con data-state para animaciones futuras, pero lo marcamos hidden y aria-hidden cuando procede.
 // -!- Riesgo: Si se agregan nuevas acciones asincrónicas deberán sincronizarse estados de carga para evitar solapamientos.
 import PropTypes from "prop-types";
 
@@ -18,7 +19,10 @@ const ParticipationGuide = ({
       isVisible ? " participation-guide--expanded" : ""
     }`}
     aria-labelledby="participation-guide-heading"
+    aria-hidden={!isVisible}
+    data-state={isVisible ? "expanded" : "collapsed"}
     hidden={!isVisible}
+    data-testid="participation-guide"
   >
     <div className="participation-guide__header">
       <h2 id="participation-guide-heading" className="participation-guide__title">
@@ -90,7 +94,7 @@ ParticipationGuide.propTypes = {
 
 ParticipationGuide.defaultProps = {
   id: undefined,
-  isVisible: true,
+  isVisible: false,
   onViewFinished: undefined,
   showFinishedShortcut: false,
 };
