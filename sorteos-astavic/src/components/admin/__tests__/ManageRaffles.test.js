@@ -13,6 +13,7 @@ const createUser = () =>
         click: (...args) => userEvent.click(...args),
         type: (...args) => userEvent.type(...args),
         clear: (...args) => userEvent.clear(...args),
+        tab: (...args) => userEvent.tab(...args),
       };
 
 const sampleRaffles = [
@@ -233,6 +234,95 @@ describe('ManageRaffles', () => {
     window.dispatchEvent(event);
 
     expect(event.returnValue).toBe(UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE);
+  });
+
+  test('cicla el foco dentro del drawer y bloquea el scroll del body', async () => {
+    const user = createUser();
+    const initialBodyStyles = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const trigger = screen.getByRole('button', { name: /editar/i });
+    await user.click(trigger);
+
+    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+    const titleInput = within(dialog).getByLabelText(/título/i);
+    expect(titleInput).toHaveFocus();
+
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.position).toBe('fixed');
+    expect(document.body.style.width).toBe('100%');
+    expect(document.body.style.top).toMatch(/^-\d+/);
+
+    const saveButton = within(dialog).getByRole('button', {
+      name: /guardar cambios/i,
+    });
+    const closeButton = within(dialog).getByRole('button', {
+      name: /cerrar panel/i,
+    });
+
+    saveButton.focus();
+    fireEvent.keyDown(saveButton, { key: 'Tab' });
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.keyDown(titleInput, { key: 'Tab', shiftKey: true });
+    expect(saveButton).toHaveFocus();
+
+    await user.click(within(dialog).getByRole('button', { name: /cancelar/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /editar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
+
+    await waitFor(() =>
+      expect(document.body.style.overflow).toBe(initialBodyStyles.overflow)
+    );
+    expect(document.body.style.position).toBe(initialBodyStyles.position);
+    expect(document.body.style.top).toBe(initialBodyStyles.top);
+    expect(document.body.style.width).toBe(initialBodyStyles.width);
+  });
+
+  test('restaura el foco en el disparador al cerrar el panel sin cambios', async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    const trigger = screen.getByRole('button', { name: /editar/i });
+    await user.click(trigger);
+
+    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+    await user.click(within(dialog).getByRole('button', { name: /cancelar/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: /editar sorteo/i })
+      ).not.toBeInTheDocument()
+    );
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
   });
 
   test('valida que la fecha ingresada tenga un formato correcto', async () => {
