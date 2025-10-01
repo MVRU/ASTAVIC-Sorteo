@@ -1910,6 +1910,8 @@ footer {
 }
 
 .raffle-card__shell--finished {
+  --raffle-finished-shell-padding-block: clamp(1rem, 2vw, 1.25rem);
+  --raffle-finished-shell-padding-inline: clamp(1rem, 2vw, 1.2rem);
   background: linear-gradient(
     90deg,
     rgba(247, 215, 116, 0.14) 0%,
@@ -1919,7 +1921,10 @@ footer {
   border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   min-height: 100%;
-  padding: 1rem;
+  padding: var(--raffle-finished-shell-padding-block)
+    var(--raffle-finished-shell-padding-inline);
+  padding-bottom: calc(var(--raffle-finished-shell-padding-block) + 0.65rem);
+  /* * Este colchón extra evita que el botón "Ver sorteo" choque con el borde. */
 }
 
 .raffle-card--finished .raffle-card__flip {
