@@ -1,6 +1,14 @@
 // src/components/admin/AdminDashboard.js
 // ! DECISIÓN DE DISEÑO: Los toasts globales sustituyen feedback locales para mantener consistencia y accesibilidad en el panel.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// ! DECISIÓN DE DISEÑO: Las validaciones ahora generan mensajes inline accesibles para acelerar la corrección de errores críticos.
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import RaffleCard from "../public/RaffleCard";
@@ -136,135 +144,158 @@ StatCard.propTypes = {
 };
 StatCard.defaultProps = { iconName: "chart" };
 
+const PRIZE_COUNT_ERROR =
+  "La cantidad de premios debe coincidir con la cantidad de ganadores.";
+
 /* =========================
    Dropzone accesible
    ========================= */
-const FileDropzone = ({ onFile, disabled, fileToken }) => {
-  const zoneRef = useRef(null);
-  const inputRef = useRef(null);
+const FileDropzone = forwardRef(
+  ({ onFile, disabled, fileToken, describedBy }, externalRef) => {
+    const zoneRef = useRef(null);
+    const inputRef = useRef(null);
 
-  const triggerPicker = () => {
-    if (disabled) return;
-    inputRef.current?.click();
-  };
+    const assignZoneRef = useCallback(
+      (element) => {
+        zoneRef.current = element;
+        if (!externalRef) return;
+        if (typeof externalRef === "function") {
+          externalRef(element);
+          return;
+        }
+        // * Permitimos al padre controlar el focus del contenedor.
+        externalRef.current = element;
+      },
+      [externalRef]
+    );
 
-  const handleKey = (event) => {
-    if (disabled) return;
-    if (event.key === "Enter" || event.key === " ") {
-      triggerPicker();
+    const triggerPicker = () => {
+      if (disabled) return;
+      inputRef.current?.click();
+    };
+
+    const handleKey = (event) => {
+      if (disabled) return;
+      if (event.key === "Enter" || event.key === " ") {
+        triggerPicker();
+        event.preventDefault();
+      }
+    };
+
+    const handleChange = (event) => {
+      if (disabled) return;
+      const nextFile =
+        event.target.files && event.target.files[0]
+          ? event.target.files[0]
+          : null;
+      onFile(nextFile);
+    };
+
+    const handleDragOver = (event) => {
+      if (disabled) return;
       event.preventDefault();
-    }
-  };
+      event.dataTransfer.dropEffect = "copy";
+    };
 
-  const handleChange = (event) => {
-    if (disabled) return;
-    const nextFile =
-      event.target.files && event.target.files[0]
-        ? event.target.files[0]
-        : null;
-    onFile(nextFile);
-  };
+    const handleDrop = (event) => {
+      if (disabled) return;
+      event.preventDefault();
+      const nextFile =
+        event.dataTransfer.files && event.dataTransfer.files[0]
+          ? event.dataTransfer.files[0]
+          : null;
+      onFile(nextFile);
+    };
 
-  const handleDragOver = (event) => {
-    if (disabled) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-  };
+    useEffect(() => {
+      if (!fileToken && inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }, [fileToken]);
 
-  const handleDrop = (event) => {
-    if (disabled) return;
-    event.preventDefault();
-    const nextFile =
-      event.dataTransfer.files && event.dataTransfer.files[0]
-        ? event.dataTransfer.files[0]
-        : null;
-    onFile(nextFile);
-  };
-
-  useEffect(() => {
-    if (!fileToken && inputRef.current) {
-      inputRef.current.value = "";
-    }
-  }, [fileToken]);
-
-  return (
-    <div
-      ref={zoneRef}
-      className="card anim-fade-in"
-      role="button"
-      tabIndex={0}
-      aria-disabled={disabled}
-      aria-label="Soltá tu archivo de participantes o presioná Enter para seleccionarlo"
-      onKeyDown={handleKey}
-      onClick={triggerPicker}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      style={{
-        padding: "1.25rem",
-        border: "2px dashed var(--border)",
-        borderRadius: "12px",
-        background: "var(--surface-elevated)",
-        cursor: disabled ? "not-allowed" : "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: "1rem",
-      }}
-    >
+    return (
       <div
+        ref={assignZoneRef}
+        className="card anim-fade-in"
+        role="button"
+        tabIndex={0}
+        aria-disabled={disabled}
+        aria-label="Soltá tu archivo de participantes o presioná Enter para seleccionarlo"
+        aria-describedby={describedBy || undefined}
+        onKeyDown={handleKey}
+        onClick={triggerPicker}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
         style={{
-          width: "48px",
-          height: "48px",
+          padding: "1.25rem",
+          border: "2px dashed var(--border)",
           borderRadius: "12px",
+          background: "var(--surface-elevated)",
+          cursor: disabled ? "not-allowed" : "pointer",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          background: "var(--surface)",
-          color: "var(--brand-700)",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+          gap: "1rem",
         }}
       >
-        <Icon name="paperclip" decorative size={26} strokeWidth={1.9} />
-      </div>
-      <div>
         <div
           style={{
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            fontSize: "1rem",
+            width: "48px",
+            height: "48px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--surface)",
+            color: "var(--brand-700)",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
           }}
         >
-          Soltá tu archivo (.csv, .tsv, .txt)
+          <Icon name="paperclip" decorative size={26} strokeWidth={1.9} />
         </div>
-        <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-          También podés hacer clic o presionar Enter para buscarlo.
+        <div>
+          <div
+            style={{
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              fontSize: "1rem",
+            }}
+          >
+            Soltá tu archivo (.csv, .tsv, .txt)
+          </div>
+          <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+            También podés hacer clic o presionar Enter para buscarlo.
+          </div>
         </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".csv,.tsv,.txt"
+          onChange={handleChange}
+          disabled={disabled}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            opacity: 0,
+            pointerEvents: "none",
+            width: 0,
+            height: 0,
+          }}
+        />
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".csv,.tsv,.txt"
-        onChange={handleChange}
-        disabled={disabled}
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          opacity: 0,
-          pointerEvents: "none",
-          width: 0,
-          height: 0,
-        }}
-      />
-    </div>
-  );
-};
+    );
+  }
+);
+FileDropzone.displayName = "FileDropzone";
 FileDropzone.propTypes = {
   onFile: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
   fileToken: PropTypes.string,
+  describedBy: PropTypes.string,
 };
 FileDropzone.defaultProps = {
   disabled: false,
   fileToken: "",
+  describedBy: undefined,
 };
 
 /* =========================
@@ -283,11 +314,14 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     winners: "1",
     manual: "",
   });
+  const [formErrors, setFormErrors] = useState({});
   const [prizes, setPrizes] = useState([{ title: "" }]);
   const [file, setFile] = useState(null);
   const [previewMessage, setPreviewMessage] = useState(previewDefaultMessage);
   const [previewParticipants, setPreviewParticipants] = useState([]);
   const [loading, setLoading] = useState(false);
+  const fieldRefs = useRef({});
+  const prizeRefs = useRef([]);
 
   // Hint de chips (solo mobile)
   const [chipHint, setChipHint] = useState(null); // 'total' | 'active' | 'finished' | null
@@ -314,6 +348,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       })),
     [prizes]
   );
+
+  const buildDescribedBy = (...ids) =>
+    ids
+      .filter((id) => typeof id === "string" && id.trim().length > 0)
+      .join(" ") || undefined;
 
   const previewRaffle = useMemo(() => {
     const fallbackDate = new Date(Date.now() + 86400000).toISOString();
@@ -401,7 +440,85 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       }
       return prev.slice(0, safeCount);
     });
+    prizeRefs.current = prizeRefs.current.slice(0, safeCount);
+    setFormErrors((prev) => {
+      if (!prev?.prizes) return prev;
+      if (!Array.isArray(prev.prizes)) return prev;
+      if (prev.prizes.length <= safeCount) return prev;
+      const nextPrizes = prev.prizes.slice(0, safeCount);
+      if (nextPrizes.every((value) => !value)) {
+        const { prizes: _removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, prizes: nextPrizes };
+    });
   };
+
+  const clearFieldError = useCallback(
+    (field, index) => {
+      setFormErrors((prev) => {
+        if (!prev || Object.keys(prev).length === 0) return prev;
+        if (field === "prizes") {
+          if (!Array.isArray(prev.prizes)) return prev;
+          if (typeof index !== "number") {
+            const nextPrizes = [...prev.prizes];
+            let touched = false;
+            nextPrizes.forEach((value, idx) => {
+              if (value === PRIZE_COUNT_ERROR) {
+                nextPrizes[idx] = null;
+                touched = true;
+              }
+            });
+            if (!touched) return prev;
+            if (nextPrizes.every((value) => !value)) {
+              const { prizes: _removed, ...rest } = prev;
+              return rest;
+            }
+            return { ...prev, prizes: nextPrizes };
+          }
+          if (!prev.prizes[index]) return prev;
+          const nextPrizes = [...prev.prizes];
+          nextPrizes[index] = null;
+          if (nextPrizes.every((value) => !value)) {
+            const { prizes: _removed, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, prizes: nextPrizes };
+        }
+        if (!prev[field]) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    },
+    [setFormErrors]
+  );
+
+  const focusFirstError = useCallback(
+    (fieldErrors) => {
+      if (!fieldErrors) return;
+      const order = ["title", "description", "datetime", "winners", "prizes", "manual"];
+      for (const key of order) {
+        if (key === "prizes") {
+          if (!Array.isArray(fieldErrors.prizes)) continue;
+          const firstPrize = fieldErrors.prizes.findIndex((value) => Boolean(value));
+          if (firstPrize >= 0) {
+            const target = prizeRefs.current[firstPrize];
+            target?.focus?.();
+            return;
+          }
+          continue;
+        }
+        if (!fieldErrors[key]) continue;
+        const node = fieldRefs.current[key];
+        if (node && typeof node.focus === "function") {
+          node.focus();
+          return;
+        }
+      }
+    },
+    []
+  );
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -410,13 +527,17 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       const nextCount = Math.max(1, Number(digitsOnly) || 1);
       setForm((prev) => ({ ...prev, winners: digitsOnly }));
       adjustPrizeSlots(nextCount);
+      clearFieldError("winners");
+      clearFieldError("prizes");
       return;
     }
     setForm((prev) => ({ ...prev, [name]: value }));
+    clearFieldError(name);
   };
 
   const handleFile = (nextFile) => {
     setFile(nextFile);
+    clearFieldError("manual");
   };
 
   const handlePrizeChange = (index, value) => {
@@ -425,6 +546,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       next[index] = { title: value };
       return next;
     });
+    clearFieldError("prizes", index);
   };
 
   const addPrize = () => {
@@ -433,6 +555,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       setForm((prevForm) => ({ ...prevForm, winners: String(next.length) }));
       return next;
     });
+    prizeRefs.current.push(null);
+    clearFieldError("prizes");
+    clearFieldError("winners");
   };
 
   const removePrize = (index) => {
@@ -446,6 +571,9 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       }));
       return safeNext;
     });
+    prizeRefs.current.splice(index, 1);
+    clearFieldError("prizes", index);
+    clearFieldError("winners");
   };
 
   const resetFormState = useCallback(() => {
@@ -460,6 +588,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
+    setFormErrors({});
+    prizeRefs.current = [];
   }, [previewDefaultMessage]);
 
   const handleResetClick = useCallback(() => {
@@ -474,51 +604,80 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
      Validaciones robustas
      ========================= */
   const validateBeforeSubmit = (payload) => {
-    const errors = [];
+    const generalErrors = [];
+    const fieldErrors = {};
 
     const title = (payload.title || "").trim();
-    if (title.length < 3)
-      errors.push("El título debe tener al menos 3 caracteres.");
+    if (title.length < 3) {
+      const message = "El título debe tener al menos 3 caracteres.";
+      generalErrors.push(message);
+      fieldErrors.title = message;
+    }
 
     if (!payload.datetime) {
-      errors.push("Seleccioná fecha y hora del sorteo.");
+      const message = "Seleccioná fecha y hora del sorteo.";
+      generalErrors.push(message);
+      fieldErrors.datetime = message;
     } else {
       const selected = new Date(payload.datetime).getTime();
       if (Number.isNaN(selected)) {
-        errors.push("La fecha/hora no es válida.");
+        const message = "La fecha/hora no es válida.";
+        generalErrors.push(message);
+        fieldErrors.datetime = message;
       } else if (selected <= Date.now()) {
-        errors.push("La fecha/hora debe ser en el futuro.");
+        const message = "La fecha/hora debe ser en el futuro.";
+        generalErrors.push(message);
+        fieldErrors.datetime = message;
       }
     }
 
-    const winnersNum = Math.max(1, Number(form.winners) || 1);
-    if (winnersNum < 1) errors.push("Debe haber al menos 1 ganador.");
-
-    // Premios: cantidad = ganadores y todos con título no vacío
-    if (!Array.isArray(prizes) || prizes.length !== winnersNum) {
-      errors.push(
-        "La cantidad de premios debe coincidir con la cantidad de ganadores."
-      );
+    const winnersNum = Math.max(1, Number(payload.winners) || 1);
+    if (winnersNum < 1) {
+      const message = "Debe haber al menos 1 ganador.";
+      generalErrors.push(message);
+      fieldErrors.winners = message;
     }
-    prizes.forEach((p, i) => {
-      if (!p || !String(p.title).trim()) {
-        errors.push(`El título del premio ${i + 1} no puede estar vacío.`);
-      }
-    });
 
-    // Participantes: al menos winners
+    if (!Array.isArray(payload.prizes) || payload.prizes.length !== winnersNum) {
+      const message = PRIZE_COUNT_ERROR;
+      generalErrors.push(message);
+      fieldErrors.winners = fieldErrors.winners || message;
+      const prizesArray = Array.isArray(payload.prizes)
+        ? [...payload.prizes]
+        : Array.from({ length: winnersNum });
+      fieldErrors.prizes = prizesArray.map(() => message);
+    }
+
+    if (Array.isArray(payload.prizes)) {
+      payload.prizes.forEach((prize, index) => {
+        if (!prize || !String(prize.title).trim()) {
+          const message = `El título del premio ${index + 1} no puede estar vacío.`;
+          generalErrors.push(message);
+          if (!fieldErrors.prizes) fieldErrors.prizes = [];
+          fieldErrors.prizes[index] = message;
+        }
+      });
+    }
+
     const participants = Array.isArray(payload.participants)
       ? payload.participants
       : [];
     if (participants.length === 0) {
-      errors.push("No se detectaron participantes (archivo o texto).");
+      const message = "No se detectaron participantes (archivo o texto).";
+      generalErrors.push(message);
+      fieldErrors.manual = message;
     } else if (participants.length < winnersNum) {
-      errors.push(
-        "La cantidad de participantes debe ser mayor o igual a la de ganadores."
-      );
+      const message =
+        "La cantidad de participantes debe ser mayor o igual a la de ganadores.";
+      generalErrors.push(message);
+      fieldErrors.manual = message;
     }
 
-    return errors;
+    if (fieldErrors.prizes && fieldErrors.prizes.every((value) => !value)) {
+      delete fieldErrors.prizes;
+    }
+
+    return { generalErrors, fieldErrors };
   };
 
   const handleSubmit = async (event) => {
@@ -534,12 +693,23 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         description: form.description,
         datetime: form.datetime,
         participants,
+        winners: winnersNum,
+        prizes,
       };
-      const errors = validateBeforeSubmit(draft);
-      if (errors.length > 0) {
+      const { fieldErrors: validationFieldErrors, generalErrors } =
+        validateBeforeSubmit(draft);
+      const hasFieldIssues = Object.keys(validationFieldErrors).length > 0;
+      if (hasFieldIssues) {
+        setFormErrors(validationFieldErrors);
+        focusFirstError(validationFieldErrors);
+      } else {
+        setFormErrors({});
+      }
+      if (generalErrors.length > 0) {
         showToast({
           status: "error",
-          message: errors[0] || "Revisá los datos antes de crear el sorteo.",
+          message:
+            generalErrors[0] || "Revisá los datos antes de crear el sorteo.",
         });
         return;
       }
@@ -575,6 +745,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
           "Sorteo creado (demo). Ya es visible en la vista pública.",
       });
       resetFormState();
+      setFormErrors({});
     } catch {
       showToast({
         status: "error",
@@ -595,6 +766,17 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     active: "Sorteos activos",
     finished: "Sorteos finalizados",
   };
+  const prizeErrors = Array.isArray(formErrors.prizes) ? formErrors.prizes : [];
+  const titleHintId = "raffle-title-hint";
+  const titleErrorId = "raffle-title-error";
+  const descriptionHintId = "raffle-description-hint";
+  const datetimeHintId = "raffle-datetime-hint";
+  const datetimeErrorId = "raffle-datetime-error";
+  const winnersHintId = "raffle-winners-hint";
+  const winnersErrorId = "raffle-winners-error";
+  const participantsHintId = "raffle-participants-hint";
+  const manualHintId = "raffle-manual-hint";
+  const manualErrorId = "raffle-manual-error";
 
   return (
     <section className="section-gap anim-fade-in" aria-labelledby="admin-panel">
@@ -724,13 +906,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   minLength={3}
                   value={form.title}
                   onChange={handleChange}
+                  ref={(element) => {
+                    fieldRefs.current.title = element;
+                  }}
+                  aria-invalid={Boolean(formErrors.title)}
+                  aria-describedby={buildDescribedBy(
+                    titleHintId,
+                    formErrors.title ? titleErrorId : null
+                  )}
                 />
                 <span
                   className="legend"
+                  id={titleHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
                   Usá un título claro y breve.
                 </span>
+                {formErrors.title && (
+                  <p
+                    id={titleErrorId}
+                    role="alert"
+                    style={{
+                      marginTop: "0.375rem",
+                      color: "var(--danger)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {formErrors.title}
+                  </p>
+                )}
               </div>
 
               <div className="form-group" style={{ marginBottom: "1.25rem" }}>
@@ -745,13 +949,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   value={form.description}
                   onChange={handleChange}
                   rows={3}
+                  ref={(element) => {
+                    fieldRefs.current.description = element;
+                  }}
+                  aria-invalid={Boolean(formErrors.description)}
+                  aria-describedby={buildDescribedBy(
+                    descriptionHintId,
+                    formErrors.description ? `${descriptionHintId}-error` : null
+                  )}
                 />
                 <span
                   className="legend"
+                  id={descriptionHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
                   Incluí condiciones o mensajes importantes.
                 </span>
+                {formErrors.description && (
+                  <p
+                    id={`${descriptionHintId}-error`}
+                    role="alert"
+                    style={{
+                      marginTop: "0.375rem",
+                      color: "var(--danger)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {formErrors.description}
+                  </p>
+                )}
               </div>
 
               <div
@@ -773,13 +999,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     required
                     value={form.datetime}
                     onChange={handleChange}
+                    ref={(element) => {
+                      fieldRefs.current.datetime = element;
+                    }}
+                    aria-invalid={Boolean(formErrors.datetime)}
+                    aria-describedby={buildDescribedBy(
+                      datetimeHintId,
+                      formErrors.datetime ? datetimeErrorId : null
+                    )}
                   />
                   <span
                     className="legend"
+                    id={datetimeHintId}
                     style={{ marginTop: "0.375rem", display: "block" }}
                   >
                     Se mostrará en formato latino.
                   </span>
+                  {formErrors.datetime && (
+                    <p
+                      id={datetimeErrorId}
+                      role="alert"
+                      style={{
+                        marginTop: "0.375rem",
+                        color: "var(--danger)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {formErrors.datetime}
+                    </p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -795,7 +1043,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     onChange={handleChange}
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    ref={(element) => {
+                      fieldRefs.current.winners = element;
+                    }}
+                    aria-invalid={Boolean(formErrors.winners)}
+                    aria-describedby={buildDescribedBy(
+                      winnersHintId,
+                      formErrors.winners ? winnersErrorId : null
+                    )}
                   />
+                  <span
+                    className="legend"
+                    id={winnersHintId}
+                    style={{ marginTop: "0.375rem", display: "block" }}
+                  >
+                    Ajustamos los premios automáticamente según esta cantidad.
+                  </span>
+                  {formErrors.winners && (
+                    <p
+                      id={winnersErrorId}
+                      role="alert"
+                      style={{
+                        marginTop: "0.375rem",
+                        color: "var(--danger)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {formErrors.winners}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -804,7 +1080,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 <p className="legend">
                   Definí un título por premio. El orden determina el puesto.
                 </p>
-                {prizes.map((prize, index) => (
+                {prizes.map((prize, index) => {
+                  const hintId = `prize-title-${index}-hint`;
+                  const errorId = `prize-title-${index}-error`;
+                  const prizeError = prizeErrors[index];
+                  return (
                   <div
                     key={`prize-${index}`}
                     className="anim-fade-in"
@@ -829,11 +1109,32 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                         onChange={(e) =>
                           handlePrizeChange(index, e.target.value)
                         }
+                        ref={(element) => {
+                          prizeRefs.current[index] = element;
+                        }}
+                        aria-invalid={Boolean(prizeError)}
+                        aria-describedby={buildDescribedBy(
+                          hintId,
+                          prizeError ? errorId : null
+                        )}
                       />
-                      <span className="legend">
+                      <span className="legend" id={hintId}>
                         Puesto {index + 1} ={" "}
                         {prize.title || `Premio ${index + 1}`}
                       </span>
+                      {prizeError && (
+                        <p
+                          id={errorId}
+                          role="alert"
+                          style={{
+                            marginTop: "0.375rem",
+                            color: "var(--danger)",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {prizeError}
+                        </p>
+                      )}
                     </div>
                     {prizes.length > 1 && (
                       <div style={{ marginTop: "0.75rem", textAlign: "right" }}>
@@ -847,7 +1148,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                       </div>
                     )}
                   </div>
-                ))}
+                );
+                })}
                 <button
                   type="button"
                   className="button button--ghost"
@@ -866,7 +1168,21 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   onFile={handleFile}
                   disabled={loading}
                   fileToken={fileToken}
+                  ref={(element) => {
+                    fieldRefs.current.participants = element;
+                  }}
+                  describedBy={buildDescribedBy(
+                    participantsHintId,
+                    formErrors.manual ? manualErrorId : null
+                  )}
                 />
+                <p
+                  className="legend"
+                  id={participantsHintId}
+                  style={{ marginTop: "0.375rem", display: "block" }}
+                >
+                  Acepta archivos .csv, .tsv o .txt con un participante por línea.
+                </p>
               </div>
 
               <div
@@ -884,13 +1200,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   value={form.manual}
                   onChange={handleChange}
                   rows={4}
+                  ref={(element) => {
+                    fieldRefs.current.manual = element;
+                  }}
+                  aria-invalid={Boolean(formErrors.manual)}
+                  aria-describedby={buildDescribedBy(
+                    manualHintId,
+                    formErrors.manual ? manualErrorId : null
+                  )}
                 />
                 <span
                   className="legend"
+                  id={manualHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
                   Acepta email o nombre. Se eliminan duplicados automáticamente.
                 </span>
+                {formErrors.manual && (
+                  <p
+                    id={manualErrorId}
+                    role="alert"
+                    style={{
+                      marginTop: "0.375rem",
+                      color: "var(--danger)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {formErrors.manual}
+                  </p>
+                )}
               </div>
 
               <div
@@ -979,6 +1317,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               </h2>
               <div
                 className="anim-up"
+                aria-hidden="true"
                 style={{
                   pointerEvents: "none",
                   opacity: previewParticipants.length ? 1 : 0.6,
@@ -990,6 +1329,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   raffle={previewRaffle}
                   onMarkFinished={() => {}}
                   onRequestReminder={() => {}}
+                  interactionMode="preview"
                 />
               </div>
               <p

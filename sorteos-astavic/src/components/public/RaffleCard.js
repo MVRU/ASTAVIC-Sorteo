@@ -1,6 +1,7 @@
 // src/components/public/RaffleCard.js
 // ! DECISIÓN DE DISEÑO: Centralizamos la tarjeta y su modal para mantener consistencia entre público y administración.
 // * Separamos efectos intensivos (countdown, transición y modal) en helpers locales para mejorar legibilidad y mantenimiento.
+// * El modo "preview" evita efectos y llamadas externas para ofrecer una representación segura en contextos administrativos.
 // -!- Riesgo: Los temporizadores dependen de window; en SSR deben aislarse antes de montar en cliente.
 import { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
@@ -12,7 +13,13 @@ const CONFETTI_EMOJIS = ["\u{1F389}", "\u{1F38A}", "\u{2728}", "\u{1F388}"];
 const CONFETTI_SLOTS = 14;
 const VANISH_MS = 1000;
 
-const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
+const RaffleCard = ({
+  raffle,
+  onMarkFinished,
+  onRequestReminder,
+  interactionMode,
+}) => {
+  const isPreviewMode = interactionMode === "preview";
   const [timeLeft, setTimeLeft] = useState(() => getTimeParts(raffle.datetime));
   const [isFinished, setIsFinished] = useState(() =>
     raffle.finished || timeLeft.diff <= 0
@@ -27,7 +34,7 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
   const confettiTimerRef = useRef(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
+    if (isPreviewMode || typeof window === "undefined") return undefined;
 
     const updateCountdown = () => {
       const parts = getTimeParts(raffle.datetime);
@@ -50,7 +57,7 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
     updateCountdown();
     const timerId = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(timerId);
-  }, [raffle.datetime, raffle.id, onMarkFinished]);
+  }, [isPreviewMode, raffle.datetime, raffle.id, onMarkFinished]);
 
   useEffect(() => {
     finishedRef.current = raffle.finished;
@@ -58,23 +65,28 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
   }, [raffle.finished]);
 
   useEffect(() => {
-    if (!showConfetti || typeof window === "undefined") return undefined;
+    if (isPreviewMode || !showConfetti || typeof window === "undefined") {
+      return undefined;
+    }
     confettiTimerRef.current = window.setTimeout(() => setShowConfetti(false), 1200);
     return () => {
       if (confettiTimerRef.current) {
         window.clearTimeout(confettiTimerRef.current);
       }
     };
-  }, [showConfetti]);
+  }, [isPreviewMode, showConfetti]);
 
-  useEffect(() => () => {
-    if (vanishTimerRef.current && typeof window !== "undefined") {
-      window.clearTimeout(vanishTimerRef.current);
-    }
-    if (confettiTimerRef.current && typeof window !== "undefined") {
-      window.clearTimeout(confettiTimerRef.current);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      if (vanishTimerRef.current && typeof window !== "undefined") {
+        window.clearTimeout(vanishTimerRef.current);
+      }
+      if (confettiTimerRef.current && typeof window !== "undefined") {
+        window.clearTimeout(confettiTimerRef.current);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const initialParts = getTimeParts(raffle.datetime);
@@ -126,11 +138,27 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
       }
     : { width: "100%" };
 
-  const handleOpenModal = () => setModalOpen(true);
+  const handleOpenModal = () => {
+    if (isPreviewMode) return;
+    setModalOpen(true);
+  };
   const handleCloseModal = () => setModalOpen(false);
+
+  const reminderButtonProps = isPreviewMode
+    ? { disabled: true }
+    : {
+        onClick: () => onRequestReminder(raffle),
+      };
+
+  const viewButtonProps = isPreviewMode
+    ? { disabled: true }
+    : {
+        onClick: handleOpenModal,
+      };
 
   return (
     <article
+      aria-hidden={isPreviewMode ? "true" : undefined}
       className={`card raffle-card${
         isFinished
           ? " raffle-card--finished raffle-card--finished-horizontal"
@@ -273,9 +301,9 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
               type="button"
               className={viewButtonClass}
               style={viewButtonStyle}
-              onClick={handleOpenModal}
               title="Ver información del sorteo"
               aria-label={`Ver detalles del sorteo ${raffle.title}`}
+              {...viewButtonProps}
             >
               Ver sorteo
             </button>
@@ -323,9 +351,9 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
               type="button"
               className="button button--ghost"
               style={{ width: "100%" }}
-              onClick={() => onRequestReminder(raffle)}
               title="Abrir formulario para recibir recordatorios por correo"
               aria-label={`Recibir recordatorio por email del sorteo ${raffle.title}`}
+              {...reminderButtonProps}
             >
               Avisarme por email
             </button>
@@ -335,9 +363,9 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
               type="button"
               className={viewButtonClass}
               style={viewButtonStyle}
-              onClick={handleOpenModal}
               title="Ver información del sorteo"
               aria-label={`Ver detalles del sorteo ${raffle.title}`}
+              {...viewButtonProps}
             >
               Ver sorteo
             </button>
@@ -345,7 +373,7 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
         </>
       )}
 
-      {modalOpen && (
+      {!isPreviewMode && modalOpen && (
         <RaffleDetailsModal
           raffle={raffle}
           isFinished={isFinished}
@@ -355,7 +383,7 @@ const RaffleCard = ({ raffle, onMarkFinished, onRequestReminder }) => {
         />
       )}
 
-      {showConfetti && (
+      {!isPreviewMode && showConfetti && (
         <div className="confetti" aria-hidden="true">
           {Array.from({ length: CONFETTI_SLOTS }).map((_, index) => (
             <span key={index} style={{ left: `${3 + index * 7}%` }}>
@@ -372,10 +400,12 @@ RaffleCard.propTypes = {
   raffle: rafflePropType.isRequired,
   onMarkFinished: PropTypes.func,
   onRequestReminder: PropTypes.func.isRequired,
+  interactionMode: PropTypes.oneOf(["active", "preview"]),
 };
 
 RaffleCard.defaultProps = {
   onMarkFinished: undefined,
+  interactionMode: "active",
 };
 
 export default RaffleCard;

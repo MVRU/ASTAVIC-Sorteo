@@ -1,6 +1,11 @@
-// src/components/Header.js
-import { useEffect, useState } from "react";
+// ! DECISIÓN DE DISEÑO: El header bloquea foco y scroll en el menú móvil para garantizar contexto accesible.
+// * El menú restaura el foco en el disparador tras cerrar y prioriza el primer enlace al abrirse en mobile.
+// * El contenedor móvil se porta al body para evitar el clipping generado por el backdrop-filter del header.
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
+import useBodyScrollLock from "../hooks/useBodyScrollLock";
+import useFocusTrap from "../hooks/useFocusTrap";
 
 const NAV_ITEMS = [
   { target: "public", href: "#/", label: "Inicio" },
@@ -18,11 +23,17 @@ const Header = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia(MOBILE_QUERY).matches
-      : false
-  );
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (typeof window.matchMedia !== "function") return false;
+    const mediaQueryList = window.matchMedia(MOBILE_QUERY);
+    return typeof mediaQueryList?.matches === "boolean"
+      ? mediaQueryList.matches
+      : false;
+  });
+  const mobileMenuRef = useRef(null);
+  const burgerButtonRef = useRef(null);
+  const menuWasOpenRef = useRef(false);
   const menuId = "primary-menu";
 
   const DESKTOP_ITEMS = NAV_ITEMS; // sin admin aquí
@@ -43,7 +54,11 @@ const Header = ({
   useEffect(() => setMenuOpen(false), [currentRoute]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    if (typeof window.matchMedia !== "function") return undefined;
+
     const mql = window.matchMedia(MOBILE_QUERY);
+    if (!mql) return undefined;
     const onChange = (e) => {
       setIsMobile(e.matches);
       if (!e.matches) setMenuOpen(false);
@@ -58,6 +73,96 @@ const Header = ({
         : mql.removeListener(onChange);
     };
   }, []);
+
+  useBodyScrollLock(menuOpen && isMobile);
+  useFocusTrap(mobileMenuRef, menuOpen && isMobile);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    if (menuOpen) {
+      menuWasOpenRef.current = true;
+      const container = mobileMenuRef.current;
+      if (!container) return;
+      const firstFocusable = container.querySelector(
+        "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])"
+      );
+      firstFocusable?.focus();
+      return;
+    }
+    if (menuWasOpenRef.current) {
+      burgerButtonRef.current?.focus();
+      menuWasOpenRef.current = false;
+    }
+  }, [menuOpen, isMobile]);
+
+  const closeMenu = () => setMenuOpen(false);
+  const burgerLabel = menuOpen ? "Cerrar menú" : "Abrir menú";
+
+  const portalTarget =
+    typeof document !== "undefined" ? document.body : null;
+
+  const mobileLayer =
+    isMobile && portalTarget
+      ? createPortal(
+          <div
+            className={`app-header__mobile-layer${menuOpen ? " is-open" : ""}`}
+            data-testid="header-mobile-layer"
+            hidden={!menuOpen}
+            aria-hidden={!menuOpen}
+          >
+            <div
+              className={`app-header__mobile-overlay${
+                menuOpen ? " is-visible" : ""
+              }`}
+              aria-hidden="true"
+              onClick={closeMenu}
+              data-testid="header-mobile-overlay"
+            />
+            <div
+              id={menuId}
+              className={`app-header__mobile${menuOpen ? " is-open" : ""}`}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menú de navegación móvil"
+              ref={mobileMenuRef}
+            >
+              <div className="app-header__mobile-top">
+                <p className="app-header__mobile-title">Menú</p>
+                <button
+                  type="button"
+                  className="app-header__mobile-close"
+                  onClick={closeMenu}
+                >
+                  Cerrar menú
+                </button>
+              </div>
+              <nav aria-label="Navegación móvil" className="app-header__mobile-nav">
+                {NAV_ITEMS.map(({ target, href, label }) => (
+                  <a
+                    key={`mobile-${target}`}
+                    href={href}
+                    className="app-header__mobile-link"
+                    aria-current={currentRoute === target ? "page" : undefined}
+                    onClick={handleNavigate(target)}
+                  >
+                    {label}
+                  </a>
+                ))}
+
+                <a
+                  href="#/admin"
+                  className="app-header__mobile-link"
+                  aria-current={currentRoute === "admin" ? "page" : undefined}
+                  onClick={handleNavigate("admin")}
+                >
+                  Administración
+                </a>
+              </nav>
+            </div>
+          </div>,
+          portalTarget
+        )
+      : null;
 
   return (
     <header className="app-header app-header--brand" role="banner">
@@ -135,48 +240,18 @@ const Header = ({
             <button
               type="button"
               className="app-header__burger button button--icon"
-              aria-label="Abrir menú"
+              aria-label={burgerLabel}
               aria-expanded={menuOpen}
               aria-controls={menuId}
               onClick={() => setMenuOpen((p) => !p)}
+              ref={burgerButtonRef}
             >
               <BurgerIcon open={menuOpen} />
             </button>
           )}
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMobile && (
-        <div
-          id={menuId}
-          className={`app-header__mobile${menuOpen ? " is-open" : ""}`}
-          hidden={!menuOpen}
-        >
-          <nav aria-label="Navegación móvil" className="app-header__mobile-nav">
-            {NAV_ITEMS.map(({ target, href, label }) => (
-              <a
-                key={`mobile-${target}`}
-                href={href}
-                className="app-header__mobile-link"
-                aria-current={currentRoute === target ? "page" : undefined}
-                onClick={handleNavigate(target)}
-              >
-                {label}
-              </a>
-            ))}
-
-            <a
-              href="#/admin"
-              className="app-header__mobile-link"
-              aria-current={currentRoute === "admin" ? "page" : undefined}
-              onClick={handleNavigate("admin")}
-            >
-              Administración
-            </a>
-          </nav>
-        </div>
-      )}
+      {mobileLayer}
     </header>
   );
 };

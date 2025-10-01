@@ -1,5 +1,6 @@
 // ! DECISIÓN DE DISEÑO: Se separan responsabilidades entre editor y confirmaciones para reforzar SRP y reutilizar el modal administrativo.
 // ! DECISIÓN DE DISEÑO: El bloqueo de navegación y recarga solo se activa con cambios pendientes para evitar interrupciones innecesarias.
+// * El drawer reutiliza useFocusTrap y useBodyScrollLock para garantizar aislamiento visual y de foco sin repetir lógica.
 // ? Riesgo: La integración con backend deberá contemplar latencias y estados de error al persistir sorteos.
 // TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
 
@@ -12,6 +13,8 @@ import RaffleAdminCard from "./manage/RaffleAdminCard";
 import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
+import useFocusTrap from "../../hooks/useFocusTrap";
+import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
 export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
   "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
@@ -160,6 +163,8 @@ const ManageRaffles = ({
   const [confirmState, setConfirmState] = useState(null);
   const [formAlert, setFormAlert] = useState(null);
   const titleInputRef = useRef(null);
+  const drawerRef = useRef(null);
+  const previousFocusRef = useRef(null);
   const historySentinelRef = useRef(false);
   const skipPopStateRef = useRef(false);
   const previousHistoryStateRef = useRef(null);
@@ -238,10 +243,34 @@ const ManageRaffles = ({
 
   const startEdit = useCallback((raffle) => {
     const mapped = composeFormState(raffle);
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      previousFocusRef.current =
+        activeElement && typeof activeElement.focus === "function"
+          ? activeElement
+          : null;
+    }
     setEditingRaffle(raffle);
     setEditForm(mapped.form);
     setFormAlert(mapped.alert);
     editBaselineRef.current = serializeForm(mapped.form);
+  }, []);
+
+  const restorePreviousFocus = useCallback(() => {
+    const node = previousFocusRef.current;
+    previousFocusRef.current = null;
+    if (!node || typeof node.focus !== "function") return;
+    if (typeof document === "undefined") return;
+    const ownerDocument = node.ownerDocument || document;
+    if (typeof ownerDocument.contains === "function" && !ownerDocument.contains(node)) {
+      return;
+    }
+    const scheduleFocus = () => node.focus();
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(scheduleFocus);
+    } else {
+      scheduleFocus();
+    }
   }, []);
 
   const closeEdit = useCallback(() => {
@@ -249,7 +278,8 @@ const ManageRaffles = ({
     setEditForm(null);
     setFormAlert(null);
     editBaselineRef.current = "";
-  }, []);
+    restorePreviousFocus();
+  }, [restorePreviousFocus]);
 
   const hasUnsavedChanges = useCallback(() => {
     if (!isEditing || !editForm) return false;
@@ -288,6 +318,9 @@ const ManageRaffles = ({
     hasUnsavedChangesRef.current = hasUnsavedChanges;
   }, [hasUnsavedChanges]);
 
+  useBodyScrollLock(isEditing);
+  useFocusTrap(drawerRef, isEditing);
+
   // Drawer UX: focus management, Esc to close, body scroll lock
   useEffect(() => {
     if (!isEditing) return undefined;
@@ -300,6 +333,7 @@ const ManageRaffles = ({
 
   useEffect(() => {
     if (!isEditing) return undefined;
+    if (typeof window === "undefined") return undefined;
     const onKey = (e) => {
       if (e.key === "Escape") {
         requestCloseEditRef.current?.();
@@ -312,15 +346,11 @@ const ManageRaffles = ({
         return UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE;
       }
     };
-    const { style } = document.body;
-    const prevOverflow = style.overflow;
-    style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      style.overflow = prevOverflow;
     };
   }, [isEditing]);
 
@@ -542,7 +572,7 @@ const ManageRaffles = ({
               className="drawer-overlay"
               onClick={() => requestCloseEdit({ origin: "overlay" })}
             />
-            <aside className="drawer anim-scale-in">
+            <aside ref={drawerRef} className="drawer anim-scale-in">
               <header className="drawer__header">
                 <div>
                   <h2 id="edit-drawer-title" className="drawer__title">

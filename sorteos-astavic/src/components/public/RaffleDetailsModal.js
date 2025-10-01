@@ -8,6 +8,8 @@ import PropTypes from "prop-types";
 import { formatDateEs } from "../../utils/raffleUtils";
 import rafflePropType from "./rafflePropType";
 import Icon from "../ui/Icon";
+import useFocusTrap from "../../hooks/useFocusTrap";
+import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
 const DEFAULT_COMPACT_COUNT = 24;
 const MODAL_CONTENT_STYLE = {
@@ -84,30 +86,28 @@ const RaffleDetailsModal = ({
 }) => {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
   const [query, setQuery] = useState("");
   const [showAllParticipants, setShowAllParticipants] = useState(false);
   const titleId = `raffle-modal-title-${raffle.id}`;
   const descId = `raffle-modal-desc-${raffle.id}`;
 
+  useBodyScrollLock(true);
+  useFocusTrap(panelRef, true);
+
   useEffect(() => {
-    if (typeof document === "undefined" || typeof window === "undefined") {
+    if (typeof document === "undefined") {
       return undefined;
     }
 
-    closeButtonRef.current?.focus();
-    const scrollY = window.scrollY || 0;
-    const previousBodyStyle = {
-      overflow: document.body.style.overflow,
-      position: document.body.style.position,
-      top: document.body.style.top,
-      width: document.body.style.width,
-    };
     const triggerNode = returnFocusRef?.current || null;
+    const activeElement = document.activeElement;
+    previousFocusRef.current =
+      activeElement && typeof activeElement.focus === "function"
+        ? activeElement
+        : null;
 
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
+    closeButtonRef.current?.focus();
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -120,15 +120,11 @@ const RaffleDetailsModal = ({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousBodyStyle.overflow;
-      document.body.style.position = previousBodyStyle.position;
-      document.body.style.top = previousBodyStyle.top;
-      document.body.style.width = previousBodyStyle.width;
-      window.scrollTo({ top: scrollY });
-
-      if (triggerNode && typeof triggerNode.focus === "function") {
-        triggerNode.focus();
+      const focusTarget = triggerNode || previousFocusRef.current;
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus();
       }
+      previousFocusRef.current = null;
     };
   }, [onClose, returnFocusRef]);
 

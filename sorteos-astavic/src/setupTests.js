@@ -17,3 +17,8 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
     dispatchEvent: () => false,
   });
 }
+
+// * Centralizamos el stub de scrollTo para evitar warnings de JSDOM en modales que bloquean el body.
+if (typeof window !== 'undefined') {
+  window.scrollTo = jest.fn();
+}

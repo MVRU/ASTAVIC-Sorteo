@@ -1,6 +1,6 @@
 // src/App.js
-// ! DECISIÓN DE DISEÑO: Delegamos efectos globales a hooks especializados para mantener App como orquestador declarativo.
-import { useCallback } from "react";
+// ! DECISIÓN DE DISEÑO: Delegamos efectos globales a hooks especializados y garantizamos accesibilidad con un enlace para saltar al contenido principal.
+import { useCallback, useRef } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LiveDrawModal from "./components/LiveDrawModal";
@@ -17,10 +17,12 @@ import "./App.css";
 
 const LOGIN_ERROR_MESSAGE =
   "Credenciales inválidas. Revisá los datos e intentá nuevamente.";
+const MAIN_CONTENT_ID = "main-content";
 
 const App = () => {
   const { showToast } = useToast();
   const { route, navigate } = useHashRoute();
+  const mainContentRef = useRef(null);
   const {
     raffles,
     activeRaffles,
@@ -54,10 +56,30 @@ const App = () => {
     showToast({ status: "info", message: "Sesión cerrada correctamente." });
   }, [logout, navigate, showToast]);
 
+  const focusMainContent = useCallback(() => {
+    const mainNode = mainContentRef.current;
+    if (mainNode) {
+      mainNode.focus();
+    }
+  }, []);
+
   return (
     <div className="app-shell">
+      <a
+        className="skip-link"
+        href={`#${MAIN_CONTENT_ID}`}
+        onClick={focusMainContent}
+      >
+        Saltar al contenido principal
+      </a>
       <Header currentRoute={route} onNavigate={navigate} isAdmin={isAdmin} />
-      <main key={route} className="anim-fade-in">
+      <main
+        id={MAIN_CONTENT_ID}
+        key={route}
+        className="anim-fade-in"
+        ref={mainContentRef}
+        tabIndex={-1}
+      >
         {route === "admin" ? (
           <AdminView
             isAdmin={isAdmin}
