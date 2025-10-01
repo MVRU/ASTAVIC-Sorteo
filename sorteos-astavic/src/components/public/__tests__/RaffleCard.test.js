@@ -1,7 +1,8 @@
 // src/components/public/__tests__/RaffleCard.test.js
 // ! DECISIÓN DE DISEÑO: Validamos la interacción de volteo para asegurar accesibilidad y evitar regresiones visuales.
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { act } from "react";
 import RaffleCard from "../RaffleCard";
 
 jest.mock("../RaffleDetailsModal", () => () => null);
@@ -38,8 +39,12 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   const cardToggle = screen.getByRole("button", {
     name: /mostrar premios del sorteo sorteo aniversario/i,
   });
+  const flipWrapper = screen.getByTestId("raffle-card-flip");
+  const shells = screen.getAllByTestId("raffle-card-shell");
   const [frontSide, backSide] = screen.getAllByRole("group", { hidden: true });
 
+  expect(shells).toHaveLength(2);
+  expect(flipWrapper).toHaveAttribute("data-active-face", "front");
   expect(frontSide).toHaveAttribute(
     "aria-label",
     "Ganadores del sorteo Sorteo aniversario"
@@ -60,6 +65,7 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   expect(cardToggle).toHaveAttribute("aria-pressed", "true");
   expect(frontSide).toHaveAttribute("aria-hidden", "true");
   expect(backSide).toHaveAttribute("aria-hidden", "false");
+  expect(flipWrapper).toHaveAttribute("data-active-face", "back");
   expect(within(backSide).getByText("Notebook Lenovo IdeaPad")).toBeInTheDocument();
 
   cardToggle.focus();
@@ -67,6 +73,7 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
 
   expect(cardToggle).toHaveAttribute("aria-pressed", "false");
   expect(frontSide).toHaveAttribute("aria-hidden", "false");
+  expect(flipWrapper).toHaveAttribute("data-active-face", "front");
   expect(within(frontSide).getByText("Ana García")).toBeInTheDocument();
 });
 
@@ -85,4 +92,79 @@ test("conservar la vista de ganadores al abrir el detalle del sorteo", async () 
 
   expect(cardToggle).toHaveAttribute("aria-pressed", "false");
   expect(frontSide).toHaveAttribute("aria-hidden", "false");
+});
+
+test("ajusta la altura del flip al mostrar premios con texto extenso", async () => {
+  const longPrizeRaffle = {
+    ...finishedRaffle,
+    id: "raffle-finished-long",
+    title: "Sorteo con premios extensos",
+    prizes: [
+      {
+        title:
+          "Lote de experiencias gastronómicas premium en 3 ciudades diferentes con hospedaje incluido y actividades complementarias.",
+      },
+      {
+        title:
+          "Suscripción anual a plataformas educativas, cajas de suscripción y asesoría personalizada para emprendimientos emergentes.",
+      },
+    ],
+  };
+
+  render(
+    <RaffleCard
+      raffle={longPrizeRaffle}
+      onMarkFinished={jest.fn()}
+      onRequestReminder={jest.fn()}
+      interactionMode="active"
+    />
+  );
+
+  const flipWrapper = screen.getByTestId("raffle-card-flip");
+  const shells = screen.getAllByTestId("raffle-card-shell");
+  const [frontShell, backShell] = shells;
+  const cardToggle = screen.getByRole("button", {
+    name: /mostrar premios del sorteo sorteo con premios extensos/i,
+  });
+
+  Object.defineProperty(frontShell, "scrollHeight", {
+    configurable: true,
+    value: 280,
+  });
+  Object.defineProperty(backShell, "scrollHeight", {
+    configurable: true,
+    value: 460,
+  });
+
+  act(() => {
+    window.dispatchEvent(new Event("resize"));
+  });
+
+  await waitFor(() => {
+    expect(flipWrapper).toHaveAttribute("data-active-face", "front");
+  });
+  await waitFor(() => {
+    expect(flipWrapper.style.height).toBe("280px");
+  });
+  const initialHeight = parseFloat(flipWrapper.style.height || "0");
+
+  await userEvent.click(cardToggle);
+
+  await waitFor(() => {
+    expect(flipWrapper).toHaveAttribute("data-active-face", "back");
+  });
+  await waitFor(() => {
+    const currentHeight = parseFloat(flipWrapper.style.height || "0");
+    expect(currentHeight).toBeGreaterThan(initialHeight);
+  });
+
+  await waitFor(() => {
+    expect(flipWrapper.style.height).toBe("460px");
+  });
+
+  expect(
+    screen.getByText(
+      /lote de experiencias gastronómicas premium en 3 ciudades diferentes/i
+    )
+  ).toBeInTheDocument();
 });

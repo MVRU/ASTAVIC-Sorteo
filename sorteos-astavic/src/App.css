@@ -697,8 +697,13 @@ main {
 
 /* Estado finalizado */
 .raffle-card--finished {
-  border-color: rgba(78, 164, 234, 0.6);
-  background: linear-gradient(180deg, #ffffff 0%, var(--brand-50) 100%);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.raffle-card--finished::after {
+  content: none;
 }
 
 /* ============================
@@ -1948,23 +1953,6 @@ footer {
   margin: 0;
 }
 
-/* Evita que el contenido se recorte en el borde de la card */
-.card,
-.raffle-card {
-  overflow: visible; /* <- si hoy está en hidden, cámbialo a visible */
-  height: auto; /* <- asegúrate de no tener un alto fijo */
-}
-
-/* Si usaste contain para optimizar pintura, quítalo en finalizados */
-.raffle-card--finished {
-  contain: none; /* <- si existía contain: content/layout/paint */
-}
-
-.raffle-card--finished .card__body,
-.raffle-card--finished .raffle-card__content {
-  max-height: none; /* <- anula cualquier límite anterior */
-}
-
 /* Hace que el texto del ganador pueda truncar con elipsis */
 .winner-row {
   display: grid;
@@ -1998,7 +1986,6 @@ footer {
 .card,
 .raffle-card {
   height: auto !important; /* anula height:100% / min-height fijos */
-  overflow: hidden; /* contenido contenido dentro de la card */
   box-sizing: border-box;
 }
 
@@ -2050,10 +2037,38 @@ footer {
   outline-offset: 4px;
 }
 
+.raffle-card--finished {
+  overflow: visible;
+}
+
+.raffle-card__shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.raffle-card__shell--finished {
+  background: linear-gradient(
+    90deg,
+    rgba(247, 215, 116, 0.14) 0%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  border: 1px solid rgba(185, 141, 35, 0.28);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  min-height: 100%;
+  padding: 1rem;
+}
+
 .raffle-card--finished .raffle-card__flip {
   position: relative;
   min-height: 100%;
   perspective: 1200px;
+  overflow: visible;
+  transition: height var(--transition-slow, 0.28s ease);
 }
 
 .raffle-card--finished .raffle-card__flip-inner {
@@ -2070,6 +2085,7 @@ footer {
 .raffle-card--finished .raffle-card__side {
   position: relative;
   backface-visibility: hidden;
+  display: flex;
 }
 
 .raffle-card--finished .raffle-card__side--back {

@@ -1,10 +1,17 @@
 // src/components/public/RaffleCard.js
 // ! DECISIÓN DE DISEÑO: Centralizamos la tarjeta y su modal para mantener consistencia entre público y administración.
 // * Separamos efectos intensivos (countdown, transición y modal) en helpers locales para mejorar legibilidad y mantenimiento.
+// * La cara trasera alterna premios con animación accesible y sincroniza su altura para evitar cortes.
 // * El modo "preview" evita efectos y llamadas externas para ofrecer una representación segura en contextos administrativos.
-// * La cara trasera alterna premios con animación accesible para mantener claridad sin sacrificar usabilidad.
 // -!- Riesgo: Los temporizadores dependen de window; en SSR deben aislarse antes de montar en cliente.
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 import { formatDateEs, getTimeParts } from "../../utils/raffleUtils";
 import rafflePropType from "./rafflePropType";
@@ -29,11 +36,14 @@ const RaffleCard = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [showPrizeSide, setShowPrizeSide] = useState(false);
+  const [flipHeight, setFlipHeight] = useState(null);
 
   const finishedRef = useRef(isFinished);
   const openButtonRef = useRef(null);
   const vanishTimerRef = useRef(null);
   const confettiTimerRef = useRef(null);
+  const frontShellRef = useRef(null);
+  const backShellRef = useRef(null);
 
   useEffect(() => {
     if (isPreviewMode || typeof window === "undefined") return undefined;
@@ -100,6 +110,7 @@ const RaffleCard = ({
     setShowConfetti(false);
     setModalOpen(false);
     setShowPrizeSide(false);
+    setFlipHeight(null);
   }, [raffle.datetime, raffle.finished, raffle.id]);
 
   const participantsCount = useMemo(
@@ -197,6 +208,37 @@ const RaffleCard = ({
             : `Mostrar premios del sorteo ${raffle.title}`,
         };
 
+  const measureActiveSide = useCallback(() => {
+    if (!isFinished) return;
+    const activeShell = showPrizeSide ? backShellRef.current : frontShellRef.current;
+    if (!activeShell) return;
+    const nextHeight =
+      activeShell.scrollHeight ||
+      activeShell.offsetHeight ||
+      activeShell.getBoundingClientRect?.().height ||
+      0;
+    if (!nextHeight) return;
+    setFlipHeight((previous) => (previous === nextHeight ? previous : nextHeight));
+  }, [isFinished, showPrizeSide]);
+
+  useLayoutEffect(() => {
+    if (!isFinished) return;
+    measureActiveSide();
+  }, [isFinished, measureActiveSide, showPrizeSide, winners, prizes]);
+
+  useEffect(() => {
+    if (!isFinished || typeof window === "undefined") {
+      return undefined;
+    }
+    const handleResize = () => {
+      measureActiveSide();
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isFinished, measureActiveSide]);
+
   return (
     <article
       aria-hidden={isPreviewMode ? "true" : undefined}
@@ -209,21 +251,21 @@ const RaffleCard = ({
       }${
         isFinished && showPrizeSide ? " raffle-card--show-prizes" : ""
       }${isVanishing ? " raffle-card--vanish" : ""}`}
-      style={{
-        ...(isFinished
-          ? {
-              background:
-                "linear-gradient(90deg, rgba(247,215,116,0.14) 0%, rgba(255,255,255,0.92) 100%)",
-              border: "1px solid rgba(185,141,35,0.28)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-              padding: "1rem",
-            }
-          : {}),
-      }}
       {...finishedInteractionProps}
     >
       {isFinished ? (
-        <div className="raffle-card__flip">
+        <div
+          className="raffle-card__flip"
+          data-testid="raffle-card-flip"
+          data-active-face={showPrizeSide ? "back" : "front"}
+          style={
+            flipHeight
+              ? {
+                  height: `${flipHeight}px`,
+                }
+              : undefined
+          }
+        >
           <div className="raffle-card__flip-inner">
             <div
               className="raffle-card__side raffle-card__side--front"
@@ -231,8 +273,13 @@ const RaffleCard = ({
               role="group"
               aria-label={`Ganadores del sorteo ${raffle.title}`}
             >
-              <div className="raffle-card__side-content">
-                <div className="raffle-card__info">
+              <div
+                ref={frontShellRef}
+                className="raffle-card__shell raffle-card__shell--finished"
+                data-testid="raffle-card-shell"
+              >
+                <div className="raffle-card__side-content">
+                  <div className="raffle-card__info">
                   <span
                     className="raffle-card__badge raffle-card__badge--finished"
                     aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
@@ -331,19 +378,20 @@ const RaffleCard = ({
                   )}
                 </div>
 
-                <div className="raffle-card__cta">
-                  <button
-                    ref={!showPrizeSide ? openButtonRef : null}
-                    type="button"
-                    className={viewButtonClass}
-                    style={viewButtonStyle}
-                    title="Ver información del sorteo"
-                    aria-label={`Ver detalles del sorteo ${raffle.title}`}
-                    data-prevent-flip="true"
-                    {...viewButtonProps}
-                  >
-                    Ver sorteo
-                  </button>
+                  <div className="raffle-card__cta">
+                    <button
+                      ref={!showPrizeSide ? openButtonRef : null}
+                      type="button"
+                      className={viewButtonClass}
+                      style={viewButtonStyle}
+                      title="Ver información del sorteo"
+                      aria-label={`Ver detalles del sorteo ${raffle.title}`}
+                      data-prevent-flip="true"
+                      {...viewButtonProps}
+                    >
+                      Ver sorteo
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -354,8 +402,13 @@ const RaffleCard = ({
               role="group"
               aria-label={`Premios del sorteo ${raffle.title}`}
             >
-              <div className="raffle-card__side-content">
-                <div className="raffle-card__info">
+              <div
+                ref={backShellRef}
+                className="raffle-card__shell raffle-card__shell--finished"
+                data-testid="raffle-card-shell"
+              >
+                <div className="raffle-card__side-content">
+                  <div className="raffle-card__info">
                   <span
                     className="raffle-card__badge raffle-card__badge--finished"
                     aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
@@ -452,26 +505,27 @@ const RaffleCard = ({
                   )}
                 </div>
 
-                <div className="raffle-card__cta">
-                  <button
-                    ref={showPrizeSide ? openButtonRef : null}
-                    type="button"
-                    className={viewButtonClass}
-                    style={viewButtonStyle}
-                    title="Ver información del sorteo"
-                    aria-label={`Ver detalles del sorteo ${raffle.title}`}
-                    data-prevent-flip="true"
-                    {...viewButtonProps}
-                  >
-                    Ver sorteo
-                  </button>
+                  <div className="raffle-card__cta">
+                    <button
+                      ref={showPrizeSide ? openButtonRef : null}
+                      type="button"
+                      className={viewButtonClass}
+                      style={viewButtonStyle}
+                      title="Ver información del sorteo"
+                      aria-label={`Ver detalles del sorteo ${raffle.title}`}
+                      data-prevent-flip="true"
+                      {...viewButtonProps}
+                    >
+                      Ver sorteo
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <>
+        <div className="raffle-card__shell">
           <span
             className="raffle-card__badge"
             aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
@@ -531,7 +585,7 @@ const RaffleCard = ({
               Ver sorteo
             </button>
           </div>
-        </>
+        </div>
       )}
 
       {!isPreviewMode && modalOpen && (
