@@ -1,4 +1,5 @@
 // ! DECISIÓN DE DISEÑO: Este componente abstrae la edición de colecciones en formularios manteniendo control externo del estado.
+// ! DECISIÓN DE DISEÑO: La superficie adopta los tokens claros del panel para respetar el fondo blanco predominante.
 // * Normaliza entradas, anima las tarjetas y gestiona el foco para balancear UX atractiva con accesibilidad WCAG.
 // ? Riesgo: Navegadores sin soporte de requestAnimationFrame podrían degradar el enfoque automático; se cae de forma segura.
 import { useId, useMemo, useState, useEffect, useRef } from "react";
@@ -7,27 +8,30 @@ import PropTypes from "prop-types";
 export const EditableListStyles = () => (
   <style>{`
       .editable-list {
-        --editable-list-gap: 1.25rem;
-        --editable-list-surface: var(--surface-card, #ffffff);
-        --editable-list-border: rgba(99, 102, 241, 0.25);
-        --editable-list-shadow: 0 20px 45px -32px rgba(15, 23, 42, 0.45);
+        --editable-list-gap: clamp(0.9rem, 1.8vw, 1.2rem);
+        --editable-list-radius: var(--radius-lg, 1.15rem);
+        --editable-list-shadow: var(--shadow-1, 0 12px 30px rgba(2, 12, 27, 0.08));
+        --editable-list-border: var(--border, rgba(15, 40, 105, 0.16));
         display: flex;
         flex-direction: column;
         gap: var(--editable-list-gap);
-        padding: clamp(1rem, 2vw, 1.5rem);
-        border-radius: 18px;
+        padding: clamp(1rem, 2.4vw, 1.4rem);
+        border-radius: var(--editable-list-radius);
         border: 1px solid var(--editable-list-border);
-        background:
-          linear-gradient(145deg, rgba(99, 102, 241, 0.07), rgba(14, 165, 233, 0.05)),
-          var(--editable-list-surface);
+        background: var(--surface-elevated, #ffffff);
         box-shadow: var(--editable-list-shadow);
-        transition: border-color 180ms ease, box-shadow 220ms ease, transform 240ms ease;
+        transition:
+          border-color var(--transition-base, 0.2s ease),
+          box-shadow var(--transition-base, 0.2s ease),
+          transform var(--transition-fast, 0.16s ease);
       }
 
       .editable-list:focus-within {
-        border-color: var(--focus-ring, #6366f1);
-        box-shadow: 0 18px 38px -26px rgba(99, 102, 241, 0.45);
-        transform: translateY(-2px);
+        border-color: var(--brand-500, #4ea4ea);
+        box-shadow:
+          0 0 0 3px rgba(78, 164, 234, 0.18),
+          var(--editable-list-shadow);
+        transform: translateY(-1px);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -47,16 +51,16 @@ export const EditableListStyles = () => (
       }
 
       .editable-list__label {
-        font-size: clamp(1rem, 1.2vw, 1.05rem);
+        font-size: clamp(1rem, 1.15vw, 1.05rem);
         font-weight: 600;
-        color: var(--text-strong, #111827);
+        color: var(--text-primary, #0a1630);
         letter-spacing: 0.01em;
       }
 
       .editable-list__helper {
         margin: 0;
         font-size: 0.9rem;
-        color: var(--text-muted, #4b5563);
+        color: var(--text-secondary, #51607a);
         line-height: 1.5;
       }
 
@@ -68,18 +72,23 @@ export const EditableListStyles = () => (
         padding: 0.55rem 1rem;
         font-weight: 600;
         border-radius: 999px;
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        color: var(--focus-ring, #6366f1);
-        background: rgba(99, 102, 241, 0.08);
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 220ms ease;
+        border: 1px solid var(--border-strong, rgba(15, 40, 105, 0.22));
+        color: var(--brand-700, #0f4d9e);
+        background: var(--brand-50, #eaf4ff);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition:
+          background-color var(--transition-fast, 0.16s ease),
+          border-color var(--transition-fast, 0.16s ease),
+          color var(--transition-fast, 0.16s ease),
+          box-shadow var(--transition-base, 0.2s ease);
       }
 
       .editable-list__add:hover,
       .editable-list__add:focus-visible {
-        background: rgba(99, 102, 241, 0.16);
-        color: var(--focus-ring-strong, #4338ca);
-        border-color: rgba(99, 102, 241, 0.55);
-        box-shadow: 0 10px 18px -14px rgba(99, 102, 241, 0.55);
+        background: var(--brand-100, #d7eaff);
+        color: var(--brand-600, #2d7ed1);
+        border-color: var(--brand-400, #68a7ef);
+        box-shadow: 0 8px 20px rgba(78, 164, 234, 0.18);
       }
 
       .editable-list__add:focus-visible {
@@ -88,24 +97,27 @@ export const EditableListStyles = () => (
 
       .editable-list__items {
         display: grid;
-        gap: 0.75rem;
+        gap: 0.85rem;
         list-style: none;
         padding: 0;
         margin: 0;
       }
 
       .editable-list__item {
-        background: var(--surface-base, #ffffff);
-        border-radius: 14px;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        padding: clamp(0.75rem, 1.8vw, 1rem);
-        box-shadow: 0 16px 28px -24px rgba(15, 23, 42, 0.45);
-        transition: border-color 160ms ease, box-shadow 220ms ease, transform 220ms ease;
+        background: var(--surface-elevated, #ffffff);
+        border-radius: var(--radius-md, 0.75rem);
+        border: 1px solid var(--border, rgba(15, 40, 105, 0.16));
+        padding: clamp(0.75rem, 1.6vw, 1rem);
+        box-shadow: 0 8px 20px rgba(2, 12, 27, 0.06);
+        transition:
+          border-color var(--transition-fast, 0.16s ease),
+          box-shadow var(--transition-base, 0.2s ease),
+          transform var(--transition-fast, 0.16s ease);
       }
 
       .editable-list__item:focus-within {
-        border-color: var(--focus-ring, #6366f1);
-        box-shadow: 0 22px 32px -22px rgba(99, 102, 241, 0.45);
+        border-color: var(--brand-500, #4ea4ea);
+        box-shadow: 0 12px 26px rgba(78, 164, 234, 0.18);
         transform: translateY(-1px);
       }
 
@@ -120,7 +132,7 @@ export const EditableListStyles = () => (
       .editable-list__item-grid {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: clamp(0.65rem, 1.5vw, 1rem);
+        gap: clamp(0.65rem, 1.4vw, 1rem);
         align-items: center;
       }
 
@@ -133,8 +145,9 @@ export const EditableListStyles = () => (
         border-radius: 50%;
         font-weight: 600;
         font-size: 0.95rem;
-        color: var(--focus-ring-strong, #4338ca);
-        background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.28), rgba(99, 102, 241, 0.12));
+        color: var(--brand-700, #0f4d9e);
+        background: var(--brand-50, #eaf4ff);
+        border: 1px solid var(--border, rgba(15, 40, 105, 0.16));
       }
 
       .editable-list__field {
@@ -147,30 +160,27 @@ export const EditableListStyles = () => (
       .editable-list__item-label {
         font-size: 0.85rem;
         font-weight: 600;
-        color: var(--text-muted, #4b5563);
+        color: var(--text-secondary, #51607a);
       }
 
       .editable-list__input {
         min-width: 0;
         width: 100%;
-        padding: 0.65rem 0.75rem;
-        border-radius: 10px;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
-        transition: border-color 160ms ease, box-shadow 200ms ease;
+        background: var(--surface-elevated, #ffffff);
+        border-color: var(--border, rgba(15, 40, 105, 0.16));
+        box-shadow: none;
       }
 
       .editable-list__input:focus-visible {
-        border-color: var(--focus-ring, #6366f1);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        border-color: var(--brand-500, #4ea4ea);
+        box-shadow: 0 0 0 3px rgba(78, 164, 234, 0.2);
         outline: none;
       }
 
       .editable-list__input--invalid {
-        border-color: var(--alert-danger-fg, #b91c1c);
-        box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.2);
-        background: rgba(254, 242, 242, 0.8);
+        border-color: var(--danger, #c03434);
+        box-shadow: 0 0 0 2px rgba(192, 52, 52, 0.15);
+        background: rgba(192, 52, 52, 0.06);
       }
 
       .editable-list__actions {
@@ -187,19 +197,23 @@ export const EditableListStyles = () => (
         height: 2.5rem;
         border-radius: 50%;
         border: 1px solid transparent;
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--alert-danger-fg, #b91c1c);
+        background: rgba(192, 52, 52, 0.1);
+        color: var(--danger, #c03434);
         font-size: 1.2rem;
         line-height: 1;
         cursor: pointer;
-        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 200ms ease, transform 180ms ease;
+        transition:
+          background-color var(--transition-fast, 0.16s ease),
+          border-color var(--transition-fast, 0.16s ease),
+          box-shadow var(--transition-base, 0.2s ease),
+          transform var(--transition-fast, 0.16s ease);
       }
 
       .editable-list__remove:hover,
       .editable-list__remove:focus-visible {
-        background: rgba(239, 68, 68, 0.18);
-        border-color: rgba(239, 68, 68, 0.3);
-        box-shadow: 0 12px 22px -18px rgba(185, 28, 28, 0.8);
+        background: rgba(192, 52, 52, 0.18);
+        border-color: rgba(192, 52, 52, 0.3);
+        box-shadow: 0 10px 22px rgba(192, 52, 52, 0.25);
         transform: translateY(-1px);
         outline: none;
       }
@@ -207,48 +221,10 @@ export const EditableListStyles = () => (
       .editable-list__empty {
         font-size: 0.9rem;
         padding: 0.85rem 1rem;
-        color: var(--text-muted, #4b5563);
-        background: rgba(148, 163, 184, 0.14);
-        border-radius: 12px;
+        color: var(--text-secondary, #51607a);
+        background: rgba(15, 40, 105, 0.06);
+        border-radius: var(--radius-md, 0.75rem);
         text-align: center;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .editable-list {
-          --editable-list-surface: rgba(17, 24, 39, 0.94);
-          --editable-list-border: rgba(99, 102, 241, 0.38);
-          --editable-list-shadow: 0 28px 48px -28px rgba(15, 23, 42, 0.9);
-          background:
-            linear-gradient(145deg, rgba(99, 102, 241, 0.24), rgba(14, 165, 233, 0.18)),
-            var(--editable-list-surface);
-        }
-
-        .editable-list__helper,
-        .editable-list__item-label,
-        .editable-list__empty {
-          color: rgba(226, 232, 240, 0.86);
-        }
-
-        .editable-list__item {
-          background: rgba(30, 41, 59, 0.95);
-          border-color: rgba(99, 102, 241, 0.28);
-          box-shadow: 0 20px 40px -30px rgba(15, 23, 42, 0.9);
-        }
-
-        .editable-list__input {
-          background: rgba(15, 23, 42, 0.85);
-          color: rgba(226, 232, 240, 0.95);
-          border-color: rgba(99, 102, 241, 0.3);
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
-        }
-
-        .editable-list__input::placeholder {
-          color: rgba(148, 163, 184, 0.7);
-        }
-
-        .editable-list__remove {
-          background: rgba(239, 68, 68, 0.24);
-        }
       }
 
       @media (max-width: 680px) {
@@ -270,7 +246,7 @@ export const EditableListStyles = () => (
 
         .editable-list__remove {
           width: 100%;
-          border-radius: 10px;
+          border-radius: var(--radius-md, 0.75rem);
           height: 2.75rem;
         }
       }
