@@ -612,6 +612,92 @@ main {
   }
 }
 
+/* Guía de participación */
+.participation-guide {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 1vw + 1rem, 2rem);
+  margin-bottom: 2.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(15, 40, 105, 0.12);
+  background: color-mix(in srgb, var(--surface) 80%, var(--brand-50) 20%);
+  box-shadow: 0 12px 30px rgba(2, 12, 27, 0.06);
+}
+
+.participation-guide__header {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 48rem;
+}
+
+.participation-guide__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.1vw + 1.1rem, 1.8rem);
+}
+
+.participation-guide__intro {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.participation-guide__steps {
+  list-style-position: inside;
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.participation-guide__step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.2rem 1.4rem 1.35rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 40, 105, 0.1);
+  background: color-mix(in srgb, #ffffff 80%, var(--brand-50) 20%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.participation-guide__step-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.participation-guide__step-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+}
+
+.participation-guide__action {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .participation-guide__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .participation-guide {
+    margin-bottom: 1.75rem;
+    padding: 1.1rem 1.2rem 1.4rem;
+  }
+
+  .participation-guide__step {
+    padding: 1rem 1.1rem 1.2rem;
+  }
+
+  .participation-guide__step-title {
+    font-size: 1rem;
+  }
+}
+
 /* ============================
    GRID & CARDS
    ============================ */

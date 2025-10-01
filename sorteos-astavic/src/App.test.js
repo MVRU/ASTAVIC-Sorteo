@@ -39,7 +39,10 @@ const submitLogin = async (user) => {
 
 test('renderiza la vista publica con el titulo Sorteos', () => {
   renderWithToast(<App />);
-  const heading = screen.getByRole('heading', { name: /Sorteos/i });
+  const heading = screen.getByRole('heading', {
+    level: 1,
+    name: /sorteos activos/i,
+  });
   expect(heading).toBeInTheDocument();
 });
 

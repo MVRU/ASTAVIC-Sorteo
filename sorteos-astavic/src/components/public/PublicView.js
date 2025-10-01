@@ -2,11 +2,13 @@
 // ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
 // * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
 // * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
+// * Integramos una guía paso a paso para educar a nuevas personas participantes sin sobrecargar el layout.
 // -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
 import { useCallback, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import RaffleGrid from "./RaffleGrid";
 import ReminderDialog from "./ReminderDialog";
+import ParticipationGuide from "./ParticipationGuide";
 import rafflePropType from "./rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import { isValidEmail, sanitizeEmail } from "../../utils/validation";
@@ -31,6 +33,7 @@ const PublicView = ({
   );
   const isFinishedRoute = route === "finished";
   const isAllRoute = route === "all";
+  const hasFinishedRaffles = finishedRaffles.length > 0;
   const segmentOptions = useMemo(
     () => [
       { label: "Todos", value: "all" },
@@ -106,6 +109,10 @@ const PublicView = ({
     },
     [onRouteChange, route]
   );
+
+  const handleViewFinished = useCallback(() => {
+    handleRouteSelection("finished");
+  }, [handleRouteSelection]);
 
   const reminderRaffle = reminder.raffle;
 
@@ -197,6 +204,11 @@ const PublicView = ({
               </button>
             </div>
           </div>
+          <ParticipationGuide
+            onOpenReminder={handleGeneralReminder}
+            onViewFinished={hasFinishedRaffles ? handleViewFinished : undefined}
+            showFinishedShortcut={hasFinishedRaffles && !isFinishedRoute}
+          />
           <RaffleGrid
             raffles={visibleRaffles}
             allowMarkFinished={!isFinishedRoute}

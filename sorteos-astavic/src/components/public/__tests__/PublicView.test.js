@@ -47,6 +47,9 @@ test("muestra copy de sorteos activos y contador accesible", () => {
   expect(
     screen.getByText(/hay 1 sorteo/i)
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: /cómo participar en los sorteos/i })
+  ).toBeInTheDocument();
 });
 
 test("permite alternar entre vistas desde el segmento", async () => {
@@ -99,6 +102,34 @@ test("muestra copy combinado y conteo acumulado en pestaña todos", () => {
     screen.getByRole("heading", { name: /todos los sorteos/i })
   ).toBeInTheDocument();
   expect(screen.getByText(/hay 2 sorteos/i)).toBeInTheDocument();
+});
+
+test("la guía explica pasos clave y ofrece accesos directos", async () => {
+  const onRouteChange = jest.fn();
+  setup({
+    finishedRaffles: [{ ...raffleSample, id: "raffle-3", finished: true }],
+    onRouteChange,
+  });
+
+  expect(
+    screen.getByText(/Configurá un aviso por correo/i)
+  ).toBeInTheDocument();
+
+  await userEvent.click(
+    screen.getByRole("button", { name: /configurar recordatorio/i })
+  );
+
+  expect(
+    await screen.findByRole("dialog", { name: /recibí recordatorios y resultados/i })
+  ).toBeInTheDocument();
+
+  const finishedShortcut = screen.getByRole("button", {
+    name: /ver sorteos finalizados/i,
+  });
+
+  await userEvent.click(finishedShortcut);
+
+  expect(onRouteChange).toHaveBeenCalledWith("finished");
 });
 
 test("valida correo antes de registrar suscripción", async () => {
