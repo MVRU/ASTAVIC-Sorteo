@@ -2,7 +2,7 @@
 // ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
 // * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
 // * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
-// * Integramos una guía paso a paso para educar a nuevas personas participantes sin sobrecargar el layout.
+// * Integramos una guía plegable para educar a nuevas personas participantes sin sobrecargar el layout.
 // -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
 import { useCallback, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
@@ -24,6 +24,7 @@ const PublicView = ({
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reminder, setReminder] = useState({ open: false, raffle: null });
+  const [isGuideVisible, setGuideVisible] = useState(false);
   const emailFieldRef = useRef(null);
   const { showToast } = useToast();
   const normalizedEmail = useMemo(() => sanitizeEmail(email), [email]);
@@ -115,6 +116,14 @@ const PublicView = ({
   }, [handleRouteSelection]);
 
   const reminderRaffle = reminder.raffle;
+  const participationGuideId = "participation-guide-section";
+  const guideToggleLabel = isGuideVisible
+    ? "Ocultar guía de participación"
+    : "Ver guía de participación";
+
+  const toggleGuideVisibility = useCallback(() => {
+    setGuideVisible((previous) => !previous);
+  }, []);
 
   const handleSubmitSubscription = useCallback(async (event) => {
     event.preventDefault();
@@ -204,7 +213,20 @@ const PublicView = ({
               </button>
             </div>
           </div>
+          <div className="participation-guide__toggle-wrapper anim-up">
+            <button
+              type="button"
+              className="button button--ghost participation-guide__toggle"
+              aria-expanded={isGuideVisible}
+              aria-controls={participationGuideId}
+              onClick={toggleGuideVisibility}
+            >
+              {guideToggleLabel}
+            </button>
+          </div>
           <ParticipationGuide
+            id={participationGuideId}
+            isVisible={isGuideVisible}
             onOpenReminder={handleGeneralReminder}
             onViewFinished={hasFinishedRaffles ? handleViewFinished : undefined}
             showFinishedShortcut={hasFinishedRaffles && !isFinishedRoute}

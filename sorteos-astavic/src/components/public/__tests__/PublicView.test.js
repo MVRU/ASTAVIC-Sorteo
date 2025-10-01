@@ -39,7 +39,7 @@ beforeEach(() => {
   mockShowToast.mockClear();
 });
 
-test("muestra copy de sorteos activos y contador accesible", () => {
+test("muestra copy de sorteos activos y mantiene la guía plegada", () => {
   setup();
   expect(
     screen.getByRole("heading", { name: /sorteos activos/i })
@@ -48,8 +48,10 @@ test("muestra copy de sorteos activos y contador accesible", () => {
     screen.getByText(/hay 1 sorteo/i)
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: /cómo participar en los sorteos/i })
-  ).toBeInTheDocument();
+    screen.queryByRole("heading", { name: /cómo participar en los sorteos/i })
+  ).not.toBeInTheDocument();
+  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
 
 test("permite alternar entre vistas desde el segmento", async () => {
@@ -104,13 +106,20 @@ test("muestra copy combinado y conteo acumulado en pestaña todos", () => {
   expect(screen.getByText(/hay 2 sorteos/i)).toBeInTheDocument();
 });
 
-test("la guía explica pasos clave y ofrece accesos directos", async () => {
+test("permite desplegar la guía y ofrece accesos directos", async () => {
   const onRouteChange = jest.fn();
   setup({
     finishedRaffles: [{ ...raffleSample, id: "raffle-3", finished: true }],
     onRouteChange,
   });
 
+  const toggle = screen.getByRole("button", { name: /ver guía de participación/i });
+  await userEvent.click(toggle);
+
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(
+    screen.getByRole("heading", { name: /cómo participar en los sorteos/i })
+  ).toBeInTheDocument();
   expect(
     screen.getByText(/Configurá un aviso por correo/i)
   ).toBeInTheDocument();

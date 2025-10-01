@@ -1,17 +1,24 @@
 // src/components/public/ParticipationGuide.js
 // ! DECISIÓN DE DISEÑO: Guiamos el flujo de participación con pasos accionables para reducir fricción y mejorar conversión.
 // * El bloque refuerza accesibilidad usando lista ordenada y encabezados jerárquicos.
+// * Permitimos plegar el contenido por defecto para reducir ruido visual sin sacrificar orientación.
 // -!- Riesgo: Si se agregan nuevas acciones asincrónicas deberán sincronizarse estados de carga para evitar solapamientos.
 import PropTypes from "prop-types";
 
 const ParticipationGuide = ({
+  id,
+  isVisible,
   onOpenReminder,
   onViewFinished,
   showFinishedShortcut,
 }) => (
   <section
-    className="participation-guide anim-up"
+    id={id}
+    className={`participation-guide anim-up${
+      isVisible ? " participation-guide--expanded" : ""
+    }`}
     aria-labelledby="participation-guide-heading"
+    hidden={!isVisible}
   >
     <div className="participation-guide__header">
       <h2 id="participation-guide-heading" className="participation-guide__title">
@@ -72,12 +79,16 @@ const ParticipationGuide = ({
 );
 
 ParticipationGuide.propTypes = {
+  id: PropTypes.string,
+  isVisible: PropTypes.bool,
   onOpenReminder: PropTypes.func.isRequired,
   onViewFinished: PropTypes.func,
   showFinishedShortcut: PropTypes.bool,
 };
 
 ParticipationGuide.defaultProps = {
+  id: undefined,
+  isVisible: true,
   onViewFinished: undefined,
   showFinishedShortcut: false,
 };
