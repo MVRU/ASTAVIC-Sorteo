@@ -1,25 +1,72 @@
 // src/components/public/PublicView.js
 // ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
 // * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
+// * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
+// * Integramos una guía plegable para educar a nuevas personas participantes sin sobrecargar el layout.
+// * Uniformamos el layout entre pestañas con una configuración centralizada que cambia solo los filtros y mensajes.
 // -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import RaffleGrid from "./RaffleGrid";
 import ReminderDialog from "./ReminderDialog";
+import ParticipationGuide from "./ParticipationGuide";
 import rafflePropType from "./rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import { isValidEmail, sanitizeEmail } from "../../utils/validation";
+
+const SEGMENT_DEFINITIONS = {
+  all: {
+    value: "all",
+    label: "Todos",
+    selectRaffles: (active, finished) => [...active, ...finished],
+    copy: {
+      title: "Todos los sorteos",
+      subtitle: "Explorá el historial completo de sorteos y sus resultados.",
+      emptyTitle: "No encontramos sorteos publicados todavía.",
+      emptySubtitle:
+        "Cuando publiquemos sorteos vas a verlos acá, activos o finalizados.",
+    },
+  },
+  public: {
+    value: "public",
+    label: "Activos",
+    selectRaffles: (active) => active,
+    copy: {
+      title: "Sorteos activos",
+      subtitle:
+        "Informate sobre los sorteos vigentes, sus premios y participantes confirmados. Pedí recordatorios por correo.",
+      emptyTitle: "No hay sorteos publicados en este momento.",
+      emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
+    },
+  },
+  finished: {
+    value: "finished",
+    label: "Finalizados",
+    selectRaffles: (_, finished) => finished,
+    copy: {
+      title: "Sorteos finalizados",
+      subtitle: "Revisá premios y ganadores de sorteos anteriores.",
+      emptyTitle: "Todavía no hay sorteos finalizados.",
+      emptySubtitle:
+        "Ni bien cerremos un sorteo, vas a ver el listado completo acá.",
+    },
+  },
+};
+
+const SEGMENT_ORDER = ["all", "public", "finished"];
 
 const PublicView = ({
   activeRaffles,
   finishedRaffles,
   onMarkFinished,
   onRegisterSubscriber,
+  onRouteChange,
   route,
 }) => {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reminder, setReminder] = useState({ open: false, raffle: null });
+  const [isGuideVisible, setGuideVisible] = useState(false);
   const emailFieldRef = useRef(null);
   const { showToast } = useToast();
   const normalizedEmail = useMemo(() => sanitizeEmail(email), [email]);
@@ -27,30 +74,27 @@ const PublicView = ({
     () => isValidEmail(normalizedEmail),
     [normalizedEmail]
   );
-  const isFinishedRoute = route === "finished";
+  const currentSegment = useMemo(
+    () => SEGMENT_DEFINITIONS[route] || SEGMENT_DEFINITIONS.public,
+    [route]
+  );
+  const isFinishedRoute = currentSegment.value === "finished";
+  const hasFinishedRaffles = finishedRaffles.length > 0;
+  const segmentOptions = useMemo(
+    () => SEGMENT_ORDER.map((key) => SEGMENT_DEFINITIONS[key]),
+    []
+  );
   const visibleRaffles = useMemo(
-    () => (isFinishedRoute ? finishedRaffles : activeRaffles),
-    [isFinishedRoute, finishedRaffles, activeRaffles]
+    () => currentSegment.selectRaffles(activeRaffles, finishedRaffles),
+    [activeRaffles, currentSegment, finishedRaffles]
   );
   const visibleCount = visibleRaffles.length;
 
-  const copy = useMemo(() => {
-    if (isFinishedRoute) {
-      return {
-        title: "Sorteos finalizados",
-        subtitle: "Revisá premios y ganadores de sorteos anteriores.",
-        emptyTitle: "Todavía no hay sorteos finalizados.",
-        emptySubtitle:
-          "Ni bien cerremos un sorteo, vas a ver el listado completo acá.",
-      };
-    }
-    return {
-      title: "Sorteos activos",
-      subtitle: "Participá en los sorteos vigentes y pedí recordatorios por correo.",
-      emptyTitle: "No hay sorteos publicados en este momento.",
-      emptySubtitle: "Publicaremos nuevos sorteos en cuanto estén disponibles.",
-    };
-  }, [isFinishedRoute]);
+  const copy = currentSegment.copy;
+
+  useEffect(() => {
+    setGuideVisible(false);
+  }, [route]);
 
   const handleCloseReminder = useCallback(() => {
     setReminder({ open: false, raffle: null });
@@ -72,7 +116,29 @@ const PublicView = ({
     handleReminder(null);
   }, [handleReminder]);
 
+  const handleRouteSelection = useCallback(
+    (targetRoute) => {
+      if (targetRoute === route) return;
+      if (onRouteChange) {
+        onRouteChange(targetRoute);
+      }
+    },
+    [onRouteChange, route]
+  );
+
+  const handleViewFinished = useCallback(() => {
+    handleRouteSelection("finished");
+  }, [handleRouteSelection]);
+
   const reminderRaffle = reminder.raffle;
+  const participationGuideId = "participation-guide-section";
+  const guideToggleLabel = isGuideVisible
+    ? "Ocultar guía de participación"
+    : "Ver guía de participación";
+
+  const toggleGuideVisibility = useCallback(() => {
+    setGuideVisible((previous) => !previous);
+  }, []);
 
   const handleSubmitSubscription = useCallback(async (event) => {
     event.preventDefault();
@@ -127,6 +193,29 @@ const PublicView = ({
               </p>
             </div>
             <div className="public-toolbar__actions anim-up">
+              <div
+                className="public-toolbar__segments"
+                role="group"
+                aria-label="Filtrar sorteos por estado"
+              >
+                {segmentOptions.map((option) => {
+                  const isActive = option.value === currentSegment.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`segmented-button${
+                        isActive ? " segmented-button--active" : ""
+                      }`}
+                      onClick={() => handleRouteSelection(option.value)}
+                      aria-pressed={isActive}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
               <span className="section-subtitle">
                 Hay {visibleCount} {visibleCount === 1 ? "sorteo" : "sorteos"}
               </span>
@@ -139,6 +228,24 @@ const PublicView = ({
               </button>
             </div>
           </div>
+          <div className="participation-guide__toggle-wrapper anim-up">
+            <button
+              type="button"
+              className="button button--ghost participation-guide__toggle"
+              aria-expanded={isGuideVisible}
+              aria-controls={participationGuideId}
+              onClick={toggleGuideVisibility}
+            >
+              {guideToggleLabel}
+            </button>
+          </div>
+          <ParticipationGuide
+            id={participationGuideId}
+            isVisible={isGuideVisible}
+            onOpenReminder={handleGeneralReminder}
+            onViewFinished={hasFinishedRaffles ? handleViewFinished : undefined}
+            showFinishedShortcut={hasFinishedRaffles && !isFinishedRoute}
+          />
           <RaffleGrid
             raffles={visibleRaffles}
             allowMarkFinished={!isFinishedRoute}
@@ -170,11 +277,13 @@ PublicView.propTypes = {
   finishedRaffles: PropTypes.arrayOf(rafflePropType).isRequired,
   onMarkFinished: PropTypes.func,
   onRegisterSubscriber: PropTypes.func.isRequired,
-  route: PropTypes.oneOf(["public", "finished"]),
+  onRouteChange: PropTypes.func,
+  route: PropTypes.oneOf(["public", "finished", "all"]),
 };
 
 PublicView.defaultProps = {
   onMarkFinished: undefined,
+  onRouteChange: undefined,
   route: "public",
 };
 

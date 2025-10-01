@@ -69,9 +69,15 @@ describe("Header - menú móvil accesible", () => {
 
     await user.tab();
     const secondLink = within(dialog).getByRole("link", {
-      name: /sorteos finalizados/i,
+      name: /todos los sorteos/i,
     });
     expect(secondLink).toHaveFocus();
+
+    await user.tab();
+    const thirdLink = within(dialog).getByRole("link", {
+      name: /sorteos finalizados/i,
+    });
+    expect(thirdLink).toHaveFocus();
 
     await user.tab();
     const adminLink = within(dialog).getByRole("link", {

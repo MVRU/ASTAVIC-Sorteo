@@ -538,6 +538,60 @@ main {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.public-toolbar__segments {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-lg);
+  background: rgba(15, 40, 105, 0.08);
+  background: color-mix(in srgb, var(--brand-50) 75%, #ffffff 25%);
+  border: 1px solid rgba(15, 40, 105, 0.14);
+  box-shadow: inset 0 1px 1px rgba(15, 40, 105, 0.08);
+}
+.segmented-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 6.5rem;
+  padding: 0.45rem 1.1rem;
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 0.25rem);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+.segmented-button:hover {
+  background: rgba(15, 40, 105, 0.12);
+  color: var(--text-primary);
+}
+.segmented-button:focus-visible {
+  outline: 3px solid rgba(15, 77, 158, 0.6);
+  outline-offset: 2px;
+}
+.segmented-button--active,
+.segmented-button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--brand-700);
+  box-shadow: 0 1px 6px rgba(15, 40, 105, 0.18);
+}
+.segmented-button--active:hover,
+.segmented-button[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, #ffffff 90%, var(--brand-100) 10%);
+}
+.segmented-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 @media (max-width: 768px) {
   .public-toolbar {
@@ -545,7 +599,133 @@ main {
     align-items: stretch;
   }
   .public-toolbar__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .public-toolbar__segments {
+    width: 100%;
     justify-content: space-between;
+  }
+  .segmented-button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Guía de participación */
+.participation-guide__toggle-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.participation-guide__toggle {
+  align-self: flex-start;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.participation-guide__toggle[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--brand-600) 12%, transparent);
+  border-color: color-mix(in srgb, var(--brand-600) 30%, transparent);
+  color: var(--brand-700);
+}
+
+.participation-guide__toggle:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 35%, transparent);
+}
+
+.participation-guide[data-state="collapsed"] {
+  display: none !important;
+  visibility: hidden;
+}
+
+.participation-guide {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 1vw + 1rem, 2rem);
+  margin-bottom: 2.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(15, 40, 105, 0.12);
+  background: color-mix(in srgb, var(--surface) 80%, var(--brand-50) 20%);
+  box-shadow: 0 12px 30px rgba(2, 12, 27, 0.06);
+}
+
+.participation-guide__header {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 48rem;
+}
+
+.participation-guide__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.1vw + 1.1rem, 1.8rem);
+}
+
+.participation-guide__intro {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.participation-guide__steps {
+  list-style-position: inside;
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.participation-guide__step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.2rem 1.4rem 1.35rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 40, 105, 0.1);
+  background: color-mix(in srgb, #ffffff 80%, var(--brand-50) 20%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.participation-guide__step-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.participation-guide__step-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+}
+
+.participation-guide__action {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .participation-guide__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .participation-guide__toggle-wrapper {
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  .participation-guide {
+    margin-bottom: 1.75rem;
+    padding: 1.1rem 1.2rem 1.4rem;
+  }
+
+  .participation-guide__step {
+    padding: 1rem 1.1rem 1.2rem;
+  }
+
+  .participation-guide__step-title {
+    font-size: 1rem;
   }
 }
 
