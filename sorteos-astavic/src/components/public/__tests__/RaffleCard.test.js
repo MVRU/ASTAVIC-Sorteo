@@ -42,6 +42,9 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   const flipWrapper = screen.getByTestId("raffle-card-flip");
   const shells = screen.getAllByTestId("raffle-card-shell");
   const [frontSide, backSide] = screen.getAllByRole("group", { hidden: true });
+  const frontCtaButton = within(frontSide).getByRole("button", {
+    name: /ver detalles del sorteo sorteo aniversario/i,
+  });
 
   expect(cardToggle).toHaveClass("raffle-card--finished");
   expect(cardToggle).not.toHaveClass("card");
@@ -63,6 +66,8 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   expect(frontSide).toHaveAttribute("aria-hidden", "false");
   expect(backSide).toHaveAttribute("aria-hidden", "true");
   expect(within(frontSide).getByText("Ana García")).toBeInTheDocument();
+  expect(frontCtaButton.style.width).toBe("");
+  expect(frontCtaButton).toHaveClass("button--gold");
 
   await userEvent.click(cardToggle);
 
@@ -71,6 +76,11 @@ test("alterna ganadores y premios al interactuar con la tarjeta finalizada", asy
   expect(backSide).toHaveAttribute("aria-hidden", "false");
   expect(flipWrapper).toHaveAttribute("data-active-face", "back");
   expect(within(backSide).getByText("Notebook Lenovo IdeaPad")).toBeInTheDocument();
+  const backCtaButton = within(backSide).getByRole("button", {
+    name: /ver detalles del sorteo sorteo aniversario/i,
+  });
+  expect(backCtaButton.style.width).toBe("");
+  expect(backCtaButton).toHaveClass("button--gold");
 
   cardToggle.focus();
   await userEvent.keyboard("{Enter}");

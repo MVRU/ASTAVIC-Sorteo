@@ -628,6 +628,21 @@ main {
   background: linear-gradient(180deg, #2c78ca 0%, #1b5ca6 100%);
 }
 
+.button--gold {
+  background: linear-gradient(180deg, #f7d774 0%, #e9b949 100%);
+  color: #3b2f0b;
+  box-shadow: 0 10px 24px rgba(233, 185, 73, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  border: 1px solid rgba(185, 141, 35, 0.35);
+}
+.button--gold:hover {
+  background: linear-gradient(180deg, #f4cd5d 0%, #dca53a 100%);
+}
+.button--gold:focus-visible {
+  outline: 3px solid rgba(185, 141, 35, 0.45);
+  outline-offset: 3px;
+}
+
 .button--ghost {
   background: transparent;
   border: 1px solid var(--border-strong);
@@ -1912,6 +1927,7 @@ footer {
 .raffle-card__shell--finished {
   --raffle-finished-shell-padding-block: clamp(1rem, 2vw, 1.25rem);
   --raffle-finished-shell-padding-inline: clamp(1rem, 2vw, 1.2rem);
+  --raffle-finished-shell-padding-bottom: clamp(1.65rem, 3vw, 2.35rem);
   background: linear-gradient(
     90deg,
     rgba(247, 215, 116, 0.14) 0%,
@@ -1923,7 +1939,7 @@ footer {
   min-height: 100%;
   padding: var(--raffle-finished-shell-padding-block)
     var(--raffle-finished-shell-padding-inline);
-  padding-bottom: calc(var(--raffle-finished-shell-padding-block) + 0.65rem);
+  padding-bottom: var(--raffle-finished-shell-padding-bottom);
   /* * Este colchón extra evita que el botón "Ver sorteo" choque con el borde. */
 }
 
@@ -1976,12 +1992,16 @@ footer {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   gap: 0.6rem;
+  width: min(100%, 18rem);
+  margin-inline: auto;
 }
 
 .raffle-card--finished .raffle-card__cta .button {
   width: 100%;
+  max-width: 16rem;
+  margin-inline: auto;
 }
 /* ==== Gestionar sorteos: UI premium y responsive ==== */
 

@@ -147,16 +147,7 @@ const RaffleCard = ({
   const viewButtonClass = isFinished
     ? "button button--gold"
     : "button button--primary";
-  const viewButtonStyle = isFinished
-    ? {
-        width: "100%",
-        background: "linear-gradient(180deg, #f7d774 0%, #e9b949 100%)",
-        color: "#3b2f0b",
-        boxShadow:
-          "0 10px 24px rgba(233,185,73,0.28), inset 0 1px 0 rgba(255,255,255,0.38)",
-        border: "1px solid rgba(185,141,35,0.35)",
-      }
-    : { width: "100%" };
+  const viewButtonStyle = isFinished ? undefined : { width: "100%" };
 
   const handleOpenModal = () => {
     if (isPreviewMode) return;
