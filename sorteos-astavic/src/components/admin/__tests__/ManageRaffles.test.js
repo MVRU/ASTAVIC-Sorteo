@@ -100,8 +100,9 @@ describe('ManageRaffles', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /editar/i }));
+    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
 
-    const alert = await screen.findByRole('alert');
+    const alert = await within(dialog).findByRole('alert');
     expect(alert).toHaveTextContent(/fecha guardada.*inválida/i);
     expect(screen.getByLabelText(/fecha y hora/i)).toHaveValue('');
   });
@@ -134,6 +135,117 @@ describe('ManageRaffles', () => {
     );
     expect(feedback).toBeDefined();
     expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
+  });
+
+  test('muestra los índices correspondientes cuando hay premios vacíos', async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+
+    const firstPrizeInput = within(dialog).getByLabelText(/premio 1/i, {
+      selector: 'input',
+    });
+    await user.clear(firstPrizeInput);
+
+    await user.click(within(dialog).getByRole('button', { name: /agregar premio/i }));
+
+    await act(async () => {
+      await user.click(within(dialog).getByRole('button', { name: /guardar cambios/i }));
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole('alert');
+    expect(alert).toHaveTextContent(/filas #1, #2/i);
+
+    const prizeInputs = within(dialog).getAllByLabelText(/premio \d+/i, {
+      selector: 'input',
+    });
+    expect(prizeInputs[0]).toHaveAttribute('aria-invalid', 'true');
+    expect(prizeInputs[1]).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('permite gestionar listas con altas, bajas y duplicados', async () => {
+    const user = createUser();
+    const onUpdate = jest.fn().mockResolvedValue({ ok: true });
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /editar/i }));
+    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+
+    const firstPrizeInput = within(dialog).getByLabelText(/premio 1/i, {
+      selector: 'input',
+    });
+    await user.clear(firstPrizeInput);
+    await user.type(firstPrizeInput, 'Gift card VIP');
+    await waitFor(() =>
+      expect(firstPrizeInput).toHaveValue('Gift card VIP')
+    );
+
+    await user.click(within(dialog).getByRole('button', { name: /agregar premio/i }));
+    let prizeInputs = within(dialog).getAllByLabelText(/premio \d+/i, {
+      selector: 'input',
+    });
+    const newPrizeInput = prizeInputs[prizeInputs.length - 1];
+    await user.type(newPrizeInput, 'Taza edición especial');
+    await waitFor(() =>
+      expect(newPrizeInput).toHaveValue('Taza edición especial')
+    );
+
+    await user.click(
+      within(dialog).getByRole('button', { name: /eliminar participante 2/i })
+    );
+
+    await user.click(
+      within(dialog).getByRole('button', { name: /agregar participante/i })
+    );
+    let participantInputs = within(dialog).getAllByLabelText(/participante \d+/i, {
+      selector: 'input',
+    });
+    let lastParticipant = participantInputs[participantInputs.length - 1];
+    await user.type(lastParticipant, 'Lucía');
+
+    await user.click(
+      within(dialog).getByRole('button', { name: /agregar participante/i })
+    );
+    participantInputs = within(dialog).getAllByLabelText(/participante \d+/i, {
+      selector: 'input',
+    });
+    lastParticipant = participantInputs[participantInputs.length - 1];
+    await user.type(lastParticipant, 'Ana');
+
+    await act(async () => {
+      await user.click(within(dialog).getByRole('button', { name: /guardar cambios/i }));
+    });
+
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1));
+    const payload = onUpdate.mock.calls[0][0];
+
+    expect(payload.id).toBe('r1');
+    expect(payload.prizes).toEqual([
+      { title: 'Gift card VIP' },
+      { title: 'Taza edición especial' },
+    ]);
+    expect(payload.participants).toEqual(['Ana', 'Lucía', 'Ana']);
+    expect(payload.datetime).toBe(sampleRaffles[0].datetime);
   });
 
   test('pide confirmación antes de cerrar con cambios sin guardar', async () => {

@@ -19,6 +19,23 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
   "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
 
+const compactWhitespace = (value) =>
+  String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const normalizeListForForm = (entries) => {
+  if (!Array.isArray(entries)) return [];
+  return entries
+    .map((entry) => {
+      if (typeof entry === "string") return compactWhitespace(entry);
+      if (entry && typeof entry.title === "string") return compactWhitespace(entry.title);
+      return "";
+    })
+    .filter((entry) => entry !== "");
+};
+
 const composeFormState = (raffle) => {
   const datetimeResult = toLocalInputValue(raffle.datetime);
   return {
@@ -32,14 +49,8 @@ const composeFormState = (raffle) => {
           ? "1"
           : String(raffle.winnersCount),
       finished: !!raffle.finished,
-      prizesText: (Array.isArray(raffle.prizes) ? raffle.prizes : [])
-        .map((prize) => (prize?.title ? prize.title : ""))
-        .filter(Boolean)
-        .join("\n"),
-      participantsText: (Array.isArray(raffle.participants)
-        ? raffle.participants
-        : []
-      ).join("\n"),
+      prizes: normalizeListForForm(raffle.prizes),
+      participants: normalizeListForForm(raffle.participants),
     },
     alert: datetimeResult.error
       ? { message: datetimeResult.error, field: "datetime" }
@@ -47,7 +58,10 @@ const composeFormState = (raffle) => {
   };
 };
 
-const normalizeMultiline = (value) => String(value ?? "").replace(/\r\n/g, "\n");
+const normalizeList = (values) => {
+  if (!Array.isArray(values)) return [];
+  return values.map((value) => compactWhitespace(value));
+};
 
 const snapshotForm = (form) => ({
   title: form.title || "",
@@ -58,8 +72,8 @@ const snapshotForm = (form) => ({
       ? ""
       : String(form.winnersCount),
   finished: Boolean(form.finished),
-  prizesText: normalizeMultiline(form.prizesText || ""),
-  participantsText: normalizeMultiline(form.participantsText || ""),
+  prizes: normalizeList(form.prizes || []),
+  participants: normalizeList(form.participants || []),
 });
 
 const serializeForm = (form) => JSON.stringify(snapshotForm(form));
@@ -105,6 +119,11 @@ function fromLocalInputValue(local) {
   return { ok: true, value: parsed.toISOString() };
 }
 
+const formatIndexes = (indexes) =>
+  indexes
+    .map((index) => `#${index + 1}`)
+    .join(", ");
+
 function buildPayloadFromForm(form) {
   const title = form.title.trim();
   if (!title) {
@@ -126,6 +145,37 @@ function buildPayloadFromForm(form) {
   const winnersCount =
     Number.isFinite(parsedWinners) && parsedWinners > 0 ? parsedWinners : 1;
 
+  const normalizedPrizes = normalizeList(form.prizes || []);
+  const normalizedParticipants = normalizeList(form.participants || []);
+
+  const emptyPrizeIndexes = normalizedPrizes
+    .map((value, index) => (!value ? index : null))
+    .filter((value) => value !== null);
+  if (emptyPrizeIndexes.length > 0) {
+    return {
+      ok: false,
+      error: `Revisá los premios en las filas ${formatIndexes(
+        emptyPrizeIndexes
+      )}: no pueden quedar vacíos.`,
+      field: "prizes",
+      indexes: emptyPrizeIndexes,
+    };
+  }
+
+  const emptyParticipantIndexes = normalizedParticipants
+    .map((value, index) => (!value ? index : null))
+    .filter((value) => value !== null);
+  if (emptyParticipantIndexes.length > 0) {
+    return {
+      ok: false,
+      error: `Completá los participantes en las filas ${formatIndexes(
+        emptyParticipantIndexes
+      )}: no pueden quedar vacíos.`,
+      field: "participants",
+      indexes: emptyParticipantIndexes,
+    };
+  }
+
   return {
     ok: true,
     payload: {
@@ -135,15 +185,10 @@ function buildPayloadFromForm(form) {
       datetime: datetimeResult.value,
       winnersCount,
       finished: Boolean(form.finished),
-      prizes: form.prizesText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
+      prizes: normalizedPrizes
+        .filter((value) => value)
         .map((prizeTitle) => ({ title: prizeTitle })),
-      participants: form.participantsText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
+      participants: normalizedParticipants.filter((value) => value),
     },
   };
 }
@@ -430,12 +475,42 @@ const ManageRaffles = ({
     }
   };
 
+  const handleListFieldChange = useCallback(
+    (field, values) => {
+      setEditForm((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [field]: values,
+        };
+      });
+      if (formAlert && (!formAlert.field || formAlert.field === field)) {
+        setFormAlert(null);
+      }
+    },
+    [formAlert]
+  );
+
+  const handlePrizesChange = useCallback(
+    (values) => handleListFieldChange("prizes", values),
+    [handleListFieldChange]
+  );
+
+  const handleParticipantsChange = useCallback(
+    (values) => handleListFieldChange("participants", values),
+    [handleListFieldChange]
+  );
+
   const handleEditSubmit = async (event) => {
     event.preventDefault();
     if (!editForm) return;
     const result = buildPayloadFromForm(editForm);
     if (!result.ok) {
-      setFormAlert({ message: result.error, field: result.field });
+      setFormAlert({
+        message: result.error,
+        field: result.field,
+        indexes: result.indexes || [],
+      });
       showToast({
         status: "error",
         message: result.error || "Revisá los datos antes de guardar.",
@@ -602,6 +677,8 @@ const ManageRaffles = ({
                     form={editForm}
                     onChange={handleEditField}
                     onSubmit={handleEditSubmit}
+                    onPrizesChange={handlePrizesChange}
+                    onParticipantsChange={handleParticipantsChange}
                     formId={editFormId}
                     titleRef={titleInputRef}
                     alert={formAlert}

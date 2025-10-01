@@ -1,5 +1,6 @@
 // ! DECISIÓN DE DISEÑO: El formulario delega cabecera y acciones al contenedor para sostener la visibilidad del drawer.
 import PropTypes from "prop-types";
+import EditableList from "./EditableList";
 
 export const RaffleEditCardStyles = () => (
   <style>{`
@@ -98,6 +99,105 @@ export const RaffleEditCardStyles = () => (
         white-space: pre-wrap;
       }
 
+      .editable-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: var(--surface-subtle, #f9fafb);
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--surface-border, #e5e7eb);
+      }
+
+      .editable-list:focus-within {
+        border-color: var(--focus-ring, #6366f1);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+      }
+
+      .editable-list__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .editable-list__label {
+        font-weight: 600;
+        color: var(--text-strong, #111827);
+      }
+
+      .editable-list__helper {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      .editable-list__items {
+        display: grid;
+        gap: 10px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+
+      .editable-list__item {
+        display: grid;
+        gap: 4px;
+      }
+
+      .editable-list__item-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .editable-list__item-label {
+        font-size: 0.8rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      .editable-list__input {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .editable-list__input--invalid {
+        border-color: var(--alert-danger-fg, #991b1b);
+        box-shadow: 0 0 0 1px rgba(153, 27, 27, 0.2);
+      }
+
+      .editable-list__empty {
+        font-size: 0.85rem;
+        color: var(--text-muted, #6b7280);
+        padding: 8px;
+        border-radius: 6px;
+        background: rgba(107, 114, 128, 0.08);
+      }
+
+      .editable-list__add,
+      .editable-list__remove {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+      }
+
+      .editable-list__remove {
+        line-height: 1;
+      }
+
+      @media (max-width: 720px) {
+        .editable-list {
+          padding: 10px;
+        }
+        .editable-list__item-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .editable-list__remove {
+          align-self: flex-end;
+        }
+      }
+
     `}</style>
 );
 
@@ -105,6 +205,8 @@ const RaffleEditCard = ({
   form,
   onChange,
   onSubmit,
+  onPrizesChange,
+  onParticipantsChange,
   formId,
   titleRef,
   alert,
@@ -120,6 +222,10 @@ const RaffleEditCard = ({
   const datetimeDescribedBy = [alert?.field === "datetime" ? alertId : null]
     .filter(Boolean)
     .join(" ");
+
+  const prizesInvalidIndexes = alert?.field === "prizes" ? alert.indexes || [] : [];
+  const participantsInvalidIndexes =
+    alert?.field === "participants" ? alert.indexes || [] : [];
 
   return (
     <form
@@ -213,32 +319,28 @@ const RaffleEditCard = ({
       </div>
 
       <div className="form-row form-row--2">
-        <div className="form-group">
-          <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
-          <textarea
-            className="input"
-            id={`${formId}-prizes`}
-            name="prizesText"
-            value={form.prizesText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor={`${formId}-participants`}>
-            Participantes (uno por línea)
-          </label>
-          <textarea
-            className="input"
-            id={`${formId}-participants`}
-            name="participantsText"
-            value={form.participantsText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
+        <EditableList
+          id={`${formId}-prizes`}
+          label="Premio"
+          values={form.prizes}
+          onChange={onPrizesChange}
+          addButtonLabel="Agregar premio"
+          placeholder="Ej.: Gift card, remera edición limitada"
+          helperText="Los premios se mostrarán en el orden indicado."
+          invalidIndexes={prizesInvalidIndexes}
+          describedBy={alert?.field === "prizes" ? alertId : undefined}
+        />
+        <EditableList
+          id={`${formId}-participants`}
+          label="Participante"
+          values={form.participants}
+          onChange={onParticipantsChange}
+          addButtonLabel="Agregar participante"
+          placeholder="Ej.: Ana Gómez"
+          helperText="Podés repetir participantes si corresponden a varios cupones."
+          invalidIndexes={participantsInvalidIndexes}
+          describedBy={alert?.field === "participants" ? alertId : undefined}
+        />
       </div>
     </form>
   );
@@ -253,17 +355,20 @@ RaffleEditCard.propTypes = {
     winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
       .isRequired,
     finished: PropTypes.bool.isRequired,
-    prizesText: PropTypes.string.isRequired,
-    participantsText: PropTypes.string.isRequired,
+    prizes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    participants: PropTypes.arrayOf(PropTypes.string).isRequired,
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  onPrizesChange: PropTypes.func.isRequired,
+  onParticipantsChange: PropTypes.func.isRequired,
   formId: PropTypes.string.isRequired,
   titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
     .isRequired,
   alert: PropTypes.shape({
     message: PropTypes.string.isRequired,
     field: PropTypes.string,
+    indexes: PropTypes.arrayOf(PropTypes.number),
   }),
   alertId: PropTypes.string,
 };
