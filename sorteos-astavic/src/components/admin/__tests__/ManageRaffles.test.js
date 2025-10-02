@@ -460,6 +460,37 @@ describe("ManageRaffles", () => {
     expect(document.body.style.width).toBe(initialBodyStyles.width);
   });
 
+  test("expone instrucciones accesibles para el asa de redimensionado", async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+    const handle = within(dialog).getByRole("separator", {
+      name: /modificar ancho del panel/i,
+    });
+    const description = within(dialog).getByText(/arrastrá el asa/i);
+    expect(description).toHaveClass("sr-only");
+
+    const describedBy = handle.getAttribute("aria-describedby");
+    expect(describedBy).toBe(description.getAttribute("id"));
+    expect(describedBy).toBeTruthy();
+
+    expect(handle).toHaveAttribute("title");
+    expect(handle.getAttribute("title") || "").toMatch(/teclado/i);
+  });
+
   test("permite ajustar el ancho del drawer con teclado dentro de los límites", async () => {
     const user = createUser();
 

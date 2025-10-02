@@ -5,6 +5,8 @@
 // * DECISIÓN: El ancho preferido se persiste en almacenamiento seguro para
 //   respetar la preferencia del usuario entre sesiones sin afectar contextos
 //   móviles.
+// * DECISIÓN: El asa de redimensionado provee instrucciones auditivas para
+//   favorecer el descubrimiento y accesibilidad de la interacción.
 
 import {
   useMemo,
@@ -267,8 +269,15 @@ const ManageRaffles = ({
   const previousHistoryStateRef = useRef(null);
   const editBaselineRef = useRef("");
   const editFormId = useId();
+  const resizeHandleDescriptionId = useId();
   const alertId = `${editFormId}-alert`;
   const drawerElementId = `${editFormId}-drawer`;
+  const resizeHandleTitle =
+    "Arrastrá o usá el teclado para ajustar el ancho del panel";
+  const resizeHandleInstructions =
+    "Arrastrá el asa para modificar el ancho del panel. " +
+    "También podés usar las flechas izquierda o derecha para ajustes cortos, " +
+    "Page Up o Page Down para saltos amplios e Inicio o Fin para ir al máximo o mínimo permitidos.";
   const portalTarget = typeof document !== "undefined" ? document.body : null;
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
@@ -903,10 +912,17 @@ const ManageRaffles = ({
                 className={drawerClassName}
                 style={drawerInlineStyle}
               >
+                <p
+                  id={resizeHandleDescriptionId}
+                  className="sr-only"
+                >
+                  {resizeHandleInstructions}
+                </p>
                 <div
                   role="separator"
                   tabIndex={0}
                   aria-label="Modificar ancho del panel"
+                  aria-describedby={resizeHandleDescriptionId}
                   aria-orientation="vertical"
                   aria-controls={drawerElementId}
                   aria-valuemin={DRAWER_MIN_WIDTH}
@@ -914,6 +930,7 @@ const ManageRaffles = ({
                   aria-valuenow={Math.round(drawerWidth)}
                   aria-valuetext={resizeValueText}
                   className="drawer__resize-handle"
+                  title={resizeHandleTitle}
                   onPointerDown={handleResizePointerDown}
                   onKeyDown={handleResizeKeyDown}
                 />
