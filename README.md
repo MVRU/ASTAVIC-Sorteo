@@ -13,7 +13,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/MVRU/ASTAVIC-Sorteo"><img src="https://img.shields.io/badge/Repositorio-GitHub-2563eb?style=for-the-badge&logo=github" alt="Repositorio en GitHub" /></a>
   <a href="https://astavic-sorteo.vercel.app/"><img src="https://img.shields.io/badge/Demo%20en%20vivo-Vercel-10b981?style=for-the-badge&logo=vercel" alt="Demo desplegada" /></a>
   <a href="#puesta-en-marcha"><img src="https://img.shields.io/badge/Comenzar-1c1917?style=for-the-badge&logo=npm&logoColor=white" alt="Guía de inicio" /></a>
   <a href="https://github.com/MVRU/ASTAVIC-Sorteo/issues"><img src="https://img.shields.io/badge/Reportar%20problema-b91c1c?style=for-the-badge&logo=github" alt="Reportar problema" /></a>
@@ -37,7 +36,6 @@
 
 - [✨ Highlights](#-highlights)
 - [Tabla de contenido](#tabla-de-contenido)
-- [Demo en vivo y repositorio](#demo-en-vivo-y-repositorio)
 - [Visión general](#visión-general)
   - [Objetivos clave](#objetivos-clave)
 - [Arquitectura funcional](#arquitectura-funcional)
@@ -51,16 +49,9 @@
 - [Credenciales demo](#credenciales-demo)
 - [Pruebas y control de calidad](#pruebas-y-control-de-calidad)
 - [Accesibilidad, UX y rendimiento](#accesibilidad-ux-y-rendimiento)
-- [Limitaciones conocidas](#limitaciones-conocidas)
-- [Próximos pasos sugeridos](#próximos-pasos-sugeridos)
+- [Limitaciones actuales](#limitaciones-actuales)
+- [Próximos pasos](#próximos-pasos)
 - [DECISIÓN DE DISEÑO](#decisión-de-diseño)
-
-## Demo en vivo y repositorio
-
-- **Repositorio oficial**: [github.com/MVRU/ASTAVIC-Sorteo](https://github.com/MVRU/ASTAVIC-Sorteo)
-- **Demo desplegada**: [astavic-sorteo.vercel.app](https://astavic-sorteo.vercel.app/)
-
-Ambas versiones se actualizan en conjunto. La demo pública se sincroniza automáticamente con la rama `main` tras cada despliegue exitoso.
 
 ## Visión general
 
@@ -160,7 +151,7 @@ La instancia publicada en Vercel y el entorno local incluyen credenciales de dem
 - **Correo**: `demo@astavic.org`
 - **Contraseña**: `Demostracion2025!`
 
-> *Recordatorio*: podés redefinir estos valores con variables de entorno para prevenir accesos no deseados en ambientes compartidos.
+> _Recordatorio_: podés redefinir estos valores con variables de entorno para prevenir accesos no deseados en ambientes compartidos.
 
 ## Pruebas y control de calidad
 
@@ -180,7 +171,7 @@ La instancia publicada en Vercel y el entorno local incluyen credenciales de dem
 - Animaciones breves (<300ms) que respetan la legibilidad y no bloquean la interacción.
 - Optimización de renders mediante `useMemo` y `useCallback` en listas extensas y formularios.
 
-## Limitaciones conocidas
+## Limitaciones actuales
 
 - Los datos vuelven a su estado inicial al recargar la página (no hay persistencia).
 - Las credenciales del panel admin solo brindan acceso demo; no hay gestión de roles ni auditoría.
