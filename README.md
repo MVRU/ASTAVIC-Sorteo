@@ -1,6 +1,6 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/Español-0ea5e9?style=for-the-badge&logo=github&logoColor=white" alt="Idioma Español" /></a>
-  <a href="https://translate.google.com/translate?sl=es&tl=en&u=https://github.com/ASTAVIC/ASTAVIC-Sorteo"><img src="https://img.shields.io/badge/English-e63946?style=for-the-badge&logo=google-translate" alt="Language English" /></a>
+  <a href="https://translate.google.com/translate?sl=es&tl=en&u=https://github.com/MVRU/ASTAVIC-Sorteo"><img src="https://img.shields.io/badge/English-e63946?style=for-the-badge&logo=google-translate" alt="Language English" /></a>
 </p>
 
 <p align="center">
@@ -13,9 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ASTAVIC/ASTAVIC-Sorteo"><img src="https://img.shields.io/badge/Estado-Demo%20en%20proceso-2563eb?style=for-the-badge&logo=github" alt="Estado demo" /></a>
+  <a href="https://astavic-sorteo.vercel.app/"><img src="https://img.shields.io/badge/Demo%20en%20vivo-Vercel-10b981?style=for-the-badge&logo=vercel" alt="Demo desplegada" /></a>
   <a href="#puesta-en-marcha"><img src="https://img.shields.io/badge/Comenzar-1c1917?style=for-the-badge&logo=npm&logoColor=white" alt="Guía de inicio" /></a>
-  <a href="https://github.com/ASTAVIC/ASTAVIC-Sorteo/issues"><img src="https://img.shields.io/badge/Reportar%20problema-b91c1c?style=for-the-badge&logo=github" alt="Reportar problema" /></a>
+  <a href="https://github.com/MVRU/ASTAVIC-Sorteo/issues"><img src="https://img.shields.io/badge/Reportar%20problema-b91c1c?style=for-the-badge&logo=github" alt="Reportar problema" /></a>
 </p>
 
 ---
@@ -46,10 +46,11 @@
 - [Estructura de carpetas](#estructura-de-carpetas)
 - [Puesta en marcha](#puesta-en-marcha)
 - [Variables de entorno](#variables-de-entorno)
+- [Credenciales demo](#credenciales-demo)
 - [Pruebas y control de calidad](#pruebas-y-control-de-calidad)
 - [Accesibilidad, UX y rendimiento](#accesibilidad-ux-y-rendimiento)
-- [Limitaciones conocidas](#limitaciones-conocidas)
-- [Próximos pasos sugeridos](#próximos-pasos-sugeridos)
+- [Limitaciones actuales](#limitaciones-actuales)
+- [Próximos pasos](#próximos-pasos)
 - [DECISIÓN DE DISEÑO](#decisión-de-diseño)
 
 ## Visión general
@@ -115,16 +116,21 @@ sorteos-astavic/
 
 ## Puesta en marcha
 
-1. **Requisitos**: Node.js ≥ 18 LTS y npm ≥ 9.
-2. Instalar dependencias:
+1. **Clonar el repositorio** y preparar el entorno:
+   ```bash
+   git clone https://github.com/MVRU/ASTAVIC-Sorteo.git
+   cd ASTAVIC-Sorteo/sorteos-astavic
+   ```
+2. **Requisitos**: Node.js ≥ 18 LTS y npm ≥ 9.
+3. Instalar dependencias:
    ```bash
    npm install
    ```
-3. Ejecutar el entorno de desarrollo (hot reload en `http://localhost:3000`):
+4. Ejecutar el entorno de desarrollo (hot reload en `http://localhost:3000`):
    ```bash
    npm run dev
    ```
-4. Generar build de producción optimizada:
+5. Generar build de producción optimizada:
    ```bash
    npm run build
    ```
@@ -137,6 +143,15 @@ El panel administrativo utiliza credenciales demo que podés sobrescribir creand
 REACT_APP_ADMIN_EMAIL=admin@astavic.org
 REACT_APP_ADMIN_PASSWORD=TuClaveSegura123
 ```
+
+## Credenciales demo
+
+La instancia publicada en Vercel y el entorno local incluyen credenciales de demostración pensadas para validar el panel administrativo sin fricción:
+
+- **Correo**: `demo@astavic.org`
+- **Contraseña**: `Demostracion2025!`
+
+> _Recordatorio_: podés redefinir estos valores con variables de entorno para prevenir accesos no deseados en ambientes compartidos.
 
 ## Pruebas y control de calidad
 
@@ -156,7 +171,7 @@ REACT_APP_ADMIN_PASSWORD=TuClaveSegura123
 - Animaciones breves (<300ms) que respetan la legibilidad y no bloquean la interacción.
 - Optimización de renders mediante `useMemo` y `useCallback` en listas extensas y formularios.
 
-## Limitaciones conocidas
+## Limitaciones actuales
 
 - Los datos vuelven a su estado inicial al recargar la página (no hay persistencia).
 - Las credenciales del panel admin solo brindan acceso demo; no hay gestión de roles ni auditoría.
@@ -168,6 +183,11 @@ REACT_APP_ADMIN_PASSWORD=TuClaveSegura123
 2. Implementar doble opt-in y confirmaciones reales de correo para cumplir normativas anti-spam.
 3. Incorporar pruebas end-to-end (Playwright o Cypress) para cubrir flujos críticos del panel administrativo.
 4. Desplegar pipelines CI/CD con ejecución automática de lint, pruebas y análisis estático.
+
+## DECISIÓN DE DISEÑO
+
+- La navegación basada en `hash` garantiza compatibilidad con despliegues estáticos (Vercel) sin configurar rutas en el servidor.
+- La gestión de sorteos y suscripciones se delega en hooks especializados para mantener un único punto de verdad y favorecer pruebas unitarias aisladas.
 
 ---
 
