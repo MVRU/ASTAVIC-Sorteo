@@ -1,4 +1,7 @@
 // src/components/admin/ManageRaffles.js
+// * DECISIÓN: El panel lateral admite redimensionado horizontal con límites
+//   seguros para acomodar formularios extensos sin comprometer la lectura del
+//   listado principal.
 
 import {
   useMemo,
@@ -19,6 +22,22 @@ import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+
+const DRAWER_MIN_WIDTH = 360;
+const DRAWER_MAX_WIDTH = 920;
+const DRAWER_DEFAULT_WIDTH = 680;
+const DRAWER_VIEWPORT_PADDING = 120;
+const RESIZE_KEYBOARD_STEP = 24;
+const RESIZE_KEYBOARD_LARGE_STEP = 72;
+
+const computeViewportMaxWidth = () => {
+  if (typeof window === "undefined" || typeof window.innerWidth !== "number") {
+    return DRAWER_MAX_WIDTH;
+  }
+  const available = window.innerWidth - DRAWER_VIEWPORT_PADDING;
+  const safeAvailable = Math.max(DRAWER_MIN_WIDTH, available);
+  return Math.min(DRAWER_MAX_WIDTH, safeAvailable);
+};
 
 export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
   "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
@@ -219,6 +238,7 @@ const ManageRaffles = ({
   const editBaselineRef = useRef("");
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
+  const drawerElementId = `${editFormId}-drawer`;
   const portalTarget = typeof document !== "undefined" ? document.body : null;
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
@@ -259,6 +279,158 @@ const ManageRaffles = ({
   const handleQueryChange = useCallback((value) => setQ(value), [setQ]);
   const handleSortChange = useCallback((value) => setSort(value), [setSort]);
   const isEditing = Boolean(editingRaffle);
+  const [maxDrawerWidth, setMaxDrawerWidth] = useState(() =>
+    computeViewportMaxWidth()
+  );
+  const [drawerWidth, setDrawerWidth] = useState(() =>
+    Math.min(
+      Math.max(DRAWER_DEFAULT_WIDTH, DRAWER_MIN_WIDTH),
+      computeViewportMaxWidth()
+    )
+  );
+  const [isResizing, setIsResizing] = useState(false);
+  const resizingStateRef = useRef(null);
+
+  const clampDrawerWidth = useCallback(
+    (value) => {
+      const max = Math.max(
+        DRAWER_MIN_WIDTH,
+        Math.min(DRAWER_MAX_WIDTH, maxDrawerWidth)
+      );
+      return Math.min(Math.max(value, DRAWER_MIN_WIDTH), max);
+    },
+    [maxDrawerWidth]
+  );
+
+  const handlePointerMove = useCallback(
+    (event) => {
+      const state = resizingStateRef.current;
+      if (!state) return;
+      if (typeof event?.clientX !== "number") return;
+      const delta = state.startX - event.clientX;
+      const nextWidth = clampDrawerWidth(state.startWidth + delta);
+      setDrawerWidth(nextWidth);
+    },
+    [clampDrawerWidth]
+  );
+
+  const handlePointerUp = useCallback(
+    () => {
+      const state = resizingStateRef.current;
+      if (state && drawerRef.current && state.pointerId !== undefined) {
+        drawerRef.current.releasePointerCapture?.(state.pointerId);
+      }
+      resizingStateRef.current = null;
+      setIsResizing(false);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
+      }
+    },
+    [handlePointerMove]
+  );
+
+  const handleResizePointerDown = useCallback(
+    (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      if (!drawerRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const rect = drawerRef.current.getBoundingClientRect();
+      const startWidth = clampDrawerWidth(
+        rect?.width ? rect.width : drawerWidth
+      );
+      const startX = typeof event.clientX === "number" ? event.clientX : 0;
+      const pointerId = event.pointerId;
+      resizingStateRef.current = { startX, startWidth, pointerId };
+      setIsResizing(true);
+      drawerRef.current.setPointerCapture?.(pointerId);
+      if (typeof window !== "undefined") {
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp);
+        window.addEventListener("pointercancel", handlePointerUp);
+      }
+    },
+    [clampDrawerWidth, drawerWidth, handlePointerMove, handlePointerUp]
+  );
+
+  const handleResizeKeyDown = useCallback(
+    (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setDrawerWidth((prev) => clampDrawerWidth(prev + RESIZE_KEYBOARD_STEP));
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setDrawerWidth((prev) => clampDrawerWidth(prev - RESIZE_KEYBOARD_STEP));
+        return;
+      }
+      if (event.key === "PageUp") {
+        event.preventDefault();
+        setDrawerWidth((prev) =>
+          clampDrawerWidth(prev + RESIZE_KEYBOARD_LARGE_STEP)
+        );
+        return;
+      }
+      if (event.key === "PageDown") {
+        event.preventDefault();
+        setDrawerWidth((prev) =>
+          clampDrawerWidth(prev - RESIZE_KEYBOARD_LARGE_STEP)
+        );
+        return;
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        setDrawerWidth(() => clampDrawerWidth(maxDrawerWidth));
+        return;
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        setDrawerWidth(() => DRAWER_MIN_WIDTH);
+      }
+    },
+    [clampDrawerWidth, maxDrawerWidth]
+  );
+
+  useEffect(() => {
+    setDrawerWidth((prev) => clampDrawerWidth(prev));
+  }, [clampDrawerWidth]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const handleResize = () => {
+      const nextMax = computeViewportMaxWidth();
+      setMaxDrawerWidth(nextMax);
+      setDrawerWidth((prev) => Math.min(Math.max(prev, DRAWER_MIN_WIDTH), nextMax));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [handlePointerMove, handlePointerUp]);
+
+  useEffect(() => {
+    if (isEditing) return undefined;
+    if (typeof window !== "undefined") {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    }
+    resizingStateRef.current = null;
+    setIsResizing(false);
+    return undefined;
+  }, [isEditing, handlePointerMove, handlePointerUp]);
 
   const list = useMemo(() => {
     const src = tab === "active" ? activeAll : finishedAll;
@@ -373,6 +545,16 @@ const ManageRaffles = ({
 
   useBodyScrollLock(isEditing);
   useFocusTrap(drawerRef, isEditing);
+
+  const effectiveMaxDrawerWidth = Math.max(
+    DRAWER_MIN_WIDTH,
+    Math.min(DRAWER_MAX_WIDTH, maxDrawerWidth)
+  );
+  const drawerClassName = isResizing
+    ? "drawer anim-scale-in drawer--resizing"
+    : "drawer anim-scale-in";
+  const drawerInlineStyle = { width: `${drawerWidth}px` };
+  const resizeValueText = `${Math.round(drawerWidth)} píxeles de ancho`;
 
   // Drawer UX: focus management, Esc to close, body scroll lock
   useEffect(() => {
@@ -656,7 +838,26 @@ const ManageRaffles = ({
                 className="drawer-overlay"
                 onClick={() => requestCloseEdit({ origin: "overlay" })}
               />
-              <aside ref={drawerRef} className="drawer anim-scale-in">
+              <aside
+                ref={drawerRef}
+                id={drawerElementId}
+                className={drawerClassName}
+                style={drawerInlineStyle}
+              >
+                <div
+                  role="separator"
+                  tabIndex={0}
+                  aria-label="Modificar ancho del panel"
+                  aria-orientation="vertical"
+                  aria-controls={drawerElementId}
+                  aria-valuemin={DRAWER_MIN_WIDTH}
+                  aria-valuemax={effectiveMaxDrawerWidth}
+                  aria-valuenow={Math.round(drawerWidth)}
+                  aria-valuetext={resizeValueText}
+                  className="drawer__resize-handle"
+                  onPointerDown={handleResizePointerDown}
+                  onKeyDown={handleResizeKeyDown}
+                />
                 <header className="drawer__header">
                   <div>
                     <h2 id="edit-drawer-title" className="drawer__title">

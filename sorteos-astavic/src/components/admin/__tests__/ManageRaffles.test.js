@@ -424,12 +424,19 @@ describe("ManageRaffles", () => {
     const closeButton = within(dialog).getByRole("button", {
       name: /cerrar panel/i,
     });
+    const resizeHandle = within(dialog).getByRole("separator", {
+      name: /modificar ancho del panel/i,
+    });
 
     saveButton.focus();
-    fireEvent.keyDown(saveButton, { key: "Tab" });
+    await user.tab();
+    expect(resizeHandle).toHaveFocus();
+
+    await user.tab();
     expect(closeButton).toHaveFocus();
 
-    fireEvent.keyDown(titleInput, { key: "Tab", shiftKey: true });
+    resizeHandle.focus();
+    await user.tab({ shift: true });
     expect(saveButton).toHaveFocus();
 
     await user.click(within(dialog).getByRole("button", { name: /cancelar/i }));
@@ -446,6 +453,49 @@ describe("ManageRaffles", () => {
     expect(document.body.style.position).toBe(initialBodyStyles.position);
     expect(document.body.style.top).toBe(initialBodyStyles.top);
     expect(document.body.style.width).toBe(initialBodyStyles.width);
+  });
+
+  test("permite ajustar el ancho del drawer con teclado dentro de los límites", async () => {
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+    const handle = within(dialog).getByRole("separator", {
+      name: /modificar ancho del panel/i,
+    });
+
+    handle.focus();
+    const readWidth = () =>
+      Number.parseInt(handle.getAttribute("aria-valuenow") || "0", 10);
+    const initialWidth = readWidth();
+
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    const expandedWidth = readWidth();
+    expect(expandedWidth).toBeGreaterThan(initialWidth);
+
+    fireEvent.keyDown(handle, { key: "ArrowRight" });
+    const restoredWidth = readWidth();
+    expect(restoredWidth).toBe(initialWidth);
+
+    fireEvent.keyDown(handle, { key: "End" });
+    const minWidth = Number.parseInt(handle.getAttribute("aria-valuemin"), 10);
+    expect(readWidth()).toBe(minWidth);
+
+    fireEvent.keyDown(handle, { key: "Home" });
+    const maxWidth = Number.parseInt(handle.getAttribute("aria-valuemax"), 10);
+    expect(readWidth()).toBe(maxWidth);
   });
 
   test("restaura el foco en el disparador al cerrar el panel sin cambios", async () => {
