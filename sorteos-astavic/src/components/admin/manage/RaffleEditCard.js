@@ -1,5 +1,7 @@
-// ! DECISIÓN DE DISEÑO: El formulario delega cabecera y acciones al contenedor para sostener la visibilidad del drawer.
+// src/components/admin/manage/RaffleEditCard.js
+
 import PropTypes from "prop-types";
+import EditableList from "./EditableList";
 
 export const RaffleEditCardStyles = () => (
   <style>{`
@@ -91,13 +93,6 @@ export const RaffleEditCardStyles = () => (
         }
       }
 
-      /* Ajustes para evitar overflow en grid */
-      .manage-edit .input { min-width: 0; }
-      .manage-edit textarea.input {
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
-      }
-
     `}</style>
 );
 
@@ -105,6 +100,8 @@ const RaffleEditCard = ({
   form,
   onChange,
   onSubmit,
+  onPrizesChange,
+  onParticipantsChange,
   formId,
   titleRef,
   alert,
@@ -120,6 +117,11 @@ const RaffleEditCard = ({
   const datetimeDescribedBy = [alert?.field === "datetime" ? alertId : null]
     .filter(Boolean)
     .join(" ");
+
+  const prizesInvalidIndexes =
+    alert?.field === "prizes" ? alert.indexes || [] : [];
+  const participantsInvalidIndexes =
+    alert?.field === "participants" ? alert.indexes || [] : [];
 
   return (
     <form
@@ -213,32 +215,28 @@ const RaffleEditCard = ({
       </div>
 
       <div className="form-row form-row--2">
-        <div className="form-group">
-          <label htmlFor={`${formId}-prizes`}>Premios (uno por línea)</label>
-          <textarea
-            className="input"
-            id={`${formId}-prizes`}
-            name="prizesText"
-            value={form.prizesText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor={`${formId}-participants`}>
-            Participantes (uno por línea)
-          </label>
-          <textarea
-            className="input"
-            id={`${formId}-participants`}
-            name="participantsText"
-            value={form.participantsText}
-            onChange={onChange}
-            rows={4}
-            spellCheck="false"
-          />
-        </div>
+        <EditableList
+          id={`${formId}-prizes`}
+          label="Premio"
+          values={form.prizes}
+          onChange={onPrizesChange}
+          addButtonLabel="Agregar premio"
+          placeholder="Ej.: Gift card, remera edición limitada"
+          helperText="Los premios se mostrarán en el orden indicado."
+          invalidIndexes={prizesInvalidIndexes}
+          describedBy={alert?.field === "prizes" ? alertId : undefined}
+        />
+        <EditableList
+          id={`${formId}-participants`}
+          label="Participante"
+          values={form.participants}
+          onChange={onParticipantsChange}
+          addButtonLabel="Agregar participante"
+          placeholder="Ej.: Ana Gómez"
+          helperText="Podés repetir participantes si corresponden a varios cupones."
+          invalidIndexes={participantsInvalidIndexes}
+          describedBy={alert?.field === "participants" ? alertId : undefined}
+        />
       </div>
     </form>
   );
@@ -253,17 +251,20 @@ RaffleEditCard.propTypes = {
     winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
       .isRequired,
     finished: PropTypes.bool.isRequired,
-    prizesText: PropTypes.string.isRequired,
-    participantsText: PropTypes.string.isRequired,
+    prizes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    participants: PropTypes.arrayOf(PropTypes.string).isRequired,
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  onPrizesChange: PropTypes.func.isRequired,
+  onParticipantsChange: PropTypes.func.isRequired,
   formId: PropTypes.string.isRequired,
   titleRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) })
     .isRequired,
   alert: PropTypes.shape({
     message: PropTypes.string.isRequired,
     field: PropTypes.string,
+    indexes: PropTypes.arrayOf(PropTypes.number),
   }),
   alertId: PropTypes.string,
 };

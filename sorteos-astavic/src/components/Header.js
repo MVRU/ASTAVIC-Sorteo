@@ -1,6 +1,5 @@
-// ! DECISIÓN DE DISEÑO: El header bloquea foco y scroll en el menú móvil para garantizar contexto accesible.
-// * El menú restaura el foco en el disparador tras cerrar y prioriza el primer enlace al abrirse en mobile.
-// * El contenedor móvil se porta al body para evitar el clipping generado por el backdrop-filter del header.
+// src/components/Header.js
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
@@ -97,8 +96,7 @@ const Header = ({
   const closeMenu = () => setMenuOpen(false);
   const burgerLabel = menuOpen ? "Cerrar menú" : "Abrir menú";
 
-  const portalTarget =
-    typeof document !== "undefined" ? document.body : null;
+  const portalTarget = typeof document !== "undefined" ? document.body : null;
 
   const mobileLayer =
     isMobile && portalTarget
@@ -135,7 +133,10 @@ const Header = ({
                   Cerrar menú
                 </button>
               </div>
-              <nav aria-label="Navegación móvil" className="app-header__mobile-nav">
+              <nav
+                aria-label="Navegación móvil"
+                className="app-header__mobile-nav"
+              >
                 {MOBILE_NAV_ITEMS.map(({ target, href, label }) => (
                   <a
                     key={`mobile-${target}`}
@@ -266,7 +267,8 @@ BurgerIcon.propTypes = { open: PropTypes.bool };
 BurgerIcon.defaultProps = { open: false };
 
 Header.propTypes = {
-  currentRoute: PropTypes.oneOf(["public", "finished", "admin", "all"]).isRequired,
+  currentRoute: PropTypes.oneOf(["public", "finished", "admin", "all"])
+    .isRequired,
   onNavigate: PropTypes.func.isRequired,
   logoSrc: PropTypes.string,
   isAdmin: PropTypes.bool, // <- NUEVO

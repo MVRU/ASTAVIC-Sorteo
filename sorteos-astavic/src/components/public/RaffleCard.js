@@ -1,10 +1,5 @@
 // src/components/public/RaffleCard.js
-// ! DECISIÓN DE DISEÑO: Centralizamos la tarjeta y su modal para mantener consistencia entre público y administración.
-// * Separamos efectos intensivos (countdown, transición y modal) en helpers locales para mejorar legibilidad y mantenimiento.
-// * La cara trasera alterna premios con animación accesible y sincroniza su altura para evitar cortes.
-// * Encapsulamos el marco dorado en la "shell" interna para que rote con el contenido sin duplicar bordes ni sombras.
-// * El modo "preview" evita efectos y llamadas externas para ofrecer una representación segura en contextos administrativos.
-// -!- Riesgo: Los temporizadores dependen de window; en SSR deben aislarse antes de montar en cliente.
+
 import {
   useCallback,
   useEffect,
@@ -30,8 +25,8 @@ const RaffleCard = ({
 }) => {
   const isPreviewMode = interactionMode === "preview";
   const [timeLeft, setTimeLeft] = useState(() => getTimeParts(raffle.datetime));
-  const [isFinished, setIsFinished] = useState(() =>
-    raffle.finished || timeLeft.diff <= 0
+  const [isFinished, setIsFinished] = useState(
+    () => raffle.finished || timeLeft.diff <= 0
   );
   const [isVanishing, setIsVanishing] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -81,7 +76,10 @@ const RaffleCard = ({
     if (isPreviewMode || !showConfetti || typeof window === "undefined") {
       return undefined;
     }
-    confettiTimerRef.current = window.setTimeout(() => setShowConfetti(false), 1200);
+    confettiTimerRef.current = window.setTimeout(
+      () => setShowConfetti(false),
+      1200
+    );
     return () => {
       if (confettiTimerRef.current) {
         window.clearTimeout(confettiTimerRef.current);
@@ -221,7 +219,9 @@ const RaffleCard = ({
 
   const measureActiveSide = useCallback(() => {
     if (!isFinished) return;
-    const activeShell = showPrizeSide ? backShellRef.current : frontShellRef.current;
+    const activeShell = showPrizeSide
+      ? backShellRef.current
+      : frontShellRef.current;
     if (!activeShell) return;
     const nextHeight =
       activeShell.scrollHeight ||
@@ -229,7 +229,9 @@ const RaffleCard = ({
       activeShell.getBoundingClientRect?.().height ||
       0;
     if (!nextHeight) return;
-    setFlipHeight((previous) => (previous === nextHeight ? previous : nextHeight));
+    setFlipHeight((previous) =>
+      previous === nextHeight ? previous : nextHeight
+    );
   }, [isFinished, showPrizeSide]);
 
   useLayoutEffect(() => {
@@ -283,103 +285,108 @@ const RaffleCard = ({
               >
                 <div className="raffle-card__side-content">
                   <div className="raffle-card__info">
-                  <span
-                    className="raffle-card__badge raffle-card__badge--finished"
-                    aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
-                    style={{ marginBottom: "0.5rem" }}
-                  >
-                    <time dateTime={new Date(raffle.datetime).toISOString()}>
-                      {formatDateEs(raffle.datetime)}
-                    </time>
-                  </span>
-
-                  <h3 className="raffle-card__title" style={{ marginTop: "0.35rem" }}>
-                    {raffle.title}
-                  </h3>
-
-                  {winners.length === 0 ? (
-                    <div
-                      style={{
-                        marginTop: "0.5rem",
-                        padding: "0.75rem",
-                        borderRadius: "0.85rem",
-                        border: "1px dashed rgba(185,141,35,0.35)",
-                        background:
-                          "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                        color: "var(--text-secondary)",
-                        textAlign: "center",
-                        fontSize: "0.95rem",
-                      }}
+                    <span
+                      className="raffle-card__badge raffle-card__badge--finished"
+                      aria-label={`Fecha y hora del sorteo: ${formatDateEs(
+                        raffle.datetime
+                      )}`}
+                      style={{ marginBottom: "0.5rem" }}
                     >
-                      Próximamente publicaremos los ganadores.
-                    </div>
-                  ) : (
-                    <ol
-                      style={{
-                        listStyle: "none",
-                        margin: "0.6rem 0 0",
-                        padding: 0,
-                        display: "grid",
-                        gap: "0.6rem",
-                      }}
+                      <time dateTime={new Date(raffle.datetime).toISOString()}>
+                        {formatDateEs(raffle.datetime)}
+                      </time>
+                    </span>
+
+                    <h3
+                      className="raffle-card__title"
+                      style={{ marginTop: "0.35rem" }}
                     >
-                      {winners.map((winner, index) => (
-                        <li
-                          key={`${winner}-${index}`}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: "0.6rem",
-                            padding: "0.55rem 0.7rem",
-                            borderRadius: "0.85rem",
-                            background:
-                              "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
-                            border: "1px solid rgba(185,141,35,0.28)",
-                            boxShadow:
-                              "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
-                          }}
-                        >
-                          <span
+                      {raffle.title}
+                    </h3>
+
+                    {winners.length === 0 ? (
+                      <div
+                        style={{
+                          marginTop: "0.5rem",
+                          padding: "0.75rem",
+                          borderRadius: "0.85rem",
+                          border: "1px dashed rgba(185,141,35,0.35)",
+                          background:
+                            "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
+                          color: "var(--text-secondary)",
+                          textAlign: "center",
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        Próximamente publicaremos los ganadores.
+                      </div>
+                    ) : (
+                      <ol
+                        style={{
+                          listStyle: "none",
+                          margin: "0.6rem 0 0",
+                          padding: 0,
+                          display: "grid",
+                          gap: "0.6rem",
+                        }}
+                      >
+                        {winners.map((winner, index) => (
+                          <li
+                            key={`${winner}-${index}`}
                             style={{
-                              display: "inline-flex",
+                              display: "flex",
                               alignItems: "center",
-                              gap: "0.5rem",
-                              fontWeight: 700,
-                              color: "var(--brand-700)",
+                              justifyContent: "space-between",
+                              gap: "0.6rem",
+                              padding: "0.55rem 0.7rem",
+                              borderRadius: "0.85rem",
+                              background:
+                                "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
+                              border: "1px solid rgba(185,141,35,0.28)",
+                              boxShadow:
+                                "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
                             }}
                           >
                             <span
-                              aria-hidden="true"
                               style={{
-                                display: "inline-grid",
-                                placeItems: "center",
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: 999,
-                                background:
-                                  index === 0
-                                    ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
-                                    : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
-                                border:
-                                  index === 0
-                                    ? "1px solid rgba(185,141,35,0.45)"
-                                    : "1px solid rgba(185,141,35,0.32)",
-                                color: "#3b2f0b",
-                                fontSize: "0.9rem",
-                                fontWeight: 800,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                fontWeight: 700,
+                                color: "var(--brand-700)",
                               }}
-                              title={`Puesto ${index + 1}`}
                             >
-                              {index + 1}
+                              <span
+                                aria-hidden="true"
+                                style={{
+                                  display: "inline-grid",
+                                  placeItems: "center",
+                                  width: "28px",
+                                  height: "28px",
+                                  borderRadius: 999,
+                                  background:
+                                    index === 0
+                                      ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
+                                      : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
+                                  border:
+                                    index === 0
+                                      ? "1px solid rgba(185,141,35,0.45)"
+                                      : "1px solid rgba(185,141,35,0.32)",
+                                  color: "#3b2f0b",
+                                  fontSize: "0.9rem",
+                                  fontWeight: 800,
+                                }}
+                                title={`Puesto ${index + 1}`}
+                              >
+                                {index + 1}
+                              </span>
+                              {winner}
                             </span>
-                            {winner}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </div>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
 
                   <div className="raffle-card__cta">
                     <button
@@ -412,101 +419,106 @@ const RaffleCard = ({
               >
                 <div className="raffle-card__side-content">
                   <div className="raffle-card__info">
-                  <span
-                    className="raffle-card__badge raffle-card__badge--finished"
-                    aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
-                    style={{ marginBottom: "0.5rem" }}
-                  >
-                    <time dateTime={new Date(raffle.datetime).toISOString()}>
-                      {formatDateEs(raffle.datetime)}
-                    </time>
-                  </span>
-
-                  <h3 className="raffle-card__title" style={{ marginTop: "0.35rem" }}>
-                    {raffle.title}
-                  </h3>
-
-                  {prizes.length === 0 ? (
-                    <div
-                      style={{
-                        marginTop: "0.5rem",
-                        padding: "0.75rem",
-                        borderRadius: "0.85rem",
-                        border: "1px dashed rgba(185,141,35,0.35)",
-                        background:
-                          "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                        color: "var(--text-secondary)",
-                        textAlign: "center",
-                        fontSize: "0.95rem",
-                      }}
+                    <span
+                      className="raffle-card__badge raffle-card__badge--finished"
+                      aria-label={`Fecha y hora del sorteo: ${formatDateEs(
+                        raffle.datetime
+                      )}`}
+                      style={{ marginBottom: "0.5rem" }}
                     >
-                      No hay premios registrados para este sorteo.
-                    </div>
-                  ) : (
-                    <ol
-                      style={{
-                        listStyle: "none",
-                        margin: "0.6rem 0 0",
-                        padding: 0,
-                        display: "grid",
-                        gap: "0.6rem",
-                      }}
+                      <time dateTime={new Date(raffle.datetime).toISOString()}>
+                        {formatDateEs(raffle.datetime)}
+                      </time>
+                    </span>
+
+                    <h3
+                      className="raffle-card__title"
+                      style={{ marginTop: "0.35rem" }}
                     >
-                      {prizes.map((prize, index) => (
-                        <li
-                          key={`${prize?.title ?? "premio"}-${index}`}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.65rem",
-                            padding: "0.6rem 0.75rem",
-                            borderRadius: "0.85rem",
-                            background:
-                              "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
-                            border: "1px solid rgba(185,141,35,0.28)",
-                            boxShadow:
-                              "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
-                          }}
-                        >
-                          <span
-                            aria-hidden="true"
+                      {raffle.title}
+                    </h3>
+
+                    {prizes.length === 0 ? (
+                      <div
+                        style={{
+                          marginTop: "0.5rem",
+                          padding: "0.75rem",
+                          borderRadius: "0.85rem",
+                          border: "1px dashed rgba(185,141,35,0.35)",
+                          background:
+                            "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
+                          color: "var(--text-secondary)",
+                          textAlign: "center",
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        No hay premios registrados para este sorteo.
+                      </div>
+                    ) : (
+                      <ol
+                        style={{
+                          listStyle: "none",
+                          margin: "0.6rem 0 0",
+                          padding: 0,
+                          display: "grid",
+                          gap: "0.6rem",
+                        }}
+                      >
+                        {prizes.map((prize, index) => (
+                          <li
+                            key={`${prize?.title ?? "premio"}-${index}`}
                             style={{
-                              display: "inline-grid",
-                              placeItems: "center",
-                              width: "28px",
-                              height: "28px",
-                              borderRadius: 999,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.65rem",
+                              padding: "0.6rem 0.75rem",
+                              borderRadius: "0.85rem",
                               background:
-                                index === 0
-                                  ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
-                                  : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
-                              border:
-                                index === 0
-                                  ? "1px solid rgba(185,141,35,0.45)"
-                                  : "1px solid rgba(185,141,35,0.32)",
-                              color: "#3b2f0b",
-                              fontSize: "0.9rem",
-                              fontWeight: 800,
+                                "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
+                              border: "1px solid rgba(185,141,35,0.28)",
+                              boxShadow:
+                                "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
                             }}
-                            title={`Premio ${index + 1}`}
                           >
-                            {index + 1}
-                          </span>
+                            <span
+                              aria-hidden="true"
+                              style={{
+                                display: "inline-grid",
+                                placeItems: "center",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: 999,
+                                background:
+                                  index === 0
+                                    ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
+                                    : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
+                                border:
+                                  index === 0
+                                    ? "1px solid rgba(185,141,35,0.45)"
+                                    : "1px solid rgba(185,141,35,0.32)",
+                                color: "#3b2f0b",
+                                fontSize: "0.9rem",
+                                fontWeight: 800,
+                              }}
+                              title={`Premio ${index + 1}`}
+                            >
+                              {index + 1}
+                            </span>
 
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              color: "var(--text-primary)",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {prize?.title ?? "Premio sin nombre"}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </div>
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: "var(--text-primary)",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {prize?.title ?? "Premio sin nombre"}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
 
                   <div className="raffle-card__cta">
                     <button
@@ -531,7 +543,9 @@ const RaffleCard = ({
         <div className="raffle-card__shell">
           <span
             className="raffle-card__badge"
-            aria-label={`Fecha y hora del sorteo: ${formatDateEs(raffle.datetime)}`}
+            aria-label={`Fecha y hora del sorteo: ${formatDateEs(
+              raffle.datetime
+            )}`}
           >
             <time dateTime={new Date(raffle.datetime).toISOString()}>
               {formatDateEs(raffle.datetime)}
@@ -552,7 +566,7 @@ const RaffleCard = ({
           </div>
 
           <span className="visually-hidden" aria-live="polite">
-            Tiempo restante: {timeLeft.days} días, {timeLeft.hours} horas y {" "}
+            Tiempo restante: {timeLeft.days} días, {timeLeft.hours} horas y{" "}
             {timeLeft.minutes} minutos.
           </span>
 

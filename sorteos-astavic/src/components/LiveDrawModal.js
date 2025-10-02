@@ -1,6 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Modal de sorteo en vivo con gestión centralizada de foco y scroll bloqueado.
-// * Reutilizamos hooks de infraestructura para focus trap y scroll lock, garantizando experiencia consistente.
-// -!- Riesgo: La restauración del foco depende de que el disparador siga montado al cerrar el modal.
+// src/components/LiveDrawModal.js
+
 import { useEffect, useId, useRef } from "react";
 import PropTypes from "prop-types";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -11,7 +10,8 @@ const LiveDrawModal = ({ open, raffle, message, winners, onClose }) => {
   const titleId = `${headingId}-title`;
   const descId = raffle?.description ? `${headingId}-desc` : undefined;
   const messageId = message ? `${headingId}-message` : undefined;
-  const describedBy = [descId, messageId].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [descId, messageId].filter(Boolean).join(" ") || undefined;
   const contentRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);

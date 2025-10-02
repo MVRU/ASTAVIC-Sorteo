@@ -1,6 +1,5 @@
 // src/components/admin/AdminDashboard.js
-// ! DECISIÓN DE DISEÑO: Los toasts globales sustituyen feedback locales para mantener consistencia y accesibilidad en el panel.
-// ! DECISIÓN DE DISEÑO: Las validaciones ahora generan mensajes inline accesibles para acelerar la corrección de errores críticos.
+
 import {
   forwardRef,
   useCallback,
@@ -16,6 +15,7 @@ import rafflePropType from "../public/rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import Icon, { ICON_NAMES } from "../ui/Icon";
 import AdminTutorial from "./AdminTutorial";
+import EditableList, { EditableListStyles } from "./manage/EditableList";
 
 /* =========================
    Hook simple de media query
@@ -306,22 +306,21 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const { showToast } = useToast();
 
   const previewDefaultMessage =
-    "Subí un archivo o pegá participantes para ver un resumen acá.";
+    "Subí un archivo o agregá participantes manualmente para ver un resumen acá.";
   const [form, setForm] = useState({
     title: "",
     description: "",
     datetime: "",
     winners: "1",
-    manual: "",
   });
   const [formErrors, setFormErrors] = useState({});
-  const [prizes, setPrizes] = useState([{ title: "" }]);
+  const [prizes, setPrizes] = useState([""]);
   const [file, setFile] = useState(null);
   const [previewMessage, setPreviewMessage] = useState(previewDefaultMessage);
   const [previewParticipants, setPreviewParticipants] = useState([]);
   const [loading, setLoading] = useState(false);
   const fieldRefs = useRef({});
-  const prizeRefs = useRef([]);
+  const [manualEntries, setManualEntries] = useState([""]);
 
   // Hint de chips (solo mobile)
   const [chipHint, setChipHint] = useState(null); // 'total' | 'active' | 'finished' | null
@@ -343,8 +342,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 
   const sanitizedPrizes = useMemo(
     () =>
-      prizes.map((prize, index) => ({
-        title: (prize?.title || "").trim() || `Premio ${index + 1}`,
+      prizes.map((title, index) => ({
+        title: (title || "").trim() || `Premio ${index + 1}`,
       })),
     [prizes]
   );
@@ -383,14 +382,14 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     previewParticipants,
   ]);
 
-  const buildPreviewState = useCallback(async (currentFile, manualText) => {
+  const buildPreviewState = useCallback(async (currentFile, manualList) => {
     const fileText = currentFile ? await currentFile.text() : "";
-    const participants = parseParticipants(fileText, manualText || "");
+    const participants = parseParticipants(fileText, manualList || []);
     if (participants.length === 0) {
       return {
         participants: [],
         message:
-          "No se detectaron participantes. Asegurate del formato o pegá uno por línea.",
+          "No se detectaron participantes. Asegurate del formato o agregalos manualmente.",
       };
     }
     const sampleList = participants.slice(0, 5).join(", ");
@@ -402,7 +401,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   }, []);
 
   useEffect(() => {
-    if (!file && !form.manual.trim()) {
+    const hasManualEntries = manualEntries.some(
+      (value) => String(value).trim().length > 0
+    );
+    if (!file && !hasManualEntries) {
       setPreviewParticipants([]);
       setPreviewMessage(previewDefaultMessage);
       return;
@@ -410,7 +412,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     let cancelled = false;
     (async () => {
       try {
-        const nextPreview = await buildPreviewState(file, form.manual);
+        const nextPreview = await buildPreviewState(file, manualEntries);
         if (cancelled) return;
         setPreviewParticipants(nextPreview.participants);
         setPreviewMessage(nextPreview.message);
@@ -425,7 +427,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     return () => {
       cancelled = true;
     };
-  }, [file, form.manual, buildPreviewState, previewDefaultMessage]);
+  }, [file, manualEntries, buildPreviewState, previewDefaultMessage]);
 
   const adjustPrizeSlots = (targetCount) => {
     const safeCount = Math.max(1, targetCount || 1);
@@ -434,13 +436,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       if (safeCount > prev.length) {
         const additions = Array.from(
           { length: safeCount - prev.length },
-          () => ({ title: "" })
+          () => ""
         );
         return [...prev, ...additions];
       }
       return prev.slice(0, safeCount);
     });
-    prizeRefs.current = prizeRefs.current.slice(0, safeCount);
     setFormErrors((prev) => {
       if (!prev?.prizes) return prev;
       if (!Array.isArray(prev.prizes)) return prev;
@@ -460,30 +461,23 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         if (!prev || Object.keys(prev).length === 0) return prev;
         if (field === "prizes") {
           if (!Array.isArray(prev.prizes)) return prev;
-          if (typeof index !== "number") {
+          if (typeof index === "number") {
+            if (!prev.prizes[index]) return prev;
             const nextPrizes = [...prev.prizes];
-            let touched = false;
-            nextPrizes.forEach((value, idx) => {
-              if (value === PRIZE_COUNT_ERROR) {
-                nextPrizes[idx] = null;
-                touched = true;
-              }
-            });
-            if (!touched) return prev;
+            nextPrizes[index] = null;
             if (nextPrizes.every((value) => !value)) {
               const { prizes: _removed, ...rest } = prev;
               return rest;
             }
             return { ...prev, prizes: nextPrizes };
           }
-          if (!prev.prizes[index]) return prev;
-          const nextPrizes = [...prev.prizes];
-          nextPrizes[index] = null;
-          if (nextPrizes.every((value) => !value)) {
-            const { prizes: _removed, ...rest } = prev;
-            return rest;
-          }
-          return { ...prev, prizes: nextPrizes };
+          const { prizes: _removed, ...rest } = prev;
+          return rest;
+        }
+        if (field === "manual") {
+          if (!prev.manual) return prev;
+          const { manual: _removed, ...rest } = prev;
+          return rest;
         }
         if (!prev[field]) return prev;
         const next = { ...prev };
@@ -494,31 +488,63 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     [setFormErrors]
   );
 
-  const focusFirstError = useCallback(
-    (fieldErrors) => {
-      if (!fieldErrors) return;
-      const order = ["title", "description", "datetime", "winners", "prizes", "manual"];
-      for (const key of order) {
-        if (key === "prizes") {
-          if (!Array.isArray(fieldErrors.prizes)) continue;
-          const firstPrize = fieldErrors.prizes.findIndex((value) => Boolean(value));
-          if (firstPrize >= 0) {
-            const target = prizeRefs.current[firstPrize];
-            target?.focus?.();
+  const focusFirstError = useCallback((fieldErrors) => {
+    if (!fieldErrors) return;
+    const order = [
+      "title",
+      "description",
+      "datetime",
+      "winners",
+      "prizes",
+      "manual",
+    ];
+    for (const key of order) {
+      if (key === "prizes") {
+        if (!Array.isArray(fieldErrors.prizes)) continue;
+        const firstPrize = fieldErrors.prizes.findIndex((value) =>
+          Boolean(value)
+        );
+        if (firstPrize >= 0) {
+          const input = document.getElementById(
+            `${prizesListId}-item-${firstPrize}`
+          );
+          if (input && typeof input.focus === "function") {
+            input.focus();
             return;
           }
-          continue;
-        }
-        if (!fieldErrors[key]) continue;
-        const node = fieldRefs.current[key];
-        if (node && typeof node.focus === "function") {
-          node.focus();
           return;
         }
+        continue;
       }
-    },
-    []
-  );
+      if (key === "manual") {
+        const manualError = fieldErrors.manual;
+        const manualIndexes = Array.isArray(manualError?.indexes)
+          ? manualError.indexes
+          : [];
+        const firstManualIndex =
+          manualIndexes.length > 0 ? manualIndexes[0] : 0;
+        const input = document.getElementById(
+          `${manualListId}-item-${firstManualIndex}`
+        );
+        if (input && typeof input.focus === "function") {
+          input.focus();
+          return;
+        }
+        const dropTarget = fieldRefs.current.participants;
+        if (dropTarget && typeof dropTarget.focus === "function") {
+          dropTarget.focus();
+          return;
+        }
+        continue;
+      }
+      if (!fieldErrors[key]) continue;
+      const node = fieldRefs.current[key];
+      if (node && typeof node.focus === "function") {
+        node.focus();
+        return;
+      }
+    }
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -540,40 +566,21 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     clearFieldError("manual");
   };
 
-  const handlePrizeChange = (index, value) => {
-    setPrizes((prev) => {
-      const next = [...prev];
-      next[index] = { title: value };
-      return next;
-    });
-    clearFieldError("prizes", index);
-  };
-
-  const addPrize = () => {
-    setPrizes((prev) => {
-      const next = [...prev, { title: "" }];
-      setForm((prevForm) => ({ ...prevForm, winners: String(next.length) }));
-      return next;
-    });
-    prizeRefs.current.push(null);
+  const handlePrizesChange = (nextValues) => {
+    const safeValues = nextValues.length > 0 ? nextValues : [""];
+    setPrizes(safeValues);
+    setForm((prevForm) => ({
+      ...prevForm,
+      winners: String(Math.max(1, safeValues.length)),
+    }));
     clearFieldError("prizes");
     clearFieldError("winners");
   };
 
-  const removePrize = (index) => {
-    setPrizes((prev) => {
-      if (prev.length === 1) return prev;
-      const next = prev.filter((_, idx) => idx !== index);
-      const safeNext = next.length > 0 ? next : [{ title: "" }];
-      setForm((prevForm) => ({
-        ...prevForm,
-        winners: String(safeNext.length),
-      }));
-      return safeNext;
-    });
-    prizeRefs.current.splice(index, 1);
-    clearFieldError("prizes", index);
-    clearFieldError("winners");
+  const handleManualEntriesChange = (nextValues) => {
+    const safeValues = nextValues.length > 0 ? nextValues : [""];
+    setManualEntries(safeValues);
+    clearFieldError("manual");
   };
 
   const resetFormState = useCallback(() => {
@@ -582,14 +589,13 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       description: "",
       datetime: "",
       winners: "1",
-      manual: "",
     });
-    setPrizes([{ title: "" }]);
+    setPrizes([""]);
     setFile(null);
     setPreviewParticipants([]);
     setPreviewMessage(previewDefaultMessage);
     setFormErrors({});
-    prizeRefs.current = [];
+    setManualEntries([""]);
   }, [previewDefaultMessage]);
 
   const handleResetClick = useCallback(() => {
@@ -638,7 +644,10 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
       fieldErrors.winners = message;
     }
 
-    if (!Array.isArray(payload.prizes) || payload.prizes.length !== winnersNum) {
+    if (
+      !Array.isArray(payload.prizes) ||
+      payload.prizes.length !== winnersNum
+    ) {
       const message = PRIZE_COUNT_ERROR;
       generalErrors.push(message);
       fieldErrors.winners = fieldErrors.winners || message;
@@ -650,8 +659,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 
     if (Array.isArray(payload.prizes)) {
       payload.prizes.forEach((prize, index) => {
-        if (!prize || !String(prize.title).trim()) {
-          const message = `El título del premio ${index + 1} no puede estar vacío.`;
+        const title = String(prize ?? "").trim();
+        if (!title) {
+          const message = `El título del premio ${
+            index + 1
+          } no puede estar vacío.`;
           generalErrors.push(message);
           if (!fieldErrors.prizes) fieldErrors.prizes = [];
           fieldErrors.prizes[index] = message;
@@ -665,12 +677,22 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     if (participants.length === 0) {
       const message = "No se detectaron participantes (archivo o texto).";
       generalErrors.push(message);
-      fieldErrors.manual = message;
+      fieldErrors.manual = {
+        message,
+        indexes: Array.isArray(payload.manualEntries)
+          ? payload.manualEntries.map((_, index) => index)
+          : [0],
+      };
     } else if (participants.length < winnersNum) {
       const message =
         "La cantidad de participantes debe ser mayor o igual a la de ganadores.";
       generalErrors.push(message);
-      fieldErrors.manual = message;
+      fieldErrors.manual = {
+        message,
+        indexes: Array.isArray(payload.manualEntries)
+          ? payload.manualEntries.map((_, index) => index)
+          : [0],
+      };
     }
 
     if (fieldErrors.prizes && fieldErrors.prizes.every((value) => !value)) {
@@ -686,7 +708,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     try {
       const winnersNum = Math.max(1, Number(form.winners) || 1);
       const fileText = file ? await file.text() : "";
-      const participants = parseParticipants(fileText, form.manual);
+      const participants = parseParticipants(fileText, manualEntries);
 
       const draft = {
         title: form.title,
@@ -695,6 +717,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         participants,
         winners: winnersNum,
         prizes,
+        manualEntries,
       };
       const { fieldErrors: validationFieldErrors, generalErrors } =
         validateBeforeSubmit(draft);
@@ -714,8 +737,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
         return;
       }
 
-      const normalizedPrizes = prizes.map((p) => ({
-        title: String(p.title).trim(),
+      const normalizedPrizes = prizes.map((title) => ({
+        title: String(title).trim(),
       }));
 
       const newRaffle = {
@@ -767,6 +790,18 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     finished: "Sorteos finalizados",
   };
   const prizeErrors = Array.isArray(formErrors.prizes) ? formErrors.prizes : [];
+  const prizeInvalidIndexes = prizeErrors
+    .map((value, index) => (value ? index : null))
+    .filter((value) => value !== null);
+  const firstPrizeError = prizeErrors.find((value) => Boolean(value));
+  const manualError =
+    formErrors.manual && typeof formErrors.manual === "object"
+      ? formErrors.manual
+      : null;
+  const manualInvalidIndexes = Array.isArray(manualError?.indexes)
+    ? manualError.indexes
+    : [];
+  const manualErrorMessage = manualError?.message || "";
   const titleHintId = "raffle-title-hint";
   const titleErrorId = "raffle-title-error";
   const descriptionHintId = "raffle-description-hint";
@@ -775,11 +810,14 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
   const winnersHintId = "raffle-winners-hint";
   const winnersErrorId = "raffle-winners-error";
   const participantsHintId = "raffle-participants-hint";
-  const manualHintId = "raffle-manual-hint";
-  const manualErrorId = "raffle-manual-error";
+  const prizesListId = "create-prizes";
+  const prizesErrorId = `${prizesListId}-error`;
+  const manualListId = "create-manual";
+  const manualErrorId = `${manualListId}-error`;
 
   return (
     <section className="section-gap anim-fade-in" aria-labelledby="admin-panel">
+      <EditableListStyles />
       <div className="container" style={{ display: "grid", gap: "1.5rem" }}>
         {/* Toolbar */}
         <div
@@ -824,7 +862,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "total" ? null : "total"))
                   }
                 >
-                  <Icon name="collection" decorative size={16} strokeWidth={2} />
+                  <Icon
+                    name="collection"
+                    decorative
+                    size={16}
+                    strokeWidth={2}
+                  />
                   {metrics.total}
                 </Chip>
                 <Chip
@@ -842,7 +885,12 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     setChipHint((s) => (s === "finished" ? null : "finished"))
                   }
                 >
-                  <Icon name="checkCircle" decorative size={16} strokeWidth={2} />
+                  <Icon
+                    name="checkCircle"
+                    decorative
+                    size={16}
+                    strokeWidth={2}
+                  />
                   {metrics.finished}
                 </Chip>
 
@@ -1076,87 +1124,30 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               </div>
 
               <div className="form-group" style={{ marginBottom: "1.25rem" }}>
-                <label>Premios</label>
-                <p className="legend">
-                  Definí un título por premio. El orden determina el puesto.
-                </p>
-                {prizes.map((prize, index) => {
-                  const hintId = `prize-title-${index}-hint`;
-                  const errorId = `prize-title-${index}-error`;
-                  const prizeError = prizeErrors[index];
-                  return (
-                  <div
-                    key={`prize-${index}`}
-                    className="anim-fade-in"
+                <EditableList
+                  id={prizesListId}
+                  label="Premio"
+                  values={prizes}
+                  onChange={handlePrizesChange}
+                  addButtonLabel="+ Agregar premio"
+                  placeholder="Ej.: Gift card, remera edición limitada"
+                  helperText="Definí un título por premio. El orden determina el puesto."
+                  invalidIndexes={prizeInvalidIndexes}
+                  describedBy={firstPrizeError ? prizesErrorId : undefined}
+                />
+                {firstPrizeError && (
+                  <p
+                    id={prizesErrorId}
+                    role="alert"
                     style={{
-                      border: "1px solid var(--border)",
-                      borderRadius: "12px",
-                      padding: "1rem",
-                      marginBottom: "0.75rem",
-                      background: "var(--surface)",
+                      marginTop: "0.5rem",
+                      color: "var(--danger)",
+                      fontSize: "0.875rem",
                     }}
                   >
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor={`prize-title-${index}`}>
-                        Título del premio {index + 1}
-                      </label>
-                      <input
-                        id={`prize-title-${index}`}
-                        className="input"
-                        placeholder={`Premio ${index + 1}`}
-                        required
-                        value={prize.title}
-                        onChange={(e) =>
-                          handlePrizeChange(index, e.target.value)
-                        }
-                        ref={(element) => {
-                          prizeRefs.current[index] = element;
-                        }}
-                        aria-invalid={Boolean(prizeError)}
-                        aria-describedby={buildDescribedBy(
-                          hintId,
-                          prizeError ? errorId : null
-                        )}
-                      />
-                      <span className="legend" id={hintId}>
-                        Puesto {index + 1} ={" "}
-                        {prize.title || `Premio ${index + 1}`}
-                      </span>
-                      {prizeError && (
-                        <p
-                          id={errorId}
-                          role="alert"
-                          style={{
-                            marginTop: "0.375rem",
-                            color: "var(--danger)",
-                            fontSize: "0.875rem",
-                          }}
-                        >
-                          {prizeError}
-                        </p>
-                      )}
-                    </div>
-                    {prizes.length > 1 && (
-                      <div style={{ marginTop: "0.75rem", textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="button button--ghost"
-                          onClick={() => removePrize(index)}
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-                })}
-                <button
-                  type="button"
-                  className="button button--ghost"
-                  onClick={addPrize}
-                >
-                  + Agregar premio
-                </button>
+                    {firstPrizeError}
+                  </p>
+                )}
               </div>
 
               <div
@@ -1181,7 +1172,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   id={participantsHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
-                  Acepta archivos .csv, .tsv o .txt con un participante por línea.
+                  Acepta archivos .csv, .tsv o .txt con un participante por
+                  línea.
                 </p>
               </div>
 
@@ -1189,44 +1181,35 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 className="form-group anim-up"
                 style={{ marginBottom: "1.25rem" }}
               >
-                <label htmlFor="raffle-manual">
-                  O pegalo manualmente (uno por línea)
-                </label>
-                <textarea
-                  id="raffle-manual"
-                  className="textarea"
-                  name="manual"
-                  placeholder={"ana@correo.com\nbruno@correo.com"}
-                  value={form.manual}
-                  onChange={handleChange}
-                  rows={4}
-                  ref={(element) => {
-                    fieldRefs.current.manual = element;
-                  }}
-                  aria-invalid={Boolean(formErrors.manual)}
-                  aria-describedby={buildDescribedBy(
-                    manualHintId,
-                    formErrors.manual ? manualErrorId : null
-                  )}
-                />
-                <span
+                <p
                   className="legend"
-                  id={manualHintId}
+                  id={participantsHintId}
                   style={{ marginTop: "0.375rem", display: "block" }}
                 >
-                  Acepta email o nombre. Se eliminan duplicados automáticamente.
-                </span>
-                {formErrors.manual && (
+                  O cárgalos manualmente:
+                </p>
+                <EditableList
+                  id={manualListId}
+                  label="Participante"
+                  values={manualEntries}
+                  onChange={handleManualEntriesChange}
+                  addButtonLabel="+ Agregar participante"
+                  placeholder="ana@correo.com"
+                  helperText="Acepta email o nombre. Se eliminan duplicados automáticamente."
+                  invalidIndexes={manualInvalidIndexes}
+                  describedBy={manualErrorMessage ? manualErrorId : undefined}
+                />
+                {manualErrorMessage && (
                   <p
                     id={manualErrorId}
                     role="alert"
                     style={{
-                      marginTop: "0.375rem",
+                      marginTop: "0.5rem",
                       color: "var(--danger)",
                       fontSize: "0.875rem",
                     }}
                   >
-                    {formErrors.manual}
+                    {manualErrorMessage}
                   </p>
                 )}
               </div>
@@ -1263,7 +1246,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   Previsualizá antes de publicar.
                 </span>
               </div>
-
             </fieldset>
           </form>
 
@@ -1294,7 +1276,11 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   value={metrics.total}
                   iconName="collection"
                 />
-                <StatCard label="Activos" value={metrics.active} iconName="hourglass" />
+                <StatCard
+                  label="Activos"
+                  value={metrics.active}
+                  iconName="hourglass"
+                />
                 <StatCard
                   label="Finalizados"
                   value={metrics.finished}

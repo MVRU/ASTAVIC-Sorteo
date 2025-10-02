@@ -1,10 +1,11 @@
-// ! DECISIÓN DE DISEÑO: Garantizamos que AdminModal mantenga el foco encerrado y lo devuelva al disparador tras cerrarse.
+// src/components/admin/__tests__/AdminModal.test.js
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AdminModal from "../AdminModal";
 
 const setupUser = () =>
-  (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
 let originalScrollTo;
 
@@ -40,8 +41,12 @@ describe("AdminModal", () => {
     );
 
     const closeButton = screen.getByRole("button", { name: /cerrar modal/i });
-    const primaryButton = screen.getByRole("button", { name: /acción principal/i });
-    const footerButton = screen.getByRole("button", { name: /guardar cambios/i });
+    const primaryButton = screen.getByRole("button", {
+      name: /acción principal/i,
+    });
+    const footerButton = screen.getByRole("button", {
+      name: /guardar cambios/i,
+    });
 
     expect(primaryButton).toHaveFocus();
 
@@ -98,7 +103,9 @@ describe("AdminModal", () => {
       </>
     );
 
-    expect(screen.getByRole("button", { name: /acción principal/i })).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: /acción principal/i })
+    ).toHaveFocus();
 
     rerender(
       <>

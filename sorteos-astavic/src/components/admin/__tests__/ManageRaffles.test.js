@@ -1,13 +1,21 @@
-// ! DECISIÓN DE DISEÑO: Cubrimos interacciones clave del panel para asegurar que los modales funcionen según lo requerido.
-import { render, screen, within, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+// src/components/admin/__tests__/ManageRaffles.test.js
+
+import {
+  render,
+  screen,
+  within,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import ManageRaffles, {
   UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE,
-} from '../ManageRaffles';
-import { ToastProvider } from '../../../context/ToastContext';
+} from "../ManageRaffles";
+import { ToastProvider } from "../../../context/ToastContext";
 
 const createUser = () =>
-  typeof userEvent.setup === 'function'
+  typeof userEvent.setup === "function"
     ? userEvent.setup()
     : {
         click: (...args) => userEvent.click(...args),
@@ -18,19 +26,19 @@ const createUser = () =>
 
 const sampleRaffles = [
   {
-    id: 'r1',
-    title: 'Sorteo aniversario',
-    description: 'Entre clientes frecuentes',
-    datetime: new Date('2030-05-20T15:00:00Z').toISOString(),
+    id: "r1",
+    title: "Sorteo aniversario",
+    description: "Entre clientes frecuentes",
+    datetime: new Date("2030-05-20T15:00:00Z").toISOString(),
     winnersCount: 2,
     finished: false,
-    participants: ['Ana', 'Luis'],
-    prizes: [{ title: 'Gift card' }],
+    participants: ["Ana", "Luis"],
+    prizes: [{ title: "Gift card" }],
   },
 ];
 
-describe('ManageRaffles', () => {
-  test('abre el modal de edición con los datos cargados', async () => {
+describe("ManageRaffles", () => {
+  test("abre el modal de edición con los datos cargados", async () => {
     const user = createUser();
     renderWithToast(
       <ManageRaffles
@@ -41,20 +49,22 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
 
-    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
     expect(dialog).toBeInTheDocument();
-    expect(screen.getByLabelText(/título/i)).toHaveValue('Sorteo aniversario');
+    expect(screen.getByLabelText(/título/i)).toHaveValue("Sorteo aniversario");
     expect(
-      within(dialog).getByRole('button', { name: /guardar cambios/i })
+      within(dialog).getByRole("button", { name: /guardar cambios/i })
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByRole('button', { name: /cancelar/i })
+      within(dialog).getByRole("button", { name: /cancelar/i })
     ).toBeInTheDocument();
   });
 
-  test('requiere confirmación antes de eliminar un sorteo', async () => {
+  test("requiere confirmación antes de eliminar un sorteo", async () => {
     const user = createUser();
     const onDelete = jest.fn();
 
@@ -67,28 +77,36 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /eliminar/i }));
+    await user.click(screen.getByRole("button", { name: /eliminar/i }));
 
-    const dialog = await screen.findByRole('dialog', { name: /eliminar sorteo/i });
-    expect(within(dialog).getByText(/¿seguro que querés eliminar/i)).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", {
+      name: /eliminar sorteo/i,
+    });
+    expect(
+      within(dialog).getByText(/¿seguro que querés eliminar/i)
+    ).toBeInTheDocument();
 
     await act(async () => {
-      await user.click(within(dialog).getByRole('button', { name: /eliminar/i }));
+      await user.click(
+        within(dialog).getByRole("button", { name: /eliminar/i })
+      );
     });
-    await waitFor(() => expect(onDelete).toHaveBeenCalledWith('r1'));
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("r1"));
     expect(
       await screen.findByText(/sorteo "sorteo aniversario" eliminado\./i)
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /eliminar sorteo/i })
+        screen.queryByRole("dialog", { name: /eliminar sorteo/i })
       ).not.toBeInTheDocument()
     );
   });
 
-  test('muestra feedback si la fecha guardada del sorteo es inválida', async () => {
+  test("muestra feedback si la fecha guardada del sorteo es inválida", async () => {
     const user = createUser();
-    const brokenRaffle = [{ ...sampleRaffles[0], id: 'r2', datetime: 'invalid' }];
+    const brokenRaffle = [
+      { ...sampleRaffles[0], id: "r2", datetime: "invalid" },
+    ];
 
     renderWithToast(
       <ManageRaffles
@@ -99,14 +117,17 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
 
-    const alert = await screen.findByRole('alert');
+    const alert = await within(dialog).findByRole("alert");
     expect(alert).toHaveTextContent(/fecha guardada.*inválida/i);
-    expect(screen.getByLabelText(/fecha y hora/i)).toHaveValue('');
+    expect(screen.getByLabelText(/fecha y hora/i)).toHaveValue("");
   });
 
-  test('impide enviar cambios cuando la fecha queda vacía', async () => {
+  test("impide enviar cambios cuando la fecha queda vacía", async () => {
     const user = createUser();
     const onUpdate = jest.fn();
 
@@ -119,24 +140,152 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     const datetimeInput = await screen.findByLabelText(/fecha y hora/i);
     await user.clear(datetimeInput);
 
     await act(async () => {
-      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+      await user.click(
+        screen.getByRole("button", { name: /guardar cambios/i })
+      );
     });
 
     expect(onUpdate).not.toHaveBeenCalled();
-    const alerts = await screen.findAllByRole('alert');
+    const alerts = await screen.findAllByRole("alert");
     const feedback = alerts.find((node) =>
-      node.textContent?.toLowerCase().includes('ingresá una fecha válida')
+      node.textContent?.toLowerCase().includes("ingresá una fecha válida")
     );
     expect(feedback).toBeDefined();
-    expect(screen.getByRole('dialog', { name: /editar sorteo/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: /editar sorteo/i })
+    ).toBeInTheDocument();
   });
 
-  test('pide confirmación antes de cerrar con cambios sin guardar', async () => {
+  test("muestra los índices correspondientes cuando hay premios vacíos", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    const firstPrizeInput = within(dialog).getByLabelText(/premio 1/i, {
+      selector: "input",
+    });
+    await user.clear(firstPrizeInput);
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /agregar premio/i })
+    );
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent(/filas #1, #2/i);
+
+    const prizeInputs = within(dialog).getAllByLabelText(/premio \d+/i, {
+      selector: "input",
+    });
+    expect(prizeInputs[0]).toHaveAttribute("aria-invalid", "true");
+    expect(prizeInputs[1]).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("permite gestionar listas con altas, bajas y duplicados", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn().mockResolvedValue({ ok: true });
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    const firstPrizeInput = within(dialog).getByLabelText(/premio 1/i, {
+      selector: "input",
+    });
+    await user.clear(firstPrizeInput);
+    await user.type(firstPrizeInput, "Gift card VIP");
+    await waitFor(() => expect(firstPrizeInput).toHaveValue("Gift card VIP"));
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /agregar premio/i })
+    );
+    let prizeInputs = within(dialog).getAllByLabelText(/premio \d+/i, {
+      selector: "input",
+    });
+    const newPrizeInput = prizeInputs[prizeInputs.length - 1];
+    await user.type(newPrizeInput, "Taza edición especial");
+    await waitFor(() =>
+      expect(newPrizeInput).toHaveValue("Taza edición especial")
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /eliminar participante 2/i })
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /agregar participante/i })
+    );
+    let participantInputs = within(dialog).getAllByLabelText(
+      /participante \d+/i,
+      {
+        selector: "input",
+      }
+    );
+    let lastParticipant = participantInputs[participantInputs.length - 1];
+    await user.type(lastParticipant, "Lucía");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /agregar participante/i })
+    );
+    participantInputs = within(dialog).getAllByLabelText(/participante \d+/i, {
+      selector: "input",
+    });
+    lastParticipant = participantInputs[participantInputs.length - 1];
+    await user.type(lastParticipant, "Ana");
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1));
+    const payload = onUpdate.mock.calls[0][0];
+
+    expect(payload.id).toBe("r1");
+    expect(payload.prizes).toEqual([
+      { title: "Gift card VIP" },
+      { title: "Taza edición especial" },
+    ]);
+    expect(payload.participants).toEqual(["Ana", "Lucía", "Ana"]);
+    expect(payload.datetime).toBe(sampleRaffles[0].datetime);
+  });
+
+  test("pide confirmación antes de cerrar con cambios sin guardar", async () => {
     const user = createUser();
 
     renderWithToast(
@@ -148,17 +297,18 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     const titleInput = await screen.findByLabelText(/título/i);
     await user.clear(titleInput);
-    await user.type(titleInput, 'Título actualizado');
+    await user.type(titleInput, "Título actualizado");
 
     await user.click(
-      within(await screen.findByRole('dialog', { name: /editar sorteo/i }))
-        .getByRole('button', { name: /cancelar/i })
+      within(
+        await screen.findByRole("dialog", { name: /editar sorteo/i })
+      ).getByRole("button", { name: /cancelar/i })
     );
 
-    const confirm = await screen.findByRole('dialog', {
+    const confirm = await screen.findByRole("dialog", {
       name: /descartar cambios/i,
     });
     expect(
@@ -166,17 +316,17 @@ describe('ManageRaffles', () => {
     ).toBeInTheDocument();
 
     await user.click(
-      within(confirm).getByRole('button', { name: /descartar/i })
+      within(confirm).getByRole("button", { name: /descartar/i })
     );
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /editar sorteo/i })
+        screen.queryByRole("dialog", { name: /editar sorteo/i })
       ).not.toBeInTheDocument()
     );
   });
 
-  test('mantiene el foco en el campo que se está editando', async () => {
+  test("mantiene el foco en el campo que se está editando", async () => {
     const user = createUser();
 
     renderWithToast(
@@ -188,10 +338,10 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     const descriptionInput = await screen.findByLabelText(/descripción/i);
     descriptionInput.focus();
-    await user.type(descriptionInput, 'Nueva descripción');
+    await user.type(descriptionInput, "Nueva descripción");
 
     await waitFor(() => {
       expect(descriptionInput).toHaveFocus();
@@ -200,14 +350,14 @@ describe('ManageRaffles', () => {
     const winnersInput = screen.getByLabelText(/ganadores/i);
     await user.click(winnersInput);
     await user.clear(winnersInput);
-    await user.type(winnersInput, '3');
+    await user.type(winnersInput, "3");
 
     await waitFor(() => {
       expect(winnersInput).toHaveFocus();
     });
   });
 
-  test('advierte en español antes de recargar cuando hay cambios sin guardar', async () => {
+  test("advierte en español antes de recargar cuando hay cambios sin guardar", async () => {
     const user = createUser();
 
     renderWithToast(
@@ -219,13 +369,13 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     const titleInput = await screen.findByLabelText(/título/i);
     await user.clear(titleInput);
-    await user.type(titleInput, 'Título de prueba');
+    await user.type(titleInput, "Título de prueba");
 
-    const event = new Event('beforeunload', { cancelable: true });
-    Object.defineProperty(event, 'returnValue', {
+    const event = new Event("beforeunload", { cancelable: true });
+    Object.defineProperty(event, "returnValue", {
       writable: true,
       configurable: true,
       value: undefined,
@@ -236,7 +386,7 @@ describe('ManageRaffles', () => {
     expect(event.returnValue).toBe(UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE);
   });
 
-  test('cicla el foco dentro del drawer y bloquea el scroll del body', async () => {
+  test("cicla el foco dentro del drawer y bloquea el scroll del body", async () => {
     const user = createUser();
     const initialBodyStyles = {
       overflow: document.body.style.overflow,
@@ -254,37 +404,39 @@ describe('ManageRaffles', () => {
       />
     );
 
-    const trigger = screen.getByRole('button', { name: /editar/i });
+    const trigger = screen.getByRole("button", { name: /editar/i });
     await user.click(trigger);
 
-    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
     const titleInput = within(dialog).getByLabelText(/título/i);
     expect(titleInput).toHaveFocus();
 
-    expect(document.body.style.overflow).toBe('hidden');
-    expect(document.body.style.position).toBe('fixed');
-    expect(document.body.style.width).toBe('100%');
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.position).toBe("fixed");
+    expect(document.body.style.width).toBe("100%");
     expect(document.body.style.top).toMatch(/^-\d+/);
 
-    const saveButton = within(dialog).getByRole('button', {
+    const saveButton = within(dialog).getByRole("button", {
       name: /guardar cambios/i,
     });
-    const closeButton = within(dialog).getByRole('button', {
+    const closeButton = within(dialog).getByRole("button", {
       name: /cerrar panel/i,
     });
 
     saveButton.focus();
-    fireEvent.keyDown(saveButton, { key: 'Tab' });
+    fireEvent.keyDown(saveButton, { key: "Tab" });
     expect(closeButton).toHaveFocus();
 
-    fireEvent.keyDown(titleInput, { key: 'Tab', shiftKey: true });
+    fireEvent.keyDown(titleInput, { key: "Tab", shiftKey: true });
     expect(saveButton).toHaveFocus();
 
-    await user.click(within(dialog).getByRole('button', { name: /cancelar/i }));
+    await user.click(within(dialog).getByRole("button", { name: /cancelar/i }));
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /editar sorteo/i })
+        screen.queryByRole("dialog", { name: /editar sorteo/i })
       ).not.toBeInTheDocument()
     );
 
@@ -296,7 +448,7 @@ describe('ManageRaffles', () => {
     expect(document.body.style.width).toBe(initialBodyStyles.width);
   });
 
-  test('restaura el foco en el disparador al cerrar el panel sin cambios', async () => {
+  test("restaura el foco en el disparador al cerrar el panel sin cambios", async () => {
     const user = createUser();
 
     renderWithToast(
@@ -308,15 +460,17 @@ describe('ManageRaffles', () => {
       />
     );
 
-    const trigger = screen.getByRole('button', { name: /editar/i });
+    const trigger = screen.getByRole("button", { name: /editar/i });
     await user.click(trigger);
 
-    const dialog = await screen.findByRole('dialog', { name: /editar sorteo/i });
-    await user.click(within(dialog).getByRole('button', { name: /cancelar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+    await user.click(within(dialog).getByRole("button", { name: /cancelar/i }));
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /editar sorteo/i })
+        screen.queryByRole("dialog", { name: /editar sorteo/i })
       ).not.toBeInTheDocument()
     );
 
@@ -325,7 +479,7 @@ describe('ManageRaffles', () => {
     });
   });
 
-  test('valida que la fecha ingresada tenga un formato correcto', async () => {
+  test("valida que la fecha ingresada tenga un formato correcto", async () => {
     const user = createUser();
     const onUpdate = jest.fn();
 
@@ -338,26 +492,28 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     const datetimeInput = await screen.findByLabelText(/fecha y hora/i);
     await user.clear(datetimeInput);
-    datetimeInput.type = 'text';
-    fireEvent.change(datetimeInput, { target: { value: '2024-13-40T99:00' } });
+    datetimeInput.type = "text";
+    fireEvent.change(datetimeInput, { target: { value: "2024-13-40T99:00" } });
 
     await act(async () => {
-      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+      await user.click(
+        screen.getByRole("button", { name: /guardar cambios/i })
+      );
     });
 
     expect(onUpdate).not.toHaveBeenCalled();
-    const alerts = await screen.findAllByRole('alert');
+    const alerts = await screen.findAllByRole("alert");
     const feedback = alerts.find((node) =>
-      node.textContent?.toLowerCase().includes('válida')
+      node.textContent?.toLowerCase().includes("válida")
     );
     expect(feedback).toBeDefined();
-    expect(datetimeInput).toHaveAttribute('aria-invalid', 'true');
+    expect(datetimeInput).toHaveAttribute("aria-invalid", "true");
   });
 
-  test('confirma antes de finalizar un sorteo activo', async () => {
+  test("confirma antes de finalizar un sorteo activo", async () => {
     const user = createUser();
     const onFinish = jest.fn();
 
@@ -370,25 +526,31 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /finalizar/i }));
+    await user.click(screen.getByRole("button", { name: /finalizar/i }));
 
-    const dialog = await screen.findByRole('dialog', { name: /finalizar sorteo/i });
+    const dialog = await screen.findByRole("dialog", {
+      name: /finalizar sorteo/i,
+    });
     await act(async () => {
-      await user.click(within(dialog).getByRole('button', { name: /finalizar/i }));
+      await user.click(
+        within(dialog).getByRole("button", { name: /finalizar/i })
+      );
     });
 
-    await waitFor(() => expect(onFinish).toHaveBeenCalledWith('r1'));
+    await waitFor(() => expect(onFinish).toHaveBeenCalledWith("r1"));
     expect(
-      await screen.findByText(/sorteo "sorteo aniversario" marcado como finalizado\./i)
+      await screen.findByText(
+        /sorteo "sorteo aniversario" marcado como finalizado\./i
+      )
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /finalizar sorteo/i })
+        screen.queryByRole("dialog", { name: /finalizar sorteo/i })
       ).not.toBeInTheDocument()
     );
   });
 
-  test('expone la grilla de sorteos con roles accesibles y etiquetas dinámicas', async () => {
+  test("expone la grilla de sorteos con roles accesibles y etiquetas dinámicas", async () => {
     const user = createUser();
 
     renderWithToast(
@@ -400,19 +562,19 @@ describe('ManageRaffles', () => {
       />
     );
 
-    const activeList = screen.getByRole('list', {
+    const activeList = screen.getByRole("list", {
       name: /sorteos activos/i,
     });
-    expect(within(activeList).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(activeList).getAllByRole("listitem")).toHaveLength(1);
 
-    await user.click(screen.getByRole('button', { name: /finalizados/i }));
+    await user.click(screen.getByRole("button", { name: /finalizados/i }));
 
     expect(activeList).toHaveAccessibleName(/sorteos finalizados/i);
-    expect(within(activeList).queryAllByRole('listitem')).toHaveLength(0);
+    expect(within(activeList).queryAllByRole("listitem")).toHaveLength(0);
     expect(screen.getByText(/no hay sorteos finalizados/i)).toBeInTheDocument();
   });
 
-  test('la tarjeta conserva etiquetas claras y agrupa las acciones', () => {
+  test("la tarjeta conserva etiquetas claras y agrupa las acciones", () => {
     renderWithToast(
       <ManageRaffles
         raffles={sampleRaffles}
@@ -422,22 +584,22 @@ describe('ManageRaffles', () => {
       />
     );
 
-    const card = screen.getByRole('article', { name: /sorteo aniversario/i });
-    expect(card).toHaveAttribute('data-state', 'active');
+    const card = screen.getByRole("article", { name: /sorteo aniversario/i });
+    expect(card).toHaveAttribute("data-state", "active");
 
-    const actionsGroup = within(card).getByRole('group', {
+    const actionsGroup = within(card).getByRole("group", {
       name: /acciones del sorteo activo/i,
     });
     expect(actionsGroup).toBeInTheDocument();
-    const actionButtons = within(actionsGroup).getAllByRole('button');
+    const actionButtons = within(actionsGroup).getAllByRole("button");
     expect(actionButtons).toHaveLength(3);
   });
 
-  test('muestra un toast cuando la actualización se completa con éxito', async () => {
+  test("muestra un toast cuando la actualización se completa con éxito", async () => {
     const user = createUser();
     const onUpdate = jest.fn(() => ({
       ok: true,
-      message: 'Sorteo actualizado correctamente.',
+      message: "Sorteo actualizado correctamente.",
     }));
 
     renderWithToast(
@@ -449,9 +611,11 @@ describe('ManageRaffles', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /editar/i }));
+    await user.click(screen.getByRole("button", { name: /editar/i }));
     await act(async () => {
-      await user.click(screen.getByRole('button', { name: /guardar cambios/i }));
+      await user.click(
+        screen.getByRole("button", { name: /guardar cambios/i })
+      );
     });
 
     await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1));
@@ -460,10 +624,9 @@ describe('ManageRaffles', () => {
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: /editar sorteo/i })
+        screen.queryByRole("dialog", { name: /editar sorteo/i })
       ).not.toBeInTheDocument()
     );
   });
 });
 const renderWithToast = (ui) => render(<ToastProvider>{ui}</ToastProvider>);
-

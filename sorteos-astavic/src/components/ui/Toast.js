@@ -1,7 +1,5 @@
 // src/components/ui/Toast.js
-// ! DECISIÓN DE DISEÑO: Renderizamos el toast en un portal para garantizar que se superponga correctamente sin alterar layouts.
-// -*- Usamos iconografía SVG compartida para mantener cohesión visual y cumplir con el pedido de eliminar emojis.
-// ? Riesgo: Si se añaden nuevos estados sin registrar su iconografía y estilo, se degradará la consistencia visual del sistema de notificaciones.
+
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 

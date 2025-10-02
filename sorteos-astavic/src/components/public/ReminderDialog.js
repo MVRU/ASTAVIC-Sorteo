@@ -1,7 +1,5 @@
 // src/components/public/ReminderDialog.js
-// ! DECISIÓN DE DISEÑO: Extraemos el modal para reutilizarlo y encapsular manejo de foco, accesibilidad y eventos de teclado.
-// * Usamos portal a document.body para evitar problemas de stacking context y lectores de pantalla.
-// -!- Riesgo: Requiere un entorno con document.body; en SSR debe renderizarse de forma condicional.
+
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
@@ -28,7 +26,9 @@ const ReminderDialog = ({
   const generalMessageId = `${dialogId}-general`;
   const emailHelpId = `${dialogId}-email-help`;
   const emailErrorId = `${dialogId}-email-error`;
-  const dialogDescription = raffle ? `${descriptionId} ${raffleMessageId}` : `${descriptionId} ${generalMessageId}`;
+  const dialogDescription = raffle
+    ? `${descriptionId} ${raffleMessageId}`
+    : `${descriptionId} ${generalMessageId}`;
   const contentRef = useRef(null);
   const closeButtonRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -99,12 +99,18 @@ const ReminderDialog = ({
               Recibí recordatorios y resultados
             </h3>
             <p id={descriptionId} className="modal__desc">
-              Te avisamos cuando empiece el sorteo y compartimos el listado de ganadores.
+              Te avisamos cuando empiece el sorteo y compartimos el listado de
+              ganadores.
             </p>
             {raffle ? (
               <>
-                <p id={raffleMessageId} className="legend" style={{ margin: 0 }}>
-                  Aplicaremos este recordatorio para<strong> {raffle.title}</strong>.
+                <p
+                  id={raffleMessageId}
+                  className="legend"
+                  style={{ margin: 0 }}
+                >
+                  Aplicaremos este recordatorio para
+                  <strong> {raffle.title}</strong>.
                 </p>
                 <button
                   type="button"
@@ -163,8 +169,16 @@ const ReminderDialog = ({
               </span>
             )}
           </div>
-          <div className="card-actions" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            <button type="submit" className="button button--primary" disabled={submitting} aria-live="polite">
+          <div
+            className="card-actions"
+            style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}
+          >
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={submitting}
+              aria-live="polite"
+            >
               {submitting
                 ? "Guardando..."
                 : raffle

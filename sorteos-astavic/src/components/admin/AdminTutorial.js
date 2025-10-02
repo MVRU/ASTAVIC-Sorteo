@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Movemos el tutorial a un componente dedicado y usamos iconografía vectorial consistente.
+// src/components/admin/AdminTutorial.js
+
 import { TUTORIAL_STEPS } from "./adminConstants";
 import Icon from "../ui/Icon";
 

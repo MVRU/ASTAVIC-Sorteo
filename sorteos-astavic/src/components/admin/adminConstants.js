@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Centralizamos textos y defaults para sincronizar vista previa y tutorial sin duplicar literales.
+// src/components/admin/adminConstants.js
+
 export const PREVIEW_DEFAULT_MESSAGE =
   "Subí un archivo o pegá participantes para ver un resumen acá.";
 

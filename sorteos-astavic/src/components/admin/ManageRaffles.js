@@ -1,16 +1,20 @@
-// ! DECISIÓN DE DISEÑO: Se separan responsabilidades entre editor y confirmaciones para reforzar SRP y reutilizar el modal administrativo.
-// ! DECISIÓN DE DISEÑO: El bloqueo de navegación y recarga solo se activa con cambios pendientes para evitar interrupciones innecesarias.
-// * El drawer reutiliza useFocusTrap y useBodyScrollLock para garantizar aislamiento visual y de foco sin repetir lógica.
-// ? Riesgo: La integración con backend deberá contemplar latencias y estados de error al persistir sorteos.
-// TODO: Validar datos críticos (fecha futura, premios, duplicados) en una capa de dominio compartida.
+// src/components/admin/ManageRaffles.js
 
-import { useMemo, useState, useRef, useId, useCallback, useEffect } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useId,
+  useCallback,
+  useEffect,
+} from "react";
 import PropTypes from "prop-types";
 import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
 import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
 import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
+import { EditableListStyles } from "./manage/EditableList";
 import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
 import useFocusTrap from "../../hooks/useFocusTrap";
@@ -18,6 +22,24 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 
 export const UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE =
   "Hay cambios sin guardar en este sorteo. ¿Seguro que querés salir?";
+
+const compactWhitespace = (value) =>
+  String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const normalizeListForForm = (entries) => {
+  if (!Array.isArray(entries)) return [];
+  return entries
+    .map((entry) => {
+      if (typeof entry === "string") return compactWhitespace(entry);
+      if (entry && typeof entry.title === "string")
+        return compactWhitespace(entry.title);
+      return "";
+    })
+    .filter((entry) => entry !== "");
+};
 
 const composeFormState = (raffle) => {
   const datetimeResult = toLocalInputValue(raffle.datetime);
@@ -32,14 +54,8 @@ const composeFormState = (raffle) => {
           ? "1"
           : String(raffle.winnersCount),
       finished: !!raffle.finished,
-      prizesText: (Array.isArray(raffle.prizes) ? raffle.prizes : [])
-        .map((prize) => (prize?.title ? prize.title : ""))
-        .filter(Boolean)
-        .join("\n"),
-      participantsText: (Array.isArray(raffle.participants)
-        ? raffle.participants
-        : []
-      ).join("\n"),
+      prizes: normalizeListForForm(raffle.prizes),
+      participants: normalizeListForForm(raffle.participants),
     },
     alert: datetimeResult.error
       ? { message: datetimeResult.error, field: "datetime" }
@@ -47,7 +63,10 @@ const composeFormState = (raffle) => {
   };
 };
 
-const normalizeMultiline = (value) => String(value ?? "").replace(/\r\n/g, "\n");
+const normalizeList = (values) => {
+  if (!Array.isArray(values)) return [];
+  return values.map((value) => compactWhitespace(value));
+};
 
 const snapshotForm = (form) => ({
   title: form.title || "",
@@ -58,8 +77,8 @@ const snapshotForm = (form) => ({
       ? ""
       : String(form.winnersCount),
   finished: Boolean(form.finished),
-  prizesText: normalizeMultiline(form.prizesText || ""),
-  participantsText: normalizeMultiline(form.participantsText || ""),
+  prizes: normalizeList(form.prizes || []),
+  participants: normalizeList(form.participants || []),
 });
 
 const serializeForm = (form) => JSON.stringify(snapshotForm(form));
@@ -105,6 +124,9 @@ function fromLocalInputValue(local) {
   return { ok: true, value: parsed.toISOString() };
 }
 
+const formatIndexes = (indexes) =>
+  indexes.map((index) => `#${index + 1}`).join(", ");
+
 function buildPayloadFromForm(form) {
   const title = form.title.trim();
   if (!title) {
@@ -126,6 +148,37 @@ function buildPayloadFromForm(form) {
   const winnersCount =
     Number.isFinite(parsedWinners) && parsedWinners > 0 ? parsedWinners : 1;
 
+  const normalizedPrizes = normalizeList(form.prizes || []);
+  const normalizedParticipants = normalizeList(form.participants || []);
+
+  const emptyPrizeIndexes = normalizedPrizes
+    .map((value, index) => (!value ? index : null))
+    .filter((value) => value !== null);
+  if (emptyPrizeIndexes.length > 0) {
+    return {
+      ok: false,
+      error: `Revisá los premios en las filas ${formatIndexes(
+        emptyPrizeIndexes
+      )}: no pueden quedar vacíos.`,
+      field: "prizes",
+      indexes: emptyPrizeIndexes,
+    };
+  }
+
+  const emptyParticipantIndexes = normalizedParticipants
+    .map((value, index) => (!value ? index : null))
+    .filter((value) => value !== null);
+  if (emptyParticipantIndexes.length > 0) {
+    return {
+      ok: false,
+      error: `Completá los participantes en las filas ${formatIndexes(
+        emptyParticipantIndexes
+      )}: no pueden quedar vacíos.`,
+      field: "participants",
+      indexes: emptyParticipantIndexes,
+    };
+  }
+
   return {
     ok: true,
     payload: {
@@ -135,15 +188,10 @@ function buildPayloadFromForm(form) {
       datetime: datetimeResult.value,
       winnersCount,
       finished: Boolean(form.finished),
-      prizes: form.prizesText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
+      prizes: normalizedPrizes
+        .filter((value) => value)
         .map((prizeTitle) => ({ title: prizeTitle })),
-      participants: form.participantsText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
+      participants: normalizedParticipants.filter((value) => value),
     },
   };
 }
@@ -171,8 +219,7 @@ const ManageRaffles = ({
   const editBaselineRef = useRef("");
   const editFormId = useId();
   const alertId = `${editFormId}-alert`;
-  const portalTarget =
-    typeof document !== "undefined" ? document.body : null;
+  const portalTarget = typeof document !== "undefined" ? document.body : null;
   const emitOutcomeToast = useCallback(
     (result, { successMessage, errorMessage }) => {
       if (result?.ok === false) {
@@ -262,11 +309,17 @@ const ManageRaffles = ({
     if (!node || typeof node.focus !== "function") return;
     if (typeof document === "undefined") return;
     const ownerDocument = node.ownerDocument || document;
-    if (typeof ownerDocument.contains === "function" && !ownerDocument.contains(node)) {
+    if (
+      typeof ownerDocument.contains === "function" &&
+      !ownerDocument.contains(node)
+    ) {
       return;
     }
     const scheduleFocus = () => node.focus();
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.requestAnimationFrame === "function"
+    ) {
       window.requestAnimationFrame(scheduleFocus);
     } else {
       scheduleFocus();
@@ -430,12 +483,42 @@ const ManageRaffles = ({
     }
   };
 
+  const handleListFieldChange = useCallback(
+    (field, values) => {
+      setEditForm((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [field]: values,
+        };
+      });
+      if (formAlert && (!formAlert.field || formAlert.field === field)) {
+        setFormAlert(null);
+      }
+    },
+    [formAlert]
+  );
+
+  const handlePrizesChange = useCallback(
+    (values) => handleListFieldChange("prizes", values),
+    [handleListFieldChange]
+  );
+
+  const handleParticipantsChange = useCallback(
+    (values) => handleListFieldChange("participants", values),
+    [handleListFieldChange]
+  );
+
   const handleEditSubmit = async (event) => {
     event.preventDefault();
     if (!editForm) return;
     const result = buildPayloadFromForm(editForm);
     if (!result.ok) {
-      setFormAlert({ message: result.error, field: result.field });
+      setFormAlert({
+        message: result.error,
+        field: result.field,
+        indexes: result.indexes || [],
+      });
       showToast({
         status: "error",
         message: result.error || "Revisá los datos antes de guardar.",
@@ -517,6 +600,7 @@ const ManageRaffles = ({
   return (
     <section className="section-gap admin-manage">
       <RaffleEditCardStyles />
+      <EditableListStyles />
 
       <div className="container">
         <ManageRafflesToolbar
@@ -562,74 +646,77 @@ const ManageRaffles = ({
 
       {isEditing && portalTarget
         ? createPortal(
-          <div
-            className="drawer-layer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-drawer-title"
-          >
             <div
-              className="drawer-overlay"
-              onClick={() => requestCloseEdit({ origin: "overlay" })}
-            />
-            <aside ref={drawerRef} className="drawer anim-scale-in">
-              <header className="drawer__header">
-                <div>
-                  <h2 id="edit-drawer-title" className="drawer__title">
-                    Editar sorteo
-                  </h2>
-                  <p className="drawer__desc">
-                    Actualizá los datos y guardá los cambios cuando estés listo.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="button button--ghost"
-                  aria-label="Cerrar panel"
-                  onClick={() => requestCloseEdit({ origin: "header" })}
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </header>
-
+              className="drawer-layer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-drawer-title"
+            >
               <div
-                className="drawer__content"
-                role="region"
-                aria-label="Formulario de edición"
-              >
-                {editForm ? (
-                  <RaffleEditCard
-                    form={editForm}
-                    onChange={handleEditField}
-                    onSubmit={handleEditSubmit}
-                    formId={editFormId}
-                    titleRef={titleInputRef}
-                    alert={formAlert}
-                    alertId={alertId}
-                  />
-                ) : null}
-              </div>
+                className="drawer-overlay"
+                onClick={() => requestCloseEdit({ origin: "overlay" })}
+              />
+              <aside ref={drawerRef} className="drawer anim-scale-in">
+                <header className="drawer__header">
+                  <div>
+                    <h2 id="edit-drawer-title" className="drawer__title">
+                      Editar sorteo
+                    </h2>
+                    <p className="drawer__desc">
+                      Actualizá los datos y guardá los cambios cuando estés
+                      listo.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    aria-label="Cerrar panel"
+                    onClick={() => requestCloseEdit({ origin: "header" })}
+                  >
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </header>
 
-              <footer className="drawer__footer">
-                <button
-                  type="button"
-                  className="button button--ghost"
-                  onClick={() => requestCloseEdit({ origin: "footer" })}
+                <div
+                  className="drawer__content"
+                  role="region"
+                  aria-label="Formulario de edición"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="button button--primary"
-                  form={editFormId}
-                >
-                  Guardar cambios
-                </button>
-              </footer>
-            </aside>
-          </div>,
-          portalTarget
-        )
+                  {editForm ? (
+                    <RaffleEditCard
+                      form={editForm}
+                      onChange={handleEditField}
+                      onSubmit={handleEditSubmit}
+                      onPrizesChange={handlePrizesChange}
+                      onParticipantsChange={handleParticipantsChange}
+                      formId={editFormId}
+                      titleRef={titleInputRef}
+                      alert={formAlert}
+                      alertId={alertId}
+                    />
+                  ) : null}
+                </div>
+
+                <footer className="drawer__footer">
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    onClick={() => requestCloseEdit({ origin: "footer" })}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="button button--primary"
+                    form={editFormId}
+                  >
+                    Guardar cambios
+                  </button>
+                </footer>
+              </aside>
+            </div>,
+            portalTarget
+          )
         : null}
 
       <AdminModal
@@ -716,9 +803,7 @@ const raffleShape = PropTypes.shape({
   winnersCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   finished: PropTypes.bool,
   participants: PropTypes.arrayOf(PropTypes.string),
-  prizes: PropTypes.arrayOf(
-    PropTypes.shape({ title: PropTypes.string })
-  ),
+  prizes: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string })),
 });
 
 ManageRaffles.propTypes = {

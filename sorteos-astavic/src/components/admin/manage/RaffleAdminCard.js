@@ -1,13 +1,15 @@
-// ! DECISIÓN DE DISEÑO: La tarjeta unifica su superficie con el contenedor para eliminar biseles y mejorar la lectura.
-// ? Riesgo: El formateo de fecha depende de la configuración regional del navegador.
+// src/components/admin/manage/RaffleAdminCard.js
+
 import PropTypes from "prop-types";
 import { formatReadableDate } from "./manageRafflesHelpers";
 
 const sanitizeDomId = (value) =>
-  `raffle-${String(value ?? "item")
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "item"}`;
+  `raffle-${
+    String(value ?? "item")
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "item"
+  }`;
 
 const buildDatetimeAttribute = (value) => {
   if (!value) return undefined;
@@ -25,7 +27,8 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
   const titleId = `${baseId}-title`;
   const descriptionId = raffle.description ? `${baseId}-desc` : null;
   const metaId = `${baseId}-stats`;
-  const describedBy = [descriptionId, metaId].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [descriptionId, metaId].filter(Boolean).join(" ") || undefined;
   const actionsLabel =
     cardState === "finished"
       ? "Acciones del sorteo finalizado"
@@ -74,7 +77,11 @@ const RaffleAdminCard = ({ raffle, onEdit, onDelete, onFinish }) => {
         </div>
       </dl>
 
-      <footer className="manage-card__actions" role="group" aria-label={actionsLabel}>
+      <footer
+        className="manage-card__actions"
+        role="group"
+        aria-label={actionsLabel}
+      >
         {!raffle.finished && onFinish && (
           <button
             type="button"

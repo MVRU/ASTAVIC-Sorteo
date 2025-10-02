@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Extraemos Chip para reutilizar estilos de toggles compactos en distintos paneles.
+// src/components/admin/ui/Chip.js
+
 import PropTypes from "prop-types";
 
 const Chip = ({ children, active, onClick }) => (

@@ -1,5 +1,5 @@
-// ! DECISIÓN DE DISEÑO: La vista previa queda aislada para poder reutilizarla y evitar lógica condicional en el panel.
-// * Usamos interactionMode="preview" en RaffleCard para evitar efectos y eventos en la vista de administración.
+// src/components/admin/RafflePreview.js
+
 import PropTypes from "prop-types";
 import RaffleCard from "../public/RaffleCard";
 import rafflePropType from "../public/rafflePropType";

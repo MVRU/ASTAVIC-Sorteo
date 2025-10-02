@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Usamos un registro basado en Set para garantizar unicidad sin re-renderizados innecesarios.
+// src/hooks/useSubscribersRegistry.js
+
 import { useCallback, useMemo, useRef, useState } from "react";
 import { isValidEmail, sanitizeEmail } from "../utils/validation";
 

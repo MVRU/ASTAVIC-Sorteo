@@ -1,10 +1,5 @@
 // src/components/public/PublicView.js
-// ! DECISIÓN DE DISEÑO: Los feedback del público utilizan el ToastContext para brindar mensajes consistentes y accesibles.
-// * Separamos responsabilidades en componentes auxiliares para mantener este contenedor declarativo.
-// * Controlamos la navegación local con un segmento accesible que evita recargas y preserva el foco.
-// * Integramos una guía plegable para educar a nuevas personas participantes sin sobrecargar el layout.
-// * Uniformamos el layout entre pestañas con una configuración centralizada que cambia solo los filtros y mensajes.
-// -!- Riesgo: En producción debería persistirse la suscripción en un backend confiable y con doble opt-in.
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import RaffleGrid from "./RaffleGrid";
@@ -140,41 +135,58 @@ const PublicView = ({
     setGuideVisible((previous) => !previous);
   }, []);
 
-  const handleSubmitSubscription = useCallback(async (event) => {
-    event.preventDefault();
-    if (!isEmailValid) {
-      showToast({ status: "error", message: "Ingresá un correo válido." });
-      return;
-    }
-    try {
-      setSubmitting(true);
-      const result = await onRegisterSubscriber(normalizedEmail, reminderRaffle);
-      if (result?.ok === false) {
-        showToast({
-          status: "error",
-          message: result.message || "No pudimos registrar tu correo. Intentá nuevamente.",
-        });
-      } else if (result?.reuse) {
-        showToast({
-          status: "info",
-          message:
-            result.message || "Ya estabas suscripto. Mantendremos tus recordatorios.",
-        });
-      } else {
-        showToast({
-          status: "success",
-          message:
-            result?.message || "Registro exitoso. Te avisaremos antes del sorteo.",
-        });
+  const handleSubmitSubscription = useCallback(
+    async (event) => {
+      event.preventDefault();
+      if (!isEmailValid) {
+        showToast({ status: "error", message: "Ingresá un correo válido." });
+        return;
       }
-      if (result?.ok && !result?.reuse) setEmail("");
-      if (result?.ok) {
-        handleCloseReminder();
+      try {
+        setSubmitting(true);
+        const result = await onRegisterSubscriber(
+          normalizedEmail,
+          reminderRaffle
+        );
+        if (result?.ok === false) {
+          showToast({
+            status: "error",
+            message:
+              result.message ||
+              "No pudimos registrar tu correo. Intentá nuevamente.",
+          });
+        } else if (result?.reuse) {
+          showToast({
+            status: "info",
+            message:
+              result.message ||
+              "Ya estabas suscripto. Mantendremos tus recordatorios.",
+          });
+        } else {
+          showToast({
+            status: "success",
+            message:
+              result?.message ||
+              "Registro exitoso. Te avisaremos antes del sorteo.",
+          });
+        }
+        if (result?.ok && !result?.reuse) setEmail("");
+        if (result?.ok) {
+          handleCloseReminder();
+        }
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setSubmitting(false);
-    }
-  }, [handleCloseReminder, isEmailValid, onRegisterSubscriber, normalizedEmail, reminderRaffle, showToast]);
+    },
+    [
+      handleCloseReminder,
+      isEmailValid,
+      onRegisterSubscriber,
+      normalizedEmail,
+      reminderRaffle,
+      showToast,
+    ]
+  );
 
   return (
     <>
@@ -251,7 +263,10 @@ const PublicView = ({
             allowMarkFinished={!isFinishedRoute}
             onMarkFinished={onMarkFinished}
             onRequestReminder={handleReminder}
-            emptyState={{ title: copy.emptyTitle, subtitle: copy.emptySubtitle }}
+            emptyState={{
+              title: copy.emptyTitle,
+              subtitle: copy.emptySubtitle,
+            }}
           />
         </div>
       </section>

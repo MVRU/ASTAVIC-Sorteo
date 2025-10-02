@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Separar la dropzone simplifica pruebas, reutilización e iconografía coherente.
+// src/components/admin/ui/FileDropzone.js
+
 import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Icon from "../../ui/Icon";
@@ -22,7 +23,9 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
   const handleChange = (event) => {
     if (disabled) return;
     const nextFile =
-      event.target.files && event.target.files[0] ? event.target.files[0] : null;
+      event.target.files && event.target.files[0]
+        ? event.target.files[0]
+        : null;
     onFile(nextFile);
   };
 

@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Estatizamos las tarjetas y empleamos iconografía SVG centralizada para consistencia visual.
+// src/components/admin/ui/StatCard.js
+
 import PropTypes from "prop-types";
 import Icon, { ICON_NAMES } from "../../ui/Icon";
 
@@ -19,7 +20,8 @@ const StatCard = ({ label, value, iconName }) => (
       background: "var(--surface-elevated)",
       border: "1px solid var(--border)",
       boxShadow: "var(--shadow-1)",
-      transition: "transform var(--transition-base), box-shadow var(--transition-base)",
+      transition:
+        "transform var(--transition-base), box-shadow var(--transition-base)",
     }}
   >
     {iconName && (

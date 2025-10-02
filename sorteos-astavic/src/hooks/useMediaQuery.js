@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Centralizamos la detección de media queries para evitar duplicar listeners en cada componente.
+// src/hooks/useMediaQuery.js
+
 import { useEffect, useState } from "react";
 
 const getMatch = (query) =>

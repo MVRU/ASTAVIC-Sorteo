@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Este hook mantiene el filtrado/ordenado desacoplado de la UI para respetar SRP.
+// src/components/admin/manage/useRaffleListFilters.js
+
 import { useMemo } from "react";
 
 const SORTERS = {
@@ -22,7 +23,9 @@ export const useRaffleListFilters = ({ raffles, tab, query, sort }) =>
     const filtered = !normalizedQuery
       ? baseList
       : baseList.filter((raffle) => {
-          const haystack = `${raffle.title || ""} ${raffle.description || ""}`.toLowerCase();
+          const haystack = `${raffle.title || ""} ${
+            raffle.description || ""
+          }`.toLowerCase();
           return haystack.includes(normalizedQuery);
         });
 

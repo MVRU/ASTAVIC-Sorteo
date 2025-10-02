@@ -1,5 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Validamos el menú móvil para evitar fugas de foco y scroll en el header.
-// * Las pruebas fuerzan viewport móvil simulando matchMedia consistente en todos los escenarios.
+// src/components/__tests__/Header.test.js
+
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Header from "../Header";
@@ -29,7 +29,7 @@ describe("Header - menú móvil accesible", () => {
   });
 
   const createUser = () =>
-    (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+    typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
   const renderHeader = (props = {}) => {
     enableMobileViewport();
@@ -56,7 +56,9 @@ describe("Header - menú móvil accesible", () => {
     });
     const header = screen.getByRole("banner");
     expect(
-      within(header).queryByRole("dialog", { name: /menú de navegación móvil/i })
+      within(header).queryByRole("dialog", {
+        name: /menú de navegación móvil/i,
+      })
     ).toBeNull();
     const closeButton = within(dialog).getByRole("button", {
       name: /cerrar menú/i,

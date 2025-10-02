@@ -1,11 +1,12 @@
-// ! DECISIÓN DE DISEÑO: Validamos el focus trap y la devolución de foco del ReminderDialog para mantener los criterios de accesibilidad.
+// src/components/public/__tests__/ReminderDialog.test.js
+
 import { createRef } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ReminderDialog from "../ReminderDialog";
 
 const setupUser = () =>
-  (typeof userEvent.setup === "function" ? userEvent.setup() : userEvent);
+  typeof userEvent.setup === "function" ? userEvent.setup() : userEvent;
 
 let originalScrollTo;
 
@@ -44,9 +45,13 @@ describe("ReminderDialog", () => {
       </>
     );
 
-    const closeButton = screen.getByRole("button", { name: /cerrar recordatorio/i });
+    const closeButton = screen.getByRole("button", {
+      name: /cerrar recordatorio/i,
+    });
     const emailInput = screen.getByLabelText(/correo electrónico/i);
-    const submitButton = screen.getByRole("button", { name: /quiero recibir novedades/i });
+    const submitButton = screen.getByRole("button", {
+      name: /quiero recibir novedades/i,
+    });
 
     expect(emailInput).toHaveFocus();
 

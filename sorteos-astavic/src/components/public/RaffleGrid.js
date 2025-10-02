@@ -1,7 +1,5 @@
 // src/components/public/RaffleGrid.js
-// ! DECISIÓN DE DISEÑO: Separamos la grilla de sorteos para reutilizarla y mantener PublicView enfocado en orquestación.
-// * La grilla declara roles accesibles (list/listitem) para lectores de pantalla.
-// -!- Riesgo: Depende de estilos globales; sin ellos, el layout perderá la disposición en columnas.
+
 import PropTypes from "prop-types";
 import RaffleCard from "./RaffleCard";
 import rafflePropType from "./rafflePropType";
@@ -29,9 +27,15 @@ const RaffleGrid = ({
 }) => {
   if (!raffles.length) {
     return (
-      <div className="empty-state card anim-fade-in" role="status" style={emptyStateStyles}>
+      <div
+        className="empty-state card anim-fade-in"
+        role="status"
+        style={emptyStateStyles}
+      >
         <p style={{ margin: 0 }}>{emptyState.title}</p>
-        <p style={{ margin: 0, color: "var(--text-3,#666)" }}>{emptyState.subtitle}</p>
+        <p style={{ margin: 0, color: "var(--text-3,#666)" }}>
+          {emptyState.subtitle}
+        </p>
       </div>
     );
   }

@@ -1,4 +1,5 @@
-// ! DECISIÓN DE DISEÑO: Encapsulamos métricas y chips y adoptamos iconografía SVG compartida para mantener la UI coherente.
+// src/components/admin/AdminStats.js
+
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Chip from "./ui/Chip";
@@ -101,9 +102,17 @@ const StatsCards = ({ metrics }) => (
       gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
     }}
   >
-    <StatCard label="Sorteos totales" value={metrics.total} iconName="collection" />
+    <StatCard
+      label="Sorteos totales"
+      value={metrics.total}
+      iconName="collection"
+    />
     <StatCard label="Activos" value={metrics.active} iconName="hourglass" />
-    <StatCard label="Finalizados" value={metrics.finished} iconName="checkCircle" />
+    <StatCard
+      label="Finalizados"
+      value={metrics.finished}
+      iconName="checkCircle"
+    />
   </div>
 );
 
