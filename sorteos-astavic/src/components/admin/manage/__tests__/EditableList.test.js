@@ -20,12 +20,14 @@ const ControlledList = ({
   initialValues,
   onChangeSpy,
   label,
+  itemLabel,
   addButtonLabel,
 }) => {
   const [values, setValues] = React.useState(initialValues);
   return (
     <EditableList
       label={label}
+      itemLabel={itemLabel}
       values={values}
       onChange={(nextValues) => {
         onChangeSpy(nextValues);
@@ -45,7 +47,8 @@ describe("EditableList", () => {
       <ControlledList
         initialValues={[" Premio inicial "]}
         onChangeSpy={onChange}
-        label="Premio"
+        label="Premios"
+        itemLabel="Premio"
         addButtonLabel="Agregar premio"
       />
     );
@@ -82,7 +85,8 @@ describe("EditableList", () => {
       <ControlledList
         initialValues={["Ana", "Ana", "Luis"]}
         onChangeSpy={onChange}
-        label="Participante"
+        label="Participantes"
+        itemLabel="Participante"
         addButtonLabel="Agregar participante"
       />
     );
@@ -122,7 +126,8 @@ describe("EditableList", () => {
       <ControlledList
         initialValues={["Voucher"]}
         onChangeSpy={onChange}
-        label="Premio"
+        label="Premios"
+        itemLabel="Premio"
         addButtonLabel="Agregar premio"
       />
     );
@@ -144,5 +149,35 @@ describe("EditableList", () => {
       screen.getByRole("button", { name: /eliminar premio 1/i })
     );
     await waitFor(() => expect(counter).toHaveTextContent("Sin elementos"));
+  });
+
+  test("usa la etiqueta singular personalizada cuando está disponible", () => {
+    render(
+      <EditableList
+        label="Requisitos"
+        itemLabel="Requisito"
+        values={["Ser mayor de edad"]}
+        onChange={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("Requisitos")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/requisito 1/i, { selector: "input" })
+    ).toBeInTheDocument();
+  });
+
+  test("elimina dos puntos del encabezado para reutilizarlo como respaldo singular", () => {
+    render(
+      <EditableList
+        label="Condiciones:"
+        values={["Leer las bases"]}
+        onChange={jest.fn()}
+      />
+    );
+
+    expect(
+      screen.getByLabelText(/condiciones 1/i, { selector: "input" })
+    ).toBeInTheDocument();
   });
 });

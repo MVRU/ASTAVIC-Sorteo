@@ -230,7 +230,8 @@ const RaffleEditCard = ({
         <div className="manage-edit__lists-item">
           <EditableList
             id={`${formId}-prizes`}
-            label="Premio"
+            label="Premios"
+            itemLabel="Premio"
             values={form.prizes}
             onChange={onPrizesChange}
             addButtonLabel="Agregar premio"
@@ -243,7 +244,8 @@ const RaffleEditCard = ({
         <div className="manage-edit__lists-item">
           <EditableList
             id={`${formId}-participants`}
-            label="Participante"
+            label="Participantes"
+            itemLabel="Participante"
             values={form.participants}
             onChange={onParticipantsChange}
             addButtonLabel="Agregar participante"

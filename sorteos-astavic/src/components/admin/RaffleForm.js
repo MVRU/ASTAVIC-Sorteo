@@ -373,6 +373,7 @@ const RaffleForm = ({
           <div className="form-group" style={{ marginBottom: "1.25rem" }}>
             <EditableList
               label="Premios"
+              itemLabel="Premio"
               helperText="Definí un título por premio. El orden determina el puesto."
               values={prizes}
               onChange={handlePrizesChange}
@@ -399,6 +400,7 @@ const RaffleForm = ({
           >
             <EditableList
               label="Participantes manuales"
+              itemLabel="Participante manual"
               helperText="Se combinan con el archivo y se eliminan duplicados automáticamente."
               values={manualParticipants}
               onChange={handleManualParticipantsChange}

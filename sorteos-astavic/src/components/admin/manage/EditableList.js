@@ -2,6 +2,8 @@
 // * DECISIÓN: Unificamos el rediseño de las listas editables para garantizar una
 //   experiencia consistente entre creación y edición, reforzando accesibilidad
 //   y adaptabilidad mobile sin duplicar estilos.
+// -*- DECISIÓN: Incorporamos una etiqueta singular opcional para alinear la
+//    semántica visual y accesible sin sacrificar encabezados descriptivos.
 
 import { useId, useMemo, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
@@ -362,6 +364,7 @@ const normalizeValues = (values) =>
 const EditableList = ({
   id,
   label,
+  itemLabel,
   values,
   onChange,
   addButtonLabel,
@@ -377,7 +380,16 @@ const EditableList = ({
   const descriptionIds = useMemo(() => {
     return [helperId, describedBy].filter(Boolean).join(" ") || undefined;
   }, [helperId, describedBy]);
-  const itemLabel = useMemo(() => label.replace(/:\s*$/, ""), [label]);
+  const sanitizedLabel = useMemo(
+    () => label.replace(/:\s*$/, "").trim(),
+    [label]
+  );
+  const singularLabel = useMemo(() => {
+    if (itemLabel && itemLabel.trim()) {
+      return itemLabel.trim();
+    }
+    return sanitizedLabel;
+  }, [itemLabel, sanitizedLabel]);
   const inputRefs = useRef([]);
   const [pendingFocusIndex, setPendingFocusIndex] = useState(null);
 
@@ -495,7 +507,7 @@ const EditableList = ({
                     className="editable-list__item-label"
                     htmlFor={inputId}
                   >
-                    {itemLabel} {index + 1}
+                    {singularLabel} {index + 1}
                   </label>
                   <input
                     id={inputId}
@@ -518,7 +530,7 @@ const EditableList = ({
                     type="button"
                     className="editable-list__remove"
                     onClick={() => handleRemove(index)}
-                    aria-label={`Eliminar ${itemLabel.toLowerCase()} ${
+                    aria-label={`Eliminar ${singularLabel.toLowerCase()} ${
                       index + 1
                     }`}
                   >
@@ -542,6 +554,7 @@ const EditableList = ({
 EditableList.propTypes = {
   id: PropTypes.string,
   label: PropTypes.string.isRequired,
+  itemLabel: PropTypes.string,
   values: PropTypes.arrayOf(PropTypes.string),
   onChange: PropTypes.func.isRequired,
   addButtonLabel: PropTypes.string,
@@ -553,6 +566,7 @@ EditableList.propTypes = {
 
 EditableList.defaultProps = {
   id: undefined,
+  itemLabel: undefined,
   values: [],
   addButtonLabel: "Agregar",
   placeholder: "",
