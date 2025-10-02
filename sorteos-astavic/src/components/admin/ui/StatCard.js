@@ -1,4 +1,5 @@
 // src/components/admin/ui/StatCard.js
+// ! DECISIÓN DE DISEÑO: Las tarjetas de métrica reutilizan tokens de sombra, tipografía e iconografía alineados al sistema.
 
 import PropTypes from "prop-types";
 import Icon, { ICON_NAMES } from "../../ui/Icon";
@@ -17,8 +18,8 @@ const StatCard = ({ label, value, iconName }) => (
       textAlign: "center",
       gap: "0.5rem",
       borderRadius: "12px",
-      background: "var(--surface-elevated)",
-      border: "1px solid var(--border)",
+      background: "var(--color-bg-surface-elevated)",
+      border: "1px solid var(--color-border)",
       boxShadow: "var(--shadow-1)",
       transition:
         "transform var(--transition-base), box-shadow var(--transition-base)",
@@ -45,7 +46,7 @@ const StatCard = ({ label, value, iconName }) => (
         style={{
           fontSize: "0.875rem",
           fontWeight: 600,
-          color: "var(--text-secondary)",
+          color: "var(--color-fg-secondary)",
           marginBottom: "0.25rem",
         }}
       >

@@ -1,4 +1,5 @@
 // src/components/admin/AdminDashboard.js
+// ! DECISIÓN DE DISEÑO: El dashboard administra formularios y listados consumiendo tokens semánticos para respetar DESIGN.md.
 
 import {
   forwardRef,
@@ -15,7 +16,7 @@ import rafflePropType from "../public/rafflePropType";
 import { useToast } from "../../context/ToastContext";
 import Icon, { ICON_NAMES } from "../ui/Icon";
 import AdminTutorial from "./AdminTutorial";
-import EditableList, { EditableListStyles } from "./manage/EditableList";
+import EditableList from "./manage/EditableList";
 
 /* =========================
    Hook simple de media query
@@ -57,7 +58,7 @@ const Chip = ({ children, onClick, active }) => (
       borderRadius: "999px",
       background: active ? "var(--brand-100)" : "var(--brand-50)",
       color: "var(--brand-700)",
-      border: "1px solid var(--border)",
+      border: "1px solid var(--color-border)",
       whiteSpace: "nowrap",
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
       cursor: "pointer",
@@ -90,8 +91,8 @@ const StatCard = ({ label, value, iconName }) => (
       textAlign: "center",
       gap: "0.5rem",
       borderRadius: "12px",
-      background: "var(--surface-elevated)",
-      border: "1px solid var(--border)",
+      background: "var(--color-bg-surface-elevated)",
+      border: "1px solid var(--color-border)",
       boxShadow: "var(--shadow-1)",
       transition:
         "transform var(--transition-base), box-shadow var(--transition-base)",
@@ -118,7 +119,7 @@ const StatCard = ({ label, value, iconName }) => (
         style={{
           fontSize: "0.875rem",
           fontWeight: 600,
-          color: "var(--text-secondary)",
+          color: "var(--color-fg-secondary)",
           marginBottom: "0.25rem",
         }}
       >
@@ -228,9 +229,9 @@ const FileDropzone = forwardRef(
         onDrop={handleDrop}
         style={{
           padding: "1.25rem",
-          border: "2px dashed var(--border)",
+          border: "2px dashed var(--color-border)",
           borderRadius: "12px",
-          background: "var(--surface-elevated)",
+          background: "var(--color-bg-surface-elevated)",
           cursor: disabled ? "not-allowed" : "pointer",
           display: "flex",
           alignItems: "center",
@@ -245,7 +246,7 @@ const FileDropzone = forwardRef(
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--surface)",
+            background: "var(--color-bg-surface)",
             color: "var(--brand-700)",
             boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
           }}
@@ -256,13 +257,13 @@ const FileDropzone = forwardRef(
           <div
             style={{
               fontWeight: 700,
-              color: "var(--text-primary)",
+              color: "var(--color-fg-primary)",
               fontSize: "1rem",
             }}
           >
             Soltá tu archivo (.csv, .tsv, .txt)
           </div>
-          <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+          <div style={{ fontSize: "0.875rem", color: "var(--color-fg-secondary)" }}>
             También podés hacer clic o presionar Enter para buscarlo.
           </div>
         </div>
@@ -817,7 +818,6 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
 
   return (
     <section className="section-gap anim-fade-in" aria-labelledby="admin-panel">
-      <EditableListStyles />
       <div className="container" style={{ display: "grid", gap: "1.5rem" }}>
         {/* Toolbar */}
         <div
@@ -907,7 +907,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                       fontSize: "0.82rem",
                       color: "var(--brand-700)",
                       background: "var(--brand-50)",
-                      border: "1px solid var(--border)",
+                      border: "1px solid var(--color-border)",
                       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
                       width: "max-content",
                     }}
@@ -976,7 +976,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     role="alert"
                     style={{
                       marginTop: "0.375rem",
-                      color: "var(--danger)",
+                      color: "var(--color-danger)",
                       fontSize: "0.875rem",
                     }}
                   >
@@ -1019,7 +1019,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     role="alert"
                     style={{
                       marginTop: "0.375rem",
-                      color: "var(--danger)",
+                      color: "var(--color-danger)",
                       fontSize: "0.875rem",
                     }}
                   >
@@ -1069,7 +1069,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                       role="alert"
                       style={{
                         marginTop: "0.375rem",
-                        color: "var(--danger)",
+                        color: "var(--color-danger)",
                         fontSize: "0.875rem",
                       }}
                     >
@@ -1113,7 +1113,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                       role="alert"
                       style={{
                         marginTop: "0.375rem",
-                        color: "var(--danger)",
+                        color: "var(--color-danger)",
                         fontSize: "0.875rem",
                       }}
                     >
@@ -1142,7 +1142,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     role="alert"
                     style={{
                       marginTop: "0.5rem",
-                      color: "var(--danger)",
+                      color: "var(--color-danger)",
                       fontSize: "0.875rem",
                     }}
                   >
@@ -1207,7 +1207,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     role="alert"
                     style={{
                       marginTop: "0.5rem",
-                      color: "var(--danger)",
+                      color: "var(--color-danger)",
                       fontSize: "0.875rem",
                     }}
                   >
@@ -1224,7 +1224,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                   gap: "1rem",
                   flexWrap: "wrap",
                   paddingTop: "0.5rem",
-                  borderTop: "1px solid var(--border)",
+                  borderTop: "1px solid var(--color-border)",
                 }}
               >
                 <button
@@ -1325,7 +1325,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 style={{
                   margin: "1rem 0 0.5rem",
                   fontSize: "0.925rem",
-                  color: "var(--text-secondary)",
+                  color: "var(--color-fg-secondary)",
                 }}
               >
                 {previewMessage}
@@ -1337,7 +1337,7 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                     marginTop: "0.5rem",
                     paddingLeft: "1.25rem",
                     fontSize: "0.9rem",
-                    color: "var(--text-secondary)",
+                    color: "var(--color-fg-secondary)",
                     maxHeight: "100px",
                     overflowY: "auto",
                   }}

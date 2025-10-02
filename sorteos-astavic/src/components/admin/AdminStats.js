@@ -1,4 +1,5 @@
 // src/components/admin/AdminStats.js
+// ! DECISIÓN DE DISEÑO: Las tarjetas y chips reutilizan tokens para mantener contraste y jerarquías definidas en DESIGN.md.
 
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
@@ -77,7 +78,7 @@ const StatsChips = ({ metrics }) => {
             fontSize: "0.82rem",
             color: "var(--brand-700)",
             background: "var(--brand-50)",
-            border: "1px solid var(--border)",
+            border: "1px solid var(--color-border)",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
             width: "max-content",
           }}

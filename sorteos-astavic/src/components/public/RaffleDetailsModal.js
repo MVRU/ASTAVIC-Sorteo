@@ -1,4 +1,5 @@
 // src/components/public/RaffleDetailsModal.js
+// ! DECISIÓN DE DISEÑO: El modal reutiliza tokens de overlay, foco y tipografía para ofrecer detalle accesible del sorteo.
 
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -22,14 +23,14 @@ const STICKY_HEADER_STYLE = {
   position: "sticky",
   top: 0,
   zIndex: 2,
-  background: "var(--surface, #fff)",
+  background: "var(--color-bg-surface)",
   borderBottom: "1px solid rgba(15,40,105,0.08)",
 };
 const STICKY_FOOTER_STYLE = {
   position: "sticky",
   bottom: 0,
   zIndex: 2,
-  background: "var(--surface, #fff)",
+  background: "var(--color-bg-surface)",
   borderTop: "1px solid rgba(15,40,105,0.08)",
 };
 const MODAL_SCROLL_STYLE = {
@@ -49,8 +50,8 @@ const PARTICIPANTS_SCROLL_STYLE = {
   overflow: "auto",
   paddingRight: "0.25rem",
   borderRadius: "0.65rem",
-  border: "1px solid var(--border)",
-  background: "var(--surface)",
+  border: "1px solid var(--color-border)",
+  background: "var(--color-bg-surface)",
   overscrollBehavior: "contain",
 };
 const WINNERS_LIST_STYLE = { display: "grid", gap: "0.5rem" };
@@ -189,7 +190,7 @@ const RaffleDetailsModal = ({
               <span
                 className="legend"
                 style={{
-                  color: "var(--text-secondary)",
+                  color: "var(--color-fg-secondary)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.4rem",
@@ -207,7 +208,7 @@ const RaffleDetailsModal = ({
               </span>
               <span
                 className="legend"
-                style={{ color: "var(--text-secondary)" }}
+                style={{ color: "var(--color-fg-secondary)" }}
               >
                 Participantes: {participantsCount}
               </span>

@@ -1,4 +1,5 @@
 // src/components/public/RaffleCard.js
+// ! DECISIÓN DE DISEÑO: Las tarjetas públicas aplican tokens de estado, superficie y tipografía coherentes con DESIGN.md.
 
 import {
   useCallback,
@@ -313,7 +314,7 @@ const RaffleCard = ({
                           border: "1px dashed rgba(185,141,35,0.35)",
                           background:
                             "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                          color: "var(--text-secondary)",
+                          color: "var(--color-fg-secondary)",
                           textAlign: "center",
                           fontSize: "0.95rem",
                         }}
@@ -447,7 +448,7 @@ const RaffleCard = ({
                           border: "1px dashed rgba(185,141,35,0.35)",
                           background:
                             "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                          color: "var(--text-secondary)",
+                          color: "var(--color-fg-secondary)",
                           textAlign: "center",
                           fontSize: "0.95rem",
                         }}
@@ -508,7 +509,7 @@ const RaffleCard = ({
                             <span
                               style={{
                                 fontWeight: 600,
-                                color: "var(--text-primary)",
+                                color: "var(--color-fg-primary)",
                                 wordBreak: "break-word",
                               }}
                             >

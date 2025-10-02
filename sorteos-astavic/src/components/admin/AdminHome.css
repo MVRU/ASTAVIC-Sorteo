@@ -1,0 +1,183 @@
+/* ! DECISIÓN DE DISEÑO: Este stylesheet aplica tokens semánticos para alinear el panel administrativo con DESIGN.md y facilitar la retematización. */
+
+.admin-home {
+  display: grid;
+  gap: clamp(var(--space-4), 2vw, var(--space-6));
+}
+
+.admin-title {
+  margin: 0;
+  font-size: clamp(var(--font-size-600), 1.2vw + 1rem, var(--font-size-800));
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+}
+
+.admin-subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--color-fg-secondary);
+  font-size: clamp(0.95rem, 0.4vw + 0.85rem, 1rem);
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.admin-toolbar:focus-within {
+  border-color: var(--color-btn-primary);
+  border-color: color-mix(in srgb, var(--color-btn-primary) 55%, transparent);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+.admin-toolbar__titles {
+  min-width: 0;
+}
+
+.admin-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline-start: auto;
+}
+
+.admin-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  padding: calc(var(--space-2) + 2px) calc(var(--space-3) + 2px);
+  transition:
+    transform var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.admin-logout:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.admin-logout__icon {
+  opacity: 0.85;
+}
+
+.admin-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-action {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-base) var(--ease-standard);
+}
+
+.admin-action:hover,
+.admin-action:focus-visible {
+  border-color: var(--color-btn-primary);
+  border-color: color-mix(in srgb, var(--color-btn-primary) 45%, transparent);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.admin-action--ghost {
+  background: var(--color-bg-muted);
+  background:
+    color-mix(
+      in srgb,
+      var(--color-bg-muted) 75%,
+      transparent
+    );
+}
+
+.admin-action__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-muted);
+  background: color-mix(in srgb, var(--color-bg-muted) 90%, transparent);
+  color: var(--color-icon-muted);
+}
+
+.admin-action__icon--primary {
+  background: var(--brand-100);
+  background: color-mix(in srgb, var(--brand-200) 50%, transparent);
+  color: var(--brand-600);
+}
+
+.admin-action__text {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.admin-action__title {
+  font-weight: 600;
+  font-size: var(--font-size-500);
+  color: var(--color-fg-primary);
+}
+
+.admin-action__desc {
+  color: var(--color-fg-muted);
+  font-size: clamp(0.9rem, 0.3vw + 0.85rem, 0.98rem);
+  line-height: var(--line-height-base);
+}
+
+@media (max-width: 700px) {
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-toolbar__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .admin-action {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-action__icon {
+    inline-size: 48px;
+    block-size: 48px;
+    justify-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-toolbar,
+  .admin-logout,
+  .admin-action {
+    transition: none;
+    transform: none;
+  }
+}

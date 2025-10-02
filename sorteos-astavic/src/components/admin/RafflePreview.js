@@ -1,4 +1,5 @@
 // src/components/admin/RafflePreview.js
+// ! DECISIÓN DE DISEÑO: La vista previa hereda tokens de card para garantizar coherencia entre administración y público.
 
 import PropTypes from "prop-types";
 import RaffleCard from "../public/RaffleCard";
@@ -40,7 +41,7 @@ const RafflePreview = ({ preview, isDesktop }) => (
       style={{
         margin: "1rem 0 0.5rem",
         fontSize: "0.925rem",
-        color: "var(--text-secondary)",
+        color: "var(--color-fg-secondary)",
       }}
     >
       {preview.message}
@@ -52,7 +53,7 @@ const RafflePreview = ({ preview, isDesktop }) => (
           marginTop: "0.5rem",
           paddingLeft: "1.25rem",
           fontSize: "0.9rem",
-          color: "var(--text-secondary)",
+          color: "var(--color-fg-secondary)",
           maxHeight: "100px",
           overflowY: "auto",
         }}

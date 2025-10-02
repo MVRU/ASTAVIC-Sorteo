@@ -1,4 +1,5 @@
 // src/components/admin/ui/Chip.js
+// ! DECISIÓN DE DISEÑO: Los chips administrativos usan tokens de borde y color para mantener contraste y foco accesible.
 
 import PropTypes from "prop-types";
 
@@ -18,7 +19,7 @@ const Chip = ({ children, active, onClick }) => (
       borderRadius: "999px",
       background: active ? "var(--brand-100)" : "var(--brand-50)",
       color: "var(--brand-700)",
-      border: "1px solid var(--border)",
+      border: "1px solid var(--color-border)",
       whiteSpace: "nowrap",
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
       cursor: "pointer",
