@@ -142,6 +142,28 @@
   --color-overlay: rgba(11, 25, 54, 0.5);
   --color-header-translucent: rgba(255, 255, 255, 0.92);
 
+  /* Superficies invertidas (header brand) */
+  --color-bg-brand: var(--brand-900);
+  --color-bg-brand-elevated: color-mix(
+    in srgb,
+    var(--brand-800) 82%,
+    #020c1b 18%
+  );
+  --color-fg-on-brand: var(--color-fg-inverted);
+  --color-fg-on-brand-soft: color-mix(in srgb, #f0f6ff 88%, transparent);
+  --color-fg-on-brand-muted: color-mix(in srgb, #f0f6ff 72%, transparent);
+  --color-border-on-brand: color-mix(in srgb, #ffffff 18%, transparent);
+  --color-border-on-brand-strong: color-mix(in srgb, #ffffff 30%, transparent);
+  --color-bg-on-brand-hover: color-mix(in srgb, #ffffff 12%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #ffffff 16%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #ffffff 20%, transparent);
+  --color-outline-on-brand: color-mix(in srgb, #ffffff 45%, transparent);
+  --color-overlay-on-brand: color-mix(
+    in srgb,
+    var(--brand-900) 68%,
+    rgba(2, 12, 27, 0.88) 32%
+  );
+
   /* Elevación */
   --shadow-1: 0 12px 30px rgba(2, 12, 27, 0.08);
   --shadow-2: 0 16px 34px rgba(2, 12, 27, 0.12);
@@ -217,6 +239,27 @@
   --color-btn-primary: var(--brand-500);
   --color-btn-primary-hover: var(--brand-600);
 
+  --color-bg-brand: #061738;
+  --color-bg-brand-elevated: color-mix(
+    in srgb,
+    #0a2149 78%,
+    #000000 22%
+  );
+  --color-fg-on-brand: #f9fbff;
+  --color-fg-on-brand-soft: color-mix(in srgb, #f9fbff 90%, transparent);
+  --color-fg-on-brand-muted: color-mix(in srgb, #f9fbff 74%, transparent);
+  --color-border-on-brand: color-mix(in srgb, #f9fbff 24%, transparent);
+  --color-border-on-brand-strong: color-mix(in srgb, #f9fbff 38%, transparent);
+  --color-bg-on-brand-hover: color-mix(in srgb, #f9fbff 18%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #f9fbff 22%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #f9fbff 26%, transparent);
+  --color-outline-on-brand: color-mix(in srgb, #f9fbff 52%, transparent);
+  --color-overlay-on-brand: color-mix(
+    in srgb,
+    rgba(2, 12, 27, 0.92) 60%,
+    rgba(0, 0, 0, 0.8) 40%
+  );
+
   --gradient-gold: linear-gradient(180deg, #f3d26a 0%, #c8922d 100%);
   --color-gold-contrast: #120a02;
   --color-gold-strong: #d5a742;
@@ -231,6 +274,18 @@
   --color-link: #0046ff;
   --color-link-hover: #002fb7;
   --color-border-strong: #1a5cff;
+  --color-bg-brand: #002b7a;
+  --color-bg-brand-elevated: #003699;
+  --color-fg-on-brand: #ffffff;
+  --color-fg-on-brand-soft: #ffffff;
+  --color-fg-on-brand-muted: #d6e4ff;
+  --color-border-on-brand: #ffffff;
+  --color-border-on-brand-strong: #ffffff;
+  --color-bg-on-brand-hover: color-mix(in srgb, #ffffff 28%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #ffffff 36%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #ffffff 42%, transparent);
+  --color-outline-on-brand: #ffffff;
+  --color-overlay-on-brand: color-mix(in srgb, #001a66 65%, #000000 35%);
   --gradient-gold: linear-gradient(180deg, #ffbf00 0%, #b87333 100%);
   --color-gold-contrast: #000000;
   --color-gold-strong: #ffbf00;
