@@ -40,6 +40,16 @@
 
 > **Usar SIEMPRE** estos tokens en componentes. El modo oscuro y accesible re-mapea estos valores.
 
+#### 1.2.1 Neutrales (texto e iconografía)
+
+| Token               | Valor hex | Uso principal                                                                 | Requisito de contraste |
+| ------------------- | --------- | ---------------------------------------------------------------------------- | ---------------------- |
+| `--text-primary`    | #0a1630   | Texto dominante y títulos sobre `--color-bg-surface` y `--color-bg-app`.    | ≥ 7:1 (AA/AAA) contra fondos claros. |
+| `--text-secondary`  | #51607a   | Meta, subtítulos y labels secundarios.                                       | ≥ 4.5:1 (AA) en fondos claros; usar ≥ 16px para cuerpos largos. |
+| `--text-muted`      | #6b7a94   | Notas aclaratorias y vacíos; sólo en tamaños ≥ 16px o mayúsculas cortas.    | ≥ 4.0:1 en `--color-bg-app`; ≥ 4.5:1 en `--color-bg-surface`. |
+| `--text-inverted`   | #ffffff   | Texto sobre superficies brand (`--brand-700`) y mensajes oscuros.           | ≥ 7:1 sobre `--brand-700` y overlays oscuros. |
+| `--icon-muted`      | #4b5563   | Íconos inactivos o de apoyo en cards y toolbars neutrales.                  | ≥ 7:1 sobre `--color-bg-surface`. |
+
 ```css
 /* src/styles/design-tokens.css */
 :root {
@@ -187,26 +197,40 @@
 ## 2) Tipografía
 
 - **Familia**: `Inter` (400, 500, 600, 700) + fallback de sistema.
-- **Escala** (usa tokens; evita tamaños ad-hoc):
-
-  - **Body**: `font-size: var(--font-size-400); line-height: var(--line-height-base);`
-  - **Subtle**: `var(--font-size-300)` para _labels_ y _meta_ (mínimo 14px).
-  - **H6**: `var(--font-size-500)`
-  - **H5**: `var(--font-size-600)`
-  - **H4**: `var(--font-size-700)`
-  - **H3**: `var(--font-size-800)`
-
-- **Títulos fluidos**: usar `clamp()` sólo en _hero/section-title_, p. ej.:
-
-  ```css
-  .section-title {
-    font-size: clamp(1.25rem, 1.5vw + 1rem, 1.875rem);
-    line-height: var(--line-height-tight);
-    font-weight: 700;
-  }
-  ```
-
 - **Accesibilidad**: microcopy **≥ 0.85rem** en móviles. Evitar uppercase prolongado; si se usa, aumentar `letter-spacing`.
+
+### 2.1 Escala y mapeo de tokens
+
+| Nivel tipográfico | Token de tamaño                     | Token de color por defecto | Uso principal |
+| ----------------- | ----------------------------------- | -------------------------- | ------------- |
+| Body              | `var(--font-size-400)` + `var(--line-height-base)` | `--text-primary`            | Texto de párrafos y descripciones extensas. |
+| Subtle            | `var(--font-size-300)`              | `--text-secondary`         | Etiquetas, metadatos y texto auxiliar ≥ 14px. |
+| H6                | `var(--font-size-500)`              | `--text-primary`           | Titulares de tarjetas y bloques secundarios. |
+| H5                | `var(--font-size-600)`              | `--text-primary`           | Encabezados de secciones y modales. |
+| H4                | `var(--font-size-700)`              | `--text-primary`           | Titulares destacados en landing y dashboard. |
+| H3                | `var(--font-size-800)`              | `--text-primary`           | Hero y encabezados jerárquicos superiores. |
+
+### 2.2 Combinaciones aprobadas
+
+- **Fondos claros (`--color-bg-surface`, `--color-bg-app`, `--color-bg-muted`)**: utilizar `--text-primary` para copy principal. `--text-secondary` se reserva para subtítulos o labels; `--text-muted` únicamente en tamaños ≥ 16px o iconografía de estado pasivo para mantener AA.
+- **Fondos brand u oscuros (`--brand-700`, overlays, drawers)**: cambiar a `--text-inverted` para texto y `currentColor` en iconos (`Icon` se alimenta de `--text-inverted`).
+- **Estados de feedback**:
+  - Éxito: `--color-success` sobre `--color-success-bg` (ratio ≥ 4.5:1); combinar con `--text-inverted` si el fondo se eleva a `--color-success` sólido.
+  - Error: `--color-danger` sobre `--color-danger-bg`; evitar usar `--text-muted` en estos bloques.
+  - Advertencia: `--color-warning` sobre `--color-warning-bg` con subtítulos en `--text-secondary`.
+  - Información: `--color-info` sobre `--color-info-bg`; CTAs secundarios conservan `--text-primary`.
+
+### 2.3 Títulos fluidos
+
+Usar `clamp()` sólo en _hero/section-title_:
+
+```css
+.section-title {
+  font-size: clamp(1.25rem, 1.5vw + 1rem, 1.875rem);
+  line-height: var(--line-height-tight);
+  font-weight: 700;
+}
+```
 
 ---
 
@@ -266,13 +290,41 @@ Ejemplos:
 ### 5.2 Botones
 
 - Base: `padding: var(--space-2) var(--space-4); gap: var(--space-2); border-radius: var(--radius-lg); transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);`
-- Estados: `:hover { transform: translateY(-1px); } :active { transform: translateY(0); }`
-- Variantes:
+- Estados activos: `:hover { transform: translateY(-1px); } :active { transform: translateY(0); } :focus-visible { outline: 3px solid color-mix(in srgb, var(--color-btn-primary) 40%, transparent); outline-offset: 3px; }`
 
-  - **Primary** (solid/gradient opcional): usa `--color-btn-primary` y `--color-btn-primary-contrast`.
-  - **Ghost**: borde `--color-border`, texto `--color-fg-primary`.
-  - **Subtle**: fondo `--color-bg-muted`, texto `--color-fg-primary`.
-  - **Gold**: usar con moderación (eventos especiales).
+#### 5.2.1 Variantes activas
+
+- **Primary** (solid/gradient opcional): `background: var(--gradient-primary)` o `--color-btn-primary`; texto `--color-btn-primary-contrast`.
+- **Ghost**: borde `--color-border`, texto `--color-fg-primary`; hover rellena con `color-mix` 12% de `--color-btn-primary`.
+- **Subtle**: fondo `--color-bg-muted`, texto `--color-fg-primary`; hover intensifica fondo + border suave.
+- **Gold**: usar con moderación (eventos especiales); mantener iconos en `--text-inverted` para garantizar contraste.
+- **Danger**: `background: var(--color-danger)` con texto blanco, destinado a acciones destructivas confirmadas.
+
+#### 5.2.2 Estados deshabilitados (`button[disabled]` / `[aria-disabled="true"]`)
+
+> Se evita degradar la opacidad: cada combinación mantiene contraste ≥ 4.5:1 sobre superficies claras y oscuras. Las variantes deshabilitadas anulan `transform`, `box-shadow` y transiciones de hover.
+
+| Variante                                   | Fondo (`background`)                                 | Texto/icono                                | Borde / sombra                                                   | Interacción deshabilitada                                                                 | Foco accesible                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Sin modificador (`.button`)                | `--button-disabled-bg` → `#e3e9f3`                   | `--button-disabled-text` → `#51607a`       | `--button-disabled-border` → `#c8d3e5`; sin sombra               | `cursor: not-allowed`; `pointer-events: none`; `opacity: 1`; no hover/active                              | Sólo aplicable con `aria-disabled`: `outline: 2px solid var(--border-strong); outline-offset: 3px;`     |
+| `.button--primary`                         | `--button-primary-disabled-bg` → `#3478bc`           | `--button-primary-disabled-text` → `#ffffff` | Sin borde; sin gradiente; sombra eliminada                       | Igual que base; conserva ancho y spinner opcional                                                     | Igual que base                                                                                          |
+| `.button--ghost`                           | `--button-ghost-disabled-bg` → `#f4f7fc`             | `--button-disabled-text`                   | `--button-ghost-disabled-border` → `#c9d4e6`; sin sombra         | Igual que base                                                                                         | Igual que base                                                                                          |
+| `.button--subtle`                          | `--button-subtle-disabled-bg` → `#edf4ff`            | `--button-disabled-text`                   | Borde transparente; sin sombra                                   | Igual que base                                                                                         | Igual que base                                                                                          |
+| `.button--gold`                            | `--button-gold-disabled-bg` → `#e6d098`              | `#3b2f0b`                                   | `--button-gold-disabled-border` → `rgba(185, 141, 35, 0.45)`; sin sombra | Igual que base                                                                                         | Igual que base                                                                                          |
+| `.button--danger`                          | `--button-danger-disabled-bg` → `#b44a4a`            | `#ffffff`                                   | `--button-danger-disabled-border` → `#a43f3f`; sin sombra        | Igual que base                                                                                         | Igual que base                                                                                          |
+
+- `button[disabled]` deja de ser foco navegable; `[aria-disabled="true"]` conserva foco para anunciar ayudas contextuales. Evitar usar ambos simultáneamente en el mismo nodo.
+- Si un control está visualmente deshabilitado pero debe explicar el motivo, proveer `aria-describedby` con el mensaje.
+
+#### 5.2.3 Recomendaciones UX y estados de carga
+
+- Mostrar mensajes de ayuda cercanos que expliquen criterios de activación (p. ej. “Completa los campos obligatorios” o “Requiere seleccionar al menos 1 boleto”).
+- Habilitar botones únicamente cuando los criterios se cumplen; mientras tanto, usar `aria-disabled="true"` si debe conservar foco para leer la ayuda.
+- Para estados de carga (`.button.is-loading`):
+  - Reemplazar el label por un spinner y texto corto (“Guardando…”), manteniendo el ancho para evitar saltos.
+  - Aplicar `pointer-events: none` pero mantener `aria-live="polite"` o `aria-busy="true"` en el contenedor para que lectores de pantalla distingan carga vs. deshabilitado.
+  - Cambiar el cursor a `progress` cuando corresponda y mantener contraste completo (sin opacidad reducida).
+- Documentar en copy o tooltip el motivo de la deshabilitación si persiste más de unos segundos.
 
 ### 5.3 Tarjetas (card / raffle-card)
 

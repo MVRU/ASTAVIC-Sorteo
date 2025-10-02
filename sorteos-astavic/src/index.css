@@ -23,8 +23,11 @@
   --surface: #f7fafc;
   --surface-elevated: #ffffff;
   --border: #d6e0ef;
-  --text-primary: #16213c;
-  --text-secondary: #5b6475;
+  --text-primary: #0a1630;
+  --text-secondary: #51607a;
+  --text-muted: #6b7a94;
+  --text-inverted: #ffffff;
+  --icon-muted: #4b5563;
   --success: #1aa368;
   --danger: #cc3a3a;
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -67,9 +70,9 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+button:disabled,
+[aria-disabled="true"] {
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 code {

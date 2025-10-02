@@ -1,4 +1,5 @@
 // src/components/admin/AdminHome.js
+// ! DECISIÓN DE DISEÑO: Las acciones de administración consumen tokens semánticos para texto e íconos y facilitan su retematización.
 
 import PropTypes from "prop-types";
 
@@ -198,11 +199,11 @@ function LocalStyles() {
         height: 48px;
         border-radius: 12px;
         background: #f3f4f6;
-        color: #4b5563;
+        color: var(--icon-muted, #4b5563);
       }
       .admin-action__icon--primary {
         background: rgba(59,130,246,.1);
-        color: #2563eb;
+        color: var(--brand-600, #2563eb);
       }
 
       .admin-action__text {

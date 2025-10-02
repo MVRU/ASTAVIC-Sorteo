@@ -26,7 +26,23 @@
 
   --text-primary: #0a1630;
   --text-secondary: #51607a;
-  --text-3: #6b7a94;
+  --text-muted: #6b7a94;
+  --text-inverted: #ffffff;
+  --text-3: var(--text-muted);
+  --icon-muted: #4b5563;
+  /* ! DECISIÓN DE DISEÑO: Los tokens de deshabilitado garantizan contraste ≥4.5:1 sin depender de opacidad global. */
+  --button-disabled-bg: #e3e9f3;
+  --button-disabled-border: #c8d3e5;
+  --button-disabled-text: #51607a;
+  --button-primary-disabled-bg: #3478bc;
+  --button-primary-disabled-text: #ffffff;
+  --button-ghost-disabled-bg: #f4f7fc;
+  --button-ghost-disabled-border: #c9d4e6;
+  --button-subtle-disabled-bg: #edf4ff;
+  --button-gold-disabled-bg: #e6d098;
+  --button-gold-disabled-border: rgba(185, 141, 35, 0.45);
+  --button-danger-disabled-bg: #b44a4a;
+  --button-danger-disabled-border: #a43f3f;
 
   --danger: #c03434;
   --success: #1f9d5a;
@@ -814,6 +830,54 @@ main {
   transform: translateY(1px);
 }
 
+/* ! DECISIÓN DE DISEÑO: Los estados deshabilitados eliminan animaciones y mantienen foco visible en `aria-disabled`. */
+.button:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-disabled-bg, #e3e9f3);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border: 1px solid var(--button-disabled-border, transparent);
+  cursor: not-allowed;
+  opacity: 1;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+}
+
+.button:is([disabled], [aria-disabled="true"]):focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 3px;
+}
+
+.button--primary:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-primary-disabled-bg, #3478bc);
+  color: var(--button-primary-disabled-text, #ffffff);
+  border: none;
+}
+
+.button--ghost:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-ghost-disabled-bg, #f4f7fc);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border-color: var(--button-ghost-disabled-border, #c9d4e6);
+}
+
+.button--subtle:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-subtle-disabled-bg, #edf4ff);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border-color: transparent;
+}
+
+.button--gold:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-gold-disabled-bg, #e6d098);
+  color: #3b2f0b;
+  border: 1px solid var(--button-gold-disabled-border, rgba(185, 141, 35, 0.45));
+  box-shadow: none;
+}
+
+.button--danger:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-danger-disabled-bg, #b44a4a);
+  color: #ffffff;
+  border-color: var(--button-danger-disabled-border, #a43f3f);
+}
+
 .button--primary {
   background: linear-gradient(180deg, var(--brand-600) 0%, #1e66b7 100%);
   color: #fff;
@@ -1465,7 +1529,7 @@ footer {
   text-decoration: underline;
 }
 .link-button:disabled {
-  color: var(--text-3, #666);
+  color: var(--text-muted, #666);
   cursor: not-allowed;
   text-decoration: none;
   opacity: 0.7;
