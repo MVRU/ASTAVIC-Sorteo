@@ -236,10 +236,28 @@ Usar `clamp()` sólo en _hero/section-title_:
 
 ## 3) Espaciado, radios, sombras
 
+### 3.1 Espaciado
+
 - **Sistema 4px**: `--space-*` + combinaciones (8/12/16/24/32/48).
 - **Separación secciones**: preferir `var(--space-6)` (32px) ó `--space-7` (48px) según densidad.
-- **Radios**: por defecto `--radius-lg` para tarjetas; `--radius-xl` en _hero/raffle-card_ grandes.
-- **Sombras**: reducir en base; reservar `--shadow-3` para overlays/modales.
+
+### 3.2 Radios
+
+- `--radius-lg` como borde por defecto en tarjetas y botones.
+- `--radius-xl` reservado a _hero/raffle-card_ y contenedores con gradientes.
+
+### 3.3 Sistema de sombras elevadas
+
+| Nivel / token                                      | Offset X | Offset Y | Blur | Spread | Color                        | Componentes asignados                                                                  |
+| -------------------------------------------------- | -------- | -------- | ---- | ------ | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `--shadow-1` → `0 12px 30px rgba(2, 12, 27, 0.08)` | 0        | 12px     | 30px | 0      | rgba(2, 12, 27, 0.08)        | Tarjetas base (`.card`), `raffle-card`, enlaces accesibles como `.skip-link`.         |
+| `--shadow-2` → `0 16px 34px rgba(2, 12, 27, 0.12)` | 0        | 16px     | 34px | 0      | rgba(2, 12, 27, 0.12)        | Estados _hover_ de tarjetas, menú móvil (`.app-header__mobile`), refuerzos de callouts |
+| `--shadow-3` → `0 24px 60px rgba(2, 12, 27, 0.22)` | 0        | 24px     | 60px | 0      | rgba(2, 12, 27, 0.22)        | Toasts (`.toast`), `modal__content` y cualquier overlay bloqueante.                   |
+| Drawer lateral (`-20px 0 60px rgba(2, 12, 27, 0.18)`) | -20px    | 0        | 60px | 0      | rgba(2, 12, 27, 0.18)        | `.drawer` (panel deslizante anclado a la derecha).                                     |
+
+- **Aplicación**: los componentes deben consumir el token correspondiente desde CSS (`box-shadow: var(--shadow-x)`) sin duplicar valores.
+- **Fallback alto contraste / entornos sin sombra**: cada superficie elevada mantiene `border: 1px solid` definido en CSS (`rgba(15, 40, 105, 0.12)` para modales y drawer). En navegadores que desactivan sombras (modo alto contraste, IE heredado) debe mantenerse la jerarquía añadiendo `outline` o intensificando el borde (`color-mix` ≥ 20% del color base) en la variante sin sombra.
+- **Responsabilidad UX**: evitar combinar múltiples niveles de sombra en un mismo bloque; sólo los overlays globales (`.toast`, `.modal`, `.drawer`) pueden usar `--shadow-3` o la sombra direccional del drawer para reforzar profundidad.
 
 ---
 
