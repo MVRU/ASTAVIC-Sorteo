@@ -1,59 +1,47 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "./styles/design-tokens.css";
 
-* {
+/* ! DECISIÓN DE DISEÑO: Base tipográfica y resets alineados a DESIGN.md; todo estilo consume tokens semánticos. */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-/* ! DECISIÓN DE DISEÑO: Variables globales para superficies, branding y compatibilidad con áreas seguras móviles. */
 :root {
-  color-scheme: light;
-  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: var(--font-family-sans);
+  line-height: var(--line-height-base);
   font-weight: 400;
-  --brand-50: #e8f2fb;
-  --brand-100: #d9ecfb;
-  --brand-200: #b3d8f6;
-  --brand-300: #8cc4f2;
-  --brand-400: #4ea4ea;
-  --brand-500: #1e88e5;
-  --brand-600: #1565c0;
-  --brand-700: #0d47a1;
-  --brand-800: #0a3a85;
-  --brand-900: #072b63;
-  --surface: #f7fafc;
-  --surface-elevated: #ffffff;
-  --border: #d6e0ef;
-  --text-primary: #0a1630;
-  --text-secondary: #51607a;
-  --text-muted: #6b7a94;
-  --text-inverted: #ffffff;
-  --icon-muted: #4b5563;
-  --success: #1aa368;
-  --danger: #cc3a3a;
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  background-color: var(--surface);
-  color: var(--text-primary);
+  background-color: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--surface);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--color-link-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
 }
 
 img,
@@ -84,6 +72,11 @@ code {
   font-size: 0.95em;
 }
 
-#root {
-  min-height: 100vh;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

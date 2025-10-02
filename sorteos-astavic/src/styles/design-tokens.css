@@ -1,0 +1,167 @@
+/* ! DECISIÓN DE DISEÑO: Fuente única de tokens de diseño siguiendo DESIGN.md. Actualizar aquí antes de tocar componentes. */
+:root {
+  color-scheme: light;
+
+  /* Superficies */
+  --color-bg-app: #f3f6fb;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-elevated: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-muted: #f5f8fc;
+
+  /* Marca base */
+  --brand-25: #f5faff;
+  --brand-50: #eaf4ff;
+  --brand-100: #d7eaff;
+  --brand-200: #b6d7ff;
+  --brand-300: #8fbefa;
+  --brand-400: #68a7ef;
+  --brand-500: #4ea4ea;
+  --brand-600: #2d7ed1;
+  --brand-700: #0f4d9e;
+  --brand-800: #0a3a85;
+  --brand-900: #072b63;
+
+  /* Tinta (texto/iconos) */
+  --color-fg-primary: #0a1b33; /* ratio >= 7:1 sobre bg-surface */
+  --color-fg-secondary: #3b4a63; /* ratio >= 4.5:1 */
+  --color-fg-muted: #5b6b85;
+  --color-fg-inverted: #ffffff;
+  --color-icon-muted: #4b5563;
+  --color-link: var(--brand-600);
+  --color-link-hover: var(--brand-700);
+
+  /* Bordes */
+  --color-border: rgba(15, 40, 105, 0.16);
+  --color-border-strong: rgba(15, 40, 105, 0.22);
+
+  /* Estados */
+  --color-success: #1f9d5a;
+  --color-success-bg: #e8f8ef;
+  --color-danger: #c03434;
+  --color-danger-bg: #fdecec;
+  --color-warning: #b45309;
+  --color-warning-bg: #fff4df;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eaf4ff;
+
+  /* Botones deshabilitados */
+  --button-disabled-bg: #e3e9f3;
+  --button-disabled-border: #c8d3e5;
+  --button-disabled-text: #51607a;
+  --button-primary-disabled-bg: #3478bc;
+  --button-primary-disabled-text: #ffffff;
+  --button-ghost-disabled-bg: #f4f7fc;
+  --button-ghost-disabled-border: #c9d4e6;
+  --button-subtle-disabled-bg: #edf4ff;
+  --button-gold-disabled-bg: #e6d098;
+  --button-gold-disabled-border: rgba(185, 141, 35, 0.45);
+  --button-danger-disabled-bg: #b44a4a;
+  --button-danger-disabled-border: #a43f3f;
+
+  /* Botón primario */
+  --color-btn-primary: var(--brand-600);
+  --color-btn-primary-hover: #1e66b7;
+  --color-btn-primary-contrast: #ffffff;
+
+  /* Gradientes y efectos */
+  --gradient-primary: linear-gradient(
+    180deg,
+    var(--brand-600) 0%,
+    #1e66b7 100%
+  );
+  --gradient-gold: linear-gradient(180deg, #f7d774 0%, #e9b949 100%);
+  --color-gold-contrast: #3b2f0b;
+  --color-accent-amber: #e59b2f;
+  --color-gold-strong: #8a6d1d;
+  --color-gold-muted: #5a4212;
+
+  /* Overlay */
+  --color-overlay: rgba(11, 25, 54, 0.5);
+  --color-header-translucent: rgba(255, 255, 255, 0.92);
+
+  /* Elevación */
+  --shadow-1: 0 12px 30px rgba(2, 12, 27, 0.08);
+  --shadow-2: 0 16px 34px rgba(2, 12, 27, 0.12);
+  --shadow-3: 0 24px 60px rgba(2, 12, 27, 0.22);
+
+  /* Tipografía base */
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-size-300: 0.875rem; /* 14px */
+  --font-size-400: 1rem; /* 16px */
+  --font-size-500: 1.125rem; /* 18px */
+  --font-size-600: 1.25rem; /* 20px */
+  --font-size-700: 1.5rem; /* 24px */
+  --font-size-800: 1.875rem; /* 30px */
+  --line-height-tight: 1.25;
+  --line-height-base: 1.5;
+  --line-height-loose: 1.65;
+
+  /* Espaciado (sistema 4px) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+
+  /* Radio (sistema 4px) */
+  --radius-sm: 0.5rem; /* 8px */
+  --radius-md: 0.75rem; /* 12px */
+  --radius-lg: 1rem; /* 16px */
+  --radius-xl: 1.25rem; /* 20px */
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 0.9);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* Layout */
+  --container-max: 1120px;
+
+  /* Layers */
+  --z-nav: 900;
+  --z-overlay: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg-app: #0b1424;
+  --color-bg-surface: #0f1b2e;
+  --color-bg-surface-elevated: #122239;
+  --color-bg-card: #122239;
+  --color-bg-muted: #0e192a;
+
+  --color-fg-primary: #eaf1ff;
+  --color-fg-secondary: #c3d2ea;
+  --color-fg-muted: #9fb1cc;
+  --color-fg-inverted: #0b1424;
+  --color-link: var(--brand-500);
+  --color-link-hover: var(--brand-400);
+
+  --color-border: rgba(234, 244, 255, 0.12);
+  --color-border-strong: rgba(234, 244, 255, 0.18);
+
+  --color-btn-primary: var(--brand-500);
+  --color-btn-primary-hover: var(--brand-600);
+
+  --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 10px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 18px 42px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="hc"] {
+  --color-link: #0046ff;
+  --color-link-hover: #002fb7;
+  --color-border-strong: #1a5cff;
+}
