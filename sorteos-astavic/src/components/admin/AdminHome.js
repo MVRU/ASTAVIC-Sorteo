@@ -2,6 +2,7 @@
 // ! DECISIÓN DE DISEÑO: Las acciones de administración consumen tokens semánticos para texto e íconos y facilitan su retematización.
 
 import PropTypes from "prop-types";
+import Icon from "../ui/Icon";
 
 // ! DECISIÓN DE DISEÑO: Este componente usa tokens neutrales para alinear iconografía y textos secundarios con la nueva guía de contraste.
 
@@ -30,18 +31,13 @@ const AdminHome = ({ onLogout }) => {
               title="Cerrar la sesión actual"
             >
               <span className="admin-logout__label">Cerrar sesión</span>
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
+              <Icon
+                name="logOut"
+                decorative
+                size={20}
+                strokeWidth={1.75}
                 className="admin-logout__icon"
-              >
-                <path
-                  fill="currentColor"
-                  d="M10 17v-2h4v-6h-4V7h6v10h-6Zm-6-1V8l4 4-4 4Z"
-                />
-              </svg>
+              />
             </button>
           </div>
         </header>
@@ -50,18 +46,12 @@ const AdminHome = ({ onLogout }) => {
         <nav aria-label="Acciones de administración" className="admin-actions">
           <a href="#/admin/crear" className="admin-action">
             <div className="admin-action__icon admin-action__icon--primary">
-              {/* Ícono “plus” */}
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  fill="currentColor"
-                  d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6Z"
-                />
-              </svg>
+              <Icon
+                name="plus"
+                decorative
+                size={24}
+                strokeWidth={1.75}
+              />
             </div>
             <div className="admin-action__text">
               <span className="admin-action__title">Crear sorteo</span>
@@ -76,18 +66,12 @@ const AdminHome = ({ onLogout }) => {
             className="admin-action admin-action--ghost"
           >
             <div className="admin-action__icon">
-              {/* Ícono “dashboard/lista” */}
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  fill="currentColor"
-                  d="M4 6h16v2H4V6Zm0 5h10v2H4v-2Zm0 5h16v2H4v-2Z"
-                />
-              </svg>
+              <Icon
+                name="list"
+                decorative
+                size={24}
+                strokeWidth={1.75}
+              />
             </div>
             <div className="admin-action__text">
               <span className="admin-action__title">Gestionar sorteos</span>
