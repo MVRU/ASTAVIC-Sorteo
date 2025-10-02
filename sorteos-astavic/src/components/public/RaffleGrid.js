@@ -1,8 +1,11 @@
 // src/components/public/RaffleGrid.js
+// ! DECISIÓN DE DISEÑO: Esta grilla usa tokens semánticos para mantener consistencia cromática en vacíos y tarjetas.
 
 import PropTypes from "prop-types";
 import RaffleCard from "./RaffleCard";
 import rafflePropType from "./rafflePropType";
+
+// ! DECISIÓN DE DISEÑO: El estado vacío usa el token --text-tertiary para respetar los nuevos contrastes documentados.
 
 const gridStyles = {
   display: "grid",
@@ -33,7 +36,7 @@ const RaffleGrid = ({
         style={emptyStateStyles}
       >
         <p style={{ margin: 0 }}>{emptyState.title}</p>
-        <p style={{ margin: 0, color: "var(--text-3,#666)" }}>
+        <p style={{ margin: 0, color: "var(--text-muted,#666)" }}>
           {emptyState.subtitle}
         </p>
       </div>

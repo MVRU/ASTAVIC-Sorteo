@@ -1,6 +1,9 @@
 // src/components/admin/AdminHome.js
+// ! DECISIÓN DE DISEÑO: Las acciones de administración consumen tokens semánticos para texto e íconos y facilitan su retematización.
 
 import PropTypes from "prop-types";
+
+// ! DECISIÓN DE DISEÑO: Este componente usa tokens neutrales para alinear iconografía y textos secundarios con la nueva guía de contraste.
 
 const AdminHome = ({ onLogout }) => {
   return (
@@ -116,7 +119,7 @@ function LocalStyles() {
 
       .admin-subtitle {
         margin: .25rem 0 0 0;
-        color: var(--text-muted, #6b7280);
+        color: var(--text-secondary, #6b7280);
         font-size: .95rem;
       }
 
@@ -198,11 +201,11 @@ function LocalStyles() {
         height: 48px;
         border-radius: 12px;
         background: #f3f4f6;
-        color: #4b5563;
+        color: var(--icon-muted, #4b5563);
       }
       .admin-action__icon--primary {
         background: rgba(59,130,246,.1);
-        color: #2563eb;
+        color: var(--brand-600, #2563eb);
       }
 
       .admin-action__text {
