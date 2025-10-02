@@ -306,82 +306,33 @@ const RaffleCard = ({
                     </h3>
 
                     {winners.length === 0 ? (
-                      <div
-                        style={{
-                          marginTop: "0.5rem",
-                          padding: "0.75rem",
-                          borderRadius: "0.85rem",
-                          border: "1px dashed rgba(185,141,35,0.35)",
-                          background:
-                            "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                          color: "var(--color-fg-secondary)",
-                          textAlign: "center",
-                          fontSize: "0.95rem",
-                        }}
-                      >
+                      <div className="raffle-card__highlight-placeholder">
                         Próximamente publicaremos los ganadores.
                       </div>
                     ) : (
-                      <ol
-                        style={{
-                          listStyle: "none",
-                          margin: "0.6rem 0 0",
-                          padding: 0,
-                          display: "grid",
-                          gap: "0.6rem",
-                        }}
-                      >
+                      <ol className="raffle-card__highlight-list">
                         {winners.map((winner, index) => (
                           <li
                             key={`${winner}-${index}`}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "0.6rem",
-                              padding: "0.55rem 0.7rem",
-                              borderRadius: "0.85rem",
-                              background:
-                                "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
-                              border: "1px solid rgba(185,141,35,0.28)",
-                              boxShadow:
-                                "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
-                            }}
+                            className="raffle-card__highlight-item"
                           >
                             <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "0.5rem",
-                                fontWeight: 700,
-                                color: "var(--brand-700)",
-                              }}
+                              className="raffle-card__highlight-leading"
                             >
                               <span
                                 aria-hidden="true"
-                                style={{
-                                  display: "inline-grid",
-                                  placeItems: "center",
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: 999,
-                                  background:
-                                    index === 0
-                                      ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
-                                      : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
-                                  border:
-                                    index === 0
-                                      ? "1px solid rgba(185,141,35,0.45)"
-                                      : "1px solid rgba(185,141,35,0.32)",
-                                  color: "#3b2f0b",
-                                  fontSize: "0.9rem",
-                                  fontWeight: 800,
-                                }}
+                                className={`raffle-card__position-pill ${
+                                  index === 0
+                                    ? "raffle-card__position-pill--top"
+                                    : "raffle-card__position-pill--regular"
+                                }`}
                                 title={`Puesto ${index + 1}`}
                               >
                                 {index + 1}
                               </span>
-                              {winner}
+                              <span className="raffle-card__highlight-leading-text">
+                                {winner}
+                              </span>
                             </span>
                           </li>
                         ))}
@@ -440,79 +391,29 @@ const RaffleCard = ({
                     </h3>
 
                     {prizes.length === 0 ? (
-                      <div
-                        style={{
-                          marginTop: "0.5rem",
-                          padding: "0.75rem",
-                          borderRadius: "0.85rem",
-                          border: "1px dashed rgba(185,141,35,0.35)",
-                          background:
-                            "linear-gradient(180deg, rgba(247,215,116,0.12) 0%, rgba(255,255,255,0.6) 100%)",
-                          color: "var(--color-fg-secondary)",
-                          textAlign: "center",
-                          fontSize: "0.95rem",
-                        }}
-                      >
+                      <div className="raffle-card__highlight-placeholder">
                         No hay premios registrados para este sorteo.
                       </div>
                     ) : (
-                      <ol
-                        style={{
-                          listStyle: "none",
-                          margin: "0.6rem 0 0",
-                          padding: 0,
-                          display: "grid",
-                          gap: "0.6rem",
-                        }}
-                      >
+                      <ol className="raffle-card__highlight-list">
                         {prizes.map((prize, index) => (
                           <li
                             key={`${prize?.title ?? "premio"}-${index}`}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.65rem",
-                              padding: "0.6rem 0.75rem",
-                              borderRadius: "0.85rem",
-                              background:
-                                "linear-gradient(180deg, rgba(247,215,116,0.18) 0%, rgba(255,255,255,0.85) 100%)",
-                              border: "1px solid rgba(185,141,35,0.28)",
-                              boxShadow:
-                                "0 3px 10px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.65)",
-                            }}
+                            className="raffle-card__highlight-item"
                           >
                             <span
                               aria-hidden="true"
-                              style={{
-                                display: "inline-grid",
-                                placeItems: "center",
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: 999,
-                                background:
-                                  index === 0
-                                    ? "linear-gradient(180deg,#f7d774 0%, #e9b949 100%)"
-                                    : "linear-gradient(180deg,#fff1a6 0%, #ffe476 100%)",
-                                border:
-                                  index === 0
-                                    ? "1px solid rgba(185,141,35,0.45)"
-                                    : "1px solid rgba(185,141,35,0.32)",
-                                color: "#3b2f0b",
-                                fontSize: "0.9rem",
-                                fontWeight: 800,
-                              }}
+                              className={`raffle-card__position-pill ${
+                                index === 0
+                                  ? "raffle-card__position-pill--top"
+                                  : "raffle-card__position-pill--regular"
+                              }`}
                               title={`Premio ${index + 1}`}
                             >
                               {index + 1}
                             </span>
 
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: "var(--color-fg-primary)",
-                                wordBreak: "break-word",
-                              }}
-                            >
+                            <span className="raffle-card__prize-name">
                               {prize?.title ?? "Premio sin nombre"}
                             </span>
                           </li>

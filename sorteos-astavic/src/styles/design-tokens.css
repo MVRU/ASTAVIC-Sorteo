@@ -77,6 +77,66 @@
   --color-accent-amber: #e59b2f;
   --color-gold-strong: #8a6d1d;
   --color-gold-muted: #5a4212;
+  --color-gold-border: color-mix(
+    in srgb,
+    var(--color-gold-strong) 32%,
+    transparent
+  );
+  --color-gold-border-subtle: color-mix(
+    in srgb,
+    var(--color-gold-strong) 22%,
+    transparent
+  );
+  --color-gold-border-dashed: color-mix(
+    in srgb,
+    var(--color-gold-strong) 26%,
+    transparent
+  );
+  --color-gold-border-focus: color-mix(
+    in srgb,
+    var(--color-gold-strong) 42%,
+    transparent
+  );
+  --color-gold-surface-strong: color-mix(
+    in srgb,
+    var(--color-gold-strong) 20%,
+    var(--color-bg-surface) 80%
+  );
+  --color-gold-surface-soft: color-mix(
+    in srgb,
+    var(--color-gold-strong) 12%,
+    var(--color-bg-surface) 88%
+  );
+  --gradient-gold-subtle: linear-gradient(
+    180deg,
+    var(--color-gold-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 92%, transparent) 100%
+  );
+  --gradient-gold-muted: linear-gradient(
+    180deg,
+    var(--color-gold-surface-soft) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 96%, transparent) 100%
+  );
+  --gradient-gold-horizontal: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold-strong) 14%, var(--color-bg-surface) 86%) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 95%, transparent) 100%
+  );
+  --shadow-gold-shell: 0 4px 12px color-mix(
+    in srgb,
+    #020c1b 14%,
+    transparent
+  );
+  --shadow-gold-item: 0 3px 10px color-mix(
+    in srgb,
+    #020c1b 12%,
+    transparent
+  );
+  --shadow-gold-inset: inset 0 1px 0 color-mix(
+    in srgb,
+    #ffffff 70%,
+    transparent
+  );
 
   /* Overlay */
   --color-overlay: rgba(11, 25, 54, 0.5);
@@ -157,6 +217,11 @@
   --color-btn-primary: var(--brand-500);
   --color-btn-primary-hover: var(--brand-600);
 
+  --gradient-gold: linear-gradient(180deg, #f3d26a 0%, #c8922d 100%);
+  --color-gold-contrast: #120a02;
+  --color-gold-strong: #d5a742;
+  --color-gold-muted: #a97c27;
+
   --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 10px 24px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 18px 42px rgba(0, 0, 0, 0.55);
@@ -166,4 +231,8 @@
   --color-link: #0046ff;
   --color-link-hover: #002fb7;
   --color-border-strong: #1a5cff;
+  --gradient-gold: linear-gradient(180deg, #ffbf00 0%, #b87333 100%);
+  --color-gold-contrast: #000000;
+  --color-gold-strong: #ffbf00;
+  --color-gold-muted: #b87333;
 }
