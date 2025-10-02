@@ -1,4 +1,11 @@
 // src/components/admin/manage/EditableList.js
+// * DECISIÓN: Unificamos el rediseño de las listas editables para garantizar una
+//   experiencia consistente entre creación y edición, reforzando accesibilidad
+//   y adaptabilidad mobile sin duplicar estilos.
+// -*- DECISIÓN: Incorporamos una etiqueta singular opcional para alinear la
+//    semántica visual y accesible sin sacrificar encabezados descriptivos.
+// -*- DECISIÓN: Contextualizamos el contador para informar el tipo de recurso
+//    administrado y mejorar la retroalimentación asistiva.
 
 import { useId, useMemo, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
@@ -6,35 +13,47 @@ import PropTypes from "prop-types";
 export const EditableListStyles = () => (
   <style>{`
       .editable-list {
-        --editable-list-gap: clamp(0.9rem, 1.8vw, 1.2rem);
-        --editable-list-radius: var(--radius-lg, 1.15rem);
-        --editable-list-shadow: var(--shadow-1, 0 12px 30px rgba(2, 12, 27, 0.08));
-        --editable-list-border: var(--border, rgba(15, 40, 105, 0.16));
+        --editable-list-gap: clamp(1rem, 2vw, 1.35rem);
+        --editable-list-radius: var(--radius-lg, 1.25rem);
+        --editable-list-shadow: var(
+          --shadow-layered,
+          0 18px 40px rgba(15, 40, 105, 0.08)
+        );
+        --editable-list-border: var(--border-soft, rgba(15, 40, 105, 0.12));
         display: flex;
         flex-direction: column;
         gap: var(--editable-list-gap);
-        padding: clamp(1rem, 2.4vw, 1.4rem);
+        padding: clamp(1.1rem, 2.6vw, 1.6rem);
         border-radius: var(--editable-list-radius);
         border: 1px solid var(--editable-list-border);
-        background: var(--surface-elevated, #ffffff);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.98) 0%,
+          rgba(241, 247, 255, 0.96) 100%
+        );
         box-shadow: var(--editable-list-shadow);
         transition:
-          border-color var(--transition-base, 0.2s ease),
-          box-shadow var(--transition-base, 0.2s ease),
+          border-color var(--transition-base, 0.22s ease),
+          box-shadow var(--transition-base, 0.22s ease),
           transform var(--transition-fast, 0.16s ease);
       }
 
       .editable-list:focus-within {
-        border-color: var(--brand-500, #4ea4ea);
+        border-color: var(--brand-400, #68a7ef);
         box-shadow:
-          0 0 0 3px rgba(78, 164, 234, 0.18),
+          0 0 0 3px rgba(78, 164, 234, 0.2),
           var(--editable-list-shadow);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
       }
 
       @media (prefers-reduced-motion: reduce) {
         .editable-list,
-        .editable-list:focus-within {
+        .editable-list:focus-within,
+        .editable-list__item,
+        .editable-list__item:focus-within,
+        .editable-list__add,
+        .editable-list__remove,
+        .editable-list__item::after {
           transition: none;
           transform: none;
         }
@@ -42,43 +61,86 @@ export const EditableListStyles = () => (
 
       .editable-list__header {
         display: flex;
+        gap: 1rem;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 0.75rem;
         flex-wrap: wrap;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid rgba(15, 40, 105, 0.08);
+      }
+
+      .editable-list__heading {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        min-width: min(16rem, 100%);
+        flex: 1 1 auto;
       }
 
       .editable-list__label {
-        font-size: clamp(1rem, 1.15vw, 1.05rem);
-        font-weight: 600;
-        color: var(--text-primary, #0a1630);
-        letter-spacing: 0.01em;
+        font-size: clamp(1rem, 1.2vw, 1.1rem);
+        font-weight: 700;
+        color: var(--text-primary, #091326);
+        letter-spacing: 0.005em;
       }
 
       .editable-list__helper {
         margin: 0;
         font-size: 0.9rem;
-        color: var(--text-secondary, #51607a);
-        line-height: 1.5;
+        color: var(--text-secondary, #4b5a76);
+        line-height: 1.6;
+      }
+
+      .editable-list__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .editable-list__count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--brand-700, #0f4d9e);
+        background: rgba(78, 164, 234, 0.12);
+        border: 1px solid rgba(78, 164, 234, 0.22);
+      }
+
+      .editable-list__count::before {
+        content: "•";
+        font-size: 0.95em;
+      }
+
+      .editable-list[data-length="0"] .editable-list__count {
+        color: var(--text-secondary, #4b5a76);
+        background: rgba(15, 40, 105, 0.06);
+        border-color: rgba(15, 40, 105, 0.12);
       }
 
       .editable-list__add {
-        align-self: flex-start;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
-        padding: 0.55rem 1rem;
+        padding: 0.6rem 1.15rem;
         font-weight: 600;
         border-radius: 999px;
-        border: 1px solid var(--border-strong, rgba(15, 40, 105, 0.22));
+        border: 1px solid rgba(15, 40, 105, 0.18);
         color: var(--brand-700, #0f4d9e);
         background: var(--brand-50, #eaf4ff);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
         transition:
-          background-color var(--transition-fast, 0.16s ease),
-          border-color var(--transition-fast, 0.16s ease),
-          color var(--transition-fast, 0.16s ease),
-          box-shadow var(--transition-base, 0.2s ease);
+          background-color var(--transition-fast, 0.18s ease),
+          border-color var(--transition-fast, 0.18s ease),
+          color var(--transition-fast, 0.18s ease),
+          box-shadow var(--transition-base, 0.24s ease);
       }
 
       .editable-list__add:hover,
@@ -86,7 +148,7 @@ export const EditableListStyles = () => (
         background: var(--brand-100, #d7eaff);
         color: var(--brand-600, #2d7ed1);
         border-color: var(--brand-400, #68a7ef);
-        box-shadow: 0 8px 20px rgba(78, 164, 234, 0.18);
+        box-shadow: 0 10px 28px rgba(78, 164, 234, 0.22);
       }
 
       .editable-list__add:focus-visible {
@@ -95,42 +157,54 @@ export const EditableListStyles = () => (
 
       .editable-list__items {
         display: grid;
-        gap: 0.85rem;
+        gap: clamp(0.9rem, 1.8vw, 1.1rem);
         list-style: none;
         padding: 0;
         margin: 0;
       }
 
       .editable-list__item {
+        position: relative;
         background: var(--surface-elevated, #ffffff);
-        border-radius: var(--radius-md, 0.75rem);
-        border: 1px solid var(--border, rgba(15, 40, 105, 0.16));
-        padding: clamp(0.75rem, 1.6vw, 1rem);
-        box-shadow: 0 8px 20px rgba(2, 12, 27, 0.06);
+        border-radius: var(--radius-md, 0.85rem);
+        border: 1px solid rgba(15, 40, 105, 0.12);
+        padding: clamp(0.85rem, 1.8vw, 1.15rem);
+        box-shadow: 0 10px 26px rgba(9, 19, 38, 0.08);
         transition:
-          border-color var(--transition-fast, 0.16s ease),
-          box-shadow var(--transition-base, 0.2s ease),
+          border-color var(--transition-fast, 0.18s ease),
+          box-shadow var(--transition-base, 0.22s ease),
           transform var(--transition-fast, 0.16s ease);
       }
 
-      .editable-list__item:focus-within {
-        border-color: var(--brand-500, #4ea4ea);
-        box-shadow: 0 12px 26px rgba(78, 164, 234, 0.18);
-        transform: translateY(-1px);
+      .editable-list__item::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--transition-fast, 0.18s ease);
+        background: linear-gradient(
+          135deg,
+          rgba(78, 164, 234, 0.12) 0%,
+          rgba(78, 164, 234, 0) 60%
+        );
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        .editable-list__item,
-        .editable-list__item:focus-within {
-          transition: none;
-          transform: none;
-        }
+      .editable-list__item:focus-within {
+        border-color: var(--brand-400, #68a7ef);
+        box-shadow: 0 14px 30px rgba(78, 164, 234, 0.22);
+        transform: translateY(-2px);
+      }
+
+      .editable-list__item:focus-within::after {
+        opacity: 1;
       }
 
       .editable-list__item-grid {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: clamp(0.65rem, 1.4vw, 1rem);
+        gap: clamp(0.7rem, 1.6vw, 1.1rem);
         align-items: center;
       }
 
@@ -138,47 +212,53 @@ export const EditableListStyles = () => (
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 2.25rem;
-        height: 2.25rem;
+        width: 2.4rem;
+        height: 2.4rem;
         border-radius: 50%;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.95rem;
         color: var(--brand-700, #0f4d9e);
-        background: var(--brand-50, #eaf4ff);
-        border: 1px solid var(--border, rgba(15, 40, 105, 0.16));
+        background: linear-gradient(
+          135deg,
+          rgba(78, 164, 234, 0.22) 0%,
+          rgba(78, 164, 234, 0.05) 100%
+        );
+        border: 1px solid rgba(78, 164, 234, 0.3);
       }
 
       .editable-list__field {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.45rem;
         min-width: 0;
       }
 
       .editable-list__item-label {
         font-size: 0.85rem;
         font-weight: 600;
-        color: var(--text-secondary, #51607a);
+        color: var(--text-secondary, #4b5a76);
       }
 
       .editable-list__input {
         min-width: 0;
         width: 100%;
         background: var(--surface-elevated, #ffffff);
-        border-color: var(--border, rgba(15, 40, 105, 0.16));
+        border-color: rgba(15, 40, 105, 0.16);
         box-shadow: none;
+        border-radius: 0.65rem;
+        padding: 0.65rem 0.85rem;
       }
 
       .editable-list__input:focus-visible {
         border-color: var(--brand-500, #4ea4ea);
-        box-shadow: 0 0 0 3px rgba(78, 164, 234, 0.2);
+        box-shadow: 0 0 0 3px rgba(78, 164, 234, 0.22);
         outline: none;
       }
 
       .editable-list__input--invalid {
         border-color: var(--danger, #c03434);
-        box-shadow: 0 0 0 2px rgba(192, 52, 52, 0.15);
-        background: rgba(192, 52, 52, 0.06);
+        box-shadow: 0 0 0 2px rgba(192, 52, 52, 0.18);
+        background: rgba(192, 52, 52, 0.08);
       }
 
       .editable-list__actions {
@@ -195,39 +275,55 @@ export const EditableListStyles = () => (
         height: 2.5rem;
         border-radius: 50%;
         border: 1px solid transparent;
-        background: rgba(192, 52, 52, 0.1);
+        background: rgba(192, 52, 52, 0.12);
         color: var(--danger, #c03434);
         font-size: 1.2rem;
         line-height: 1;
         cursor: pointer;
         transition:
-          background-color var(--transition-fast, 0.16s ease),
-          border-color var(--transition-fast, 0.16s ease),
-          box-shadow var(--transition-base, 0.2s ease),
+          background-color var(--transition-fast, 0.18s ease),
+          border-color var(--transition-fast, 0.18s ease),
+          box-shadow var(--transition-base, 0.22s ease),
           transform var(--transition-fast, 0.16s ease);
       }
 
       .editable-list__remove:hover,
       .editable-list__remove:focus-visible {
-        background: rgba(192, 52, 52, 0.18);
-        border-color: rgba(192, 52, 52, 0.3);
-        box-shadow: 0 10px 22px rgba(192, 52, 52, 0.25);
-        transform: translateY(-1px);
+        background: rgba(192, 52, 52, 0.2);
+        border-color: rgba(192, 52, 52, 0.32);
+        box-shadow: 0 12px 26px rgba(192, 52, 52, 0.28);
+        transform: translateY(-2px);
         outline: none;
       }
 
       .editable-list__empty {
         font-size: 0.9rem;
-        padding: 0.85rem 1rem;
-        color: var(--text-secondary, #51607a);
-        background: rgba(15, 40, 105, 0.06);
+        padding: 1rem 1.1rem;
+        color: var(--text-secondary, #4b5a76);
+        background: rgba(15, 40, 105, 0.08);
         border-radius: var(--radius-md, 0.75rem);
         text-align: center;
+        border: 1px dashed rgba(15, 40, 105, 0.16);
       }
 
       @media (max-width: 680px) {
         .editable-list {
-          padding: clamp(0.85rem, 4vw, 1.25rem);
+          padding: clamp(0.95rem, 4vw, 1.35rem);
+        }
+
+        .editable-list__header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+        }
+
+        .editable-list__cta {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .editable-list__count {
+          order: 1;
         }
 
         .editable-list__item-grid {
@@ -247,6 +343,14 @@ export const EditableListStyles = () => (
           border-radius: var(--radius-md, 0.75rem);
           height: 2.75rem;
         }
+
+        .editable-list__add {
+          width: 100%;
+        }
+
+        .editable-list__count {
+          width: fit-content;
+        }
       }
     `}</style>
 );
@@ -259,9 +363,23 @@ const coerceString = (value) => {
 const normalizeValues = (values) =>
   values.map((item) => coerceString(item).replace(/\r?\n/g, " "));
 
+const FALLBACK_SINGULAR = "Elemento";
+const FALLBACK_PLURAL = "Elementos";
+
+const sanitizeToken = (value, fallback) => {
+  const trimmed = coerceString(value).trim();
+  return trimmed || fallback;
+};
+
+const toAccessibleLowerCase = (value, fallback) => {
+  const sanitized = sanitizeToken(value, fallback);
+  return sanitized.toLocaleLowerCase("es-ES");
+};
+
 const EditableList = ({
   id,
   label,
+  itemLabel,
   values,
   onChange,
   addButtonLabel,
@@ -277,7 +395,25 @@ const EditableList = ({
   const descriptionIds = useMemo(() => {
     return [helperId, describedBy].filter(Boolean).join(" ") || undefined;
   }, [helperId, describedBy]);
-  const itemLabel = useMemo(() => label.replace(/:\s*$/, ""), [label]);
+  const sanitizedLabel = useMemo(
+    () => label.replace(/:\s*$/, "").trim(),
+    [label]
+  );
+  const singularLabel = useMemo(() => {
+    if (itemLabel && itemLabel.trim()) {
+      return itemLabel.trim();
+    }
+    return sanitizeToken(sanitizedLabel, FALLBACK_SINGULAR);
+  }, [itemLabel, sanitizedLabel]);
+  const pluralLabel = useMemo(() => {
+    return sanitizeToken(sanitizedLabel, FALLBACK_PLURAL);
+  }, [sanitizedLabel]);
+  const accessibleSingular = useMemo(() => {
+    return toAccessibleLowerCase(singularLabel, FALLBACK_SINGULAR);
+  }, [singularLabel]);
+  const accessiblePlural = useMemo(() => {
+    return toAccessibleLowerCase(pluralLabel, FALLBACK_PLURAL);
+  }, [pluralLabel]);
   const inputRefs = useRef([]);
   const [pendingFocusIndex, setPendingFocusIndex] = useState(null);
 
@@ -338,30 +474,56 @@ const EditableList = ({
     }
   };
 
+  const summaryLabel = useMemo(() => {
+    if (values.length === 0) {
+      return `0 ${accessiblePlural}`;
+    }
+    if (values.length === 1) {
+      return `1 ${accessibleSingular}`;
+    }
+    return `${values.length} ${accessiblePlural}`;
+  }, [accessiblePlural, accessibleSingular, values.length]);
+  const badgeAriaLabel = useMemo(() => {
+    return `Total de ${accessiblePlural}: ${summaryLabel}`;
+  }, [accessiblePlural, summaryLabel]);
+
   return (
     <div
       className="editable-list"
       aria-describedby={descriptionIds}
       role="group"
       aria-labelledby={labelId}
+      data-length={values.length}
     >
       <div className="editable-list__header">
-        <span id={labelId} className="editable-list__label">
-          {label}
-        </span>
-        <button
-          type="button"
-          className="button button--ghost editable-list__add"
-          onClick={handleAdd}
-        >
-          {addButtonLabel}
-        </button>
+        <div className="editable-list__heading">
+          <span id={labelId} className="editable-list__label">
+            {label}
+          </span>
+          {helperText ? (
+            <p id={helperId} className="editable-list__helper">
+              {helperText}
+            </p>
+          ) : null}
+        </div>
+        <div className="editable-list__cta">
+          <span
+            className="editable-list__count"
+            role="status"
+            aria-live="polite"
+            aria-label={badgeAriaLabel}
+          >
+            {summaryLabel}
+          </span>
+          <button
+            type="button"
+            className="button button--ghost editable-list__add"
+            onClick={handleAdd}
+          >
+            {addButtonLabel}
+          </button>
+        </div>
       </div>
-      {helperText ? (
-        <p id={helperId} className="editable-list__helper">
-          {helperText}
-        </p>
-      ) : null}
       <ul className="editable-list__items">
         {values.map((value, index) => {
           const inputId = `${listId}-item-${index}`;
@@ -377,7 +539,7 @@ const EditableList = ({
                     className="editable-list__item-label"
                     htmlFor={inputId}
                   >
-                    {itemLabel} {index + 1}
+                    {singularLabel} {index + 1}
                   </label>
                   <input
                     id={inputId}
@@ -400,7 +562,7 @@ const EditableList = ({
                     type="button"
                     className="editable-list__remove"
                     onClick={() => handleRemove(index)}
-                    aria-label={`Eliminar ${itemLabel.toLowerCase()} ${
+                    aria-label={`Eliminar ${singularLabel.toLowerCase()} ${
                       index + 1
                     }`}
                   >
@@ -413,7 +575,7 @@ const EditableList = ({
         })}
         {values.length === 0 ? (
           <li className="editable-list__empty" aria-live="polite">
-            Aún no agregaste elementos.
+            {`Aún no agregaste ${accessiblePlural}.`}
           </li>
         ) : null}
       </ul>
@@ -424,6 +586,7 @@ const EditableList = ({
 EditableList.propTypes = {
   id: PropTypes.string,
   label: PropTypes.string.isRequired,
+  itemLabel: PropTypes.string,
   values: PropTypes.arrayOf(PropTypes.string),
   onChange: PropTypes.func.isRequired,
   addButtonLabel: PropTypes.string,
@@ -435,6 +598,7 @@ EditableList.propTypes = {
 
 EditableList.defaultProps = {
   id: undefined,
+  itemLabel: undefined,
   values: [],
   addButtonLabel: "Agregar",
   placeholder: "",

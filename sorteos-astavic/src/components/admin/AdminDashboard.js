@@ -1126,7 +1126,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
               <div className="form-group" style={{ marginBottom: "1.25rem" }}>
                 <EditableList
                   id={prizesListId}
-                  label="Premio"
+                  label="Premios"
+                  itemLabel="Premio"
                   values={prizes}
                   onChange={handlePrizesChange}
                   addButtonLabel="+ Agregar premio"
@@ -1190,7 +1191,8 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
                 </p>
                 <EditableList
                   id={manualListId}
-                  label="Participante"
+                  label="Participantes manuales"
+                  itemLabel="Participante manual"
                   values={manualEntries}
                   onChange={handleManualEntriesChange}
                   addButtonLabel="+ Agregar participante"

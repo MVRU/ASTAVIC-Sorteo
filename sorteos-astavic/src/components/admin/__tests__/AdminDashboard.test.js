@@ -47,7 +47,7 @@ describe("AdminDashboard", () => {
     ).toBeInTheDocument();
 
     const manualInput = screen.getByRole("textbox", {
-      name: /participante 1/i,
+      name: /participante manual 1/i,
     });
     expect(manualInput).toHaveAttribute("aria-invalid", "true");
     expect(

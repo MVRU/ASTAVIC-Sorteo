@@ -1,4 +1,6 @@
 // src/components/admin/manage/__tests__/EditableList.test.js
+// * DECISIÓN: Verificamos tanto la experiencia de edición como los nuevos
+//   elementos de feedback visual del rediseño (contador reactivo).
 
 import React from "react";
 import { render, screen, within, waitFor } from "@testing-library/react";
@@ -18,12 +20,14 @@ const ControlledList = ({
   initialValues,
   onChangeSpy,
   label,
+  itemLabel,
   addButtonLabel,
 }) => {
   const [values, setValues] = React.useState(initialValues);
   return (
     <EditableList
       label={label}
+      itemLabel={itemLabel}
       values={values}
       onChange={(nextValues) => {
         onChangeSpy(nextValues);
@@ -43,7 +47,8 @@ describe("EditableList", () => {
       <ControlledList
         initialValues={[" Premio inicial "]}
         onChangeSpy={onChange}
-        label="Premio"
+        label="Premios"
+        itemLabel="Premio"
         addButtonLabel="Agregar premio"
       />
     );
@@ -80,7 +85,8 @@ describe("EditableList", () => {
       <ControlledList
         initialValues={["Ana", "Ana", "Luis"]}
         onChangeSpy={onChange}
-        label="Participante"
+        label="Participantes"
+        itemLabel="Participante"
         addButtonLabel="Agregar participante"
       />
     );
@@ -109,6 +115,86 @@ describe("EditableList", () => {
       screen.getByRole("button", { name: /eliminar participante 1/i })
     );
     expect(onChange).toHaveBeenLastCalledWith([]);
-    expect(screen.getByText(/aún no agregaste elementos/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/aún no agregaste participantes\./i)
+    ).toBeInTheDocument();
+  });
+
+  test("actualiza el contador visible con cada modificación", async () => {
+    const user = createUser();
+    const onChange = jest.fn();
+
+    render(
+      <ControlledList
+        initialValues={["Voucher"]}
+        onChangeSpy={onChange}
+        label="Premios"
+        itemLabel="Premio"
+        addButtonLabel="Agregar premio"
+      />
+    );
+
+    const counter = screen.getByRole("status", {
+      name: /total de premios/i,
+    });
+    expect(counter).toHaveTextContent("1 premio");
+
+    await user.click(screen.getByRole("button", { name: /agregar premio/i }));
+    await waitFor(() => expect(counter).toHaveTextContent("2 premios"));
+
+    await user.click(
+      screen.getByRole("button", { name: /eliminar premio 2/i })
+    );
+    await waitFor(() => expect(counter).toHaveTextContent("1 premio"));
+
+    await user.click(
+      screen.getByRole("button", { name: /eliminar premio 1/i })
+    );
+    await waitFor(() => expect(counter).toHaveTextContent("0 premios"));
+  });
+
+  test("sin etiqueta singular explícita mantiene la pluralización contextual", () => {
+    render(
+      <EditableList
+        label="Condiciones"
+        values={[]}
+        onChange={jest.fn()}
+      />
+    );
+
+    const counter = screen.getByRole("status", {
+      name: /total de condiciones/i,
+    });
+    expect(counter).toHaveTextContent("0 condiciones");
+  });
+
+  test("usa la etiqueta singular personalizada cuando está disponible", () => {
+    render(
+      <EditableList
+        label="Requisitos"
+        itemLabel="Requisito"
+        values={["Ser mayor de edad"]}
+        onChange={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("Requisitos")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/requisito 1/i, { selector: "input" })
+    ).toBeInTheDocument();
+  });
+
+  test("elimina dos puntos del encabezado para reutilizarlo como respaldo singular", () => {
+    render(
+      <EditableList
+        label="Condiciones:"
+        values={["Leer las bases"]}
+        onChange={jest.fn()}
+      />
+    );
+
+    expect(
+      screen.getByLabelText(/condiciones 1/i, { selector: "input" })
+    ).toBeInTheDocument();
   });
 });
