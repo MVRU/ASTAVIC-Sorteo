@@ -675,14 +675,6 @@ a:focus-visible {
 
 ---
 
-## 12) Sugerencias de evolución
-
-- Añadir **tema institucional** (colores del sindicato) remapeando sólo tokens semánticos.
-- Introducir **tokens de data viz** si se suman dashboards (paleta categórica segura para daltónicos).
-- Catálogo de **componentes admin** (tablas editables, filtros, paginación, vacíos de estado).
-
----
-
 ### Apéndice: Gradientes y efectos (opcional, sobriedad primero)
 
 - Botón primario (gradiente) → usar sólo en páginas de marketing o momentos “especiales”.
