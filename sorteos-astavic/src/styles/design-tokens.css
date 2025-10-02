@@ -169,6 +169,53 @@
   --color-overlay: rgba(11, 25, 54, 0.5);
   --color-header-translucent: rgba(255, 255, 255, 0.92);
 
+  /* ! DECISIÓN DE DISEÑO: Los controles segmentados usan tokens dedicados para mantener consistencia entre temas y variantes de accesibilidad. */
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 88%,
+    var(--color-btn-primary) 12%
+  );
+  --color-segmented-border: color-mix(
+    in srgb,
+    var(--color-btn-primary) 28%,
+    transparent
+  );
+  --shadow-segmented-inset: inset 0 1px 1px color-mix(
+    in srgb,
+    var(--color-btn-primary) 24%,
+    transparent
+  );
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 86%,
+    var(--color-btn-primary) 14%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 90%,
+    var(--color-btn-primary) 10%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 82%,
+    var(--color-btn-primary) 18%
+  );
+  --shadow-segmented-active: 0 2px 6px color-mix(
+    in srgb,
+    #020c1b 18%,
+    transparent
+  );
+  --color-outline-interactive: color-mix(
+    in srgb,
+    var(--color-btn-primary) 52%,
+    transparent
+  );
+  --color-fg-accent: color-mix(
+    in srgb,
+    var(--color-btn-primary) 82%,
+    var(--color-fg-primary) 18%
+  );
+
   /* Superficies invertidas (header brand) */
   --color-bg-brand: var(--brand-900);
   --color-bg-brand-elevated: color-mix(
@@ -265,6 +312,52 @@
 
   --color-btn-primary: var(--brand-500);
   --color-btn-primary-hover: var(--brand-600);
+
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 76%,
+    var(--color-btn-primary) 24%
+  );
+  --color-segmented-border: color-mix(
+    in srgb,
+    var(--color-btn-primary) 34%,
+    transparent
+  );
+  --shadow-segmented-inset: inset 0 1px 1px color-mix(
+    in srgb,
+    var(--color-btn-primary) 30%,
+    transparent
+  );
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 68%,
+    var(--color-btn-primary) 32%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 72%,
+    var(--color-btn-primary) 28%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 64%,
+    var(--color-btn-primary) 36%
+  );
+  --shadow-segmented-active: 0 2px 6px color-mix(
+    in srgb,
+    rgba(0, 0, 0, 0.8) 28%,
+    transparent
+  );
+  --color-outline-interactive: color-mix(
+    in srgb,
+    var(--color-btn-primary) 58%,
+    transparent
+  );
+  --color-fg-accent: color-mix(
+    in srgb,
+    var(--color-btn-primary) 72%,
+    #ffffff 28%
+  );
 
   --color-bg-brand: #061738;
   --color-bg-brand-elevated: color-mix(
@@ -364,4 +457,29 @@
   );
   --color-highlight-info-border: #1a5cff;
   --color-highlight-info-fg: #002b7a;
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 70%,
+    #0046ff 30%
+  );
+  --color-segmented-border: #1a5cff;
+  --shadow-segmented-inset: inset 0 0 0 1px #1a5cff;
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 55%,
+    #0046ff 45%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 50%,
+    #0046ff 50%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 45%,
+    #0046ff 55%
+  );
+  --shadow-segmented-active: 0 0 0 2px #1a5cff;
+  --color-outline-interactive: #1a5cff;
+  --color-fg-accent: #001c5f;
 }
