@@ -26,11 +26,23 @@
 
   --text-primary: #0a1630;
   --text-secondary: #51607a;
-  --text-tertiary: #5e6a86;
-  --text-3: var(--text-tertiary);
+  --text-muted: #6b7a94;
   --text-inverted: #ffffff;
+  --text-3: var(--text-muted);
   --icon-muted: #4b5563;
-  --text-muted: var(--text-secondary);
+  /* ! DECISIÓN DE DISEÑO: Los tokens de deshabilitado garantizan contraste ≥4.5:1 sin depender de opacidad global. */
+  --button-disabled-bg: #e3e9f3;
+  --button-disabled-border: #c8d3e5;
+  --button-disabled-text: #51607a;
+  --button-primary-disabled-bg: #3478bc;
+  --button-primary-disabled-text: #ffffff;
+  --button-ghost-disabled-bg: #f4f7fc;
+  --button-ghost-disabled-border: #c9d4e6;
+  --button-subtle-disabled-bg: #edf4ff;
+  --button-gold-disabled-bg: #e6d098;
+  --button-gold-disabled-border: rgba(185, 141, 35, 0.45);
+  --button-danger-disabled-bg: #b44a4a;
+  --button-danger-disabled-border: #a43f3f;
 
   --danger: #c03434;
   --success: #1f9d5a;
@@ -586,10 +598,8 @@ main {
   color: var(--text-secondary);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 .segmented-button:hover {
   background: rgba(15, 40, 105, 0.12);
@@ -819,52 +829,52 @@ main {
   transform: translateY(1px);
 }
 
-/* ! DECISIÓN DE DISEÑO: Uniformamos feedback deshabilitado para cada variante sin
-   perder contraste, y preservamos foco visible en elementos con aria-disabled. */
-.button[disabled],
-.button[aria-disabled="true"] {
+/* ! DECISIÓN DE DISEÑO: Los estados deshabilitados eliminan animaciones y mantienen foco visible en `aria-disabled`. */
+.button:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-disabled-bg, #e3e9f3);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border: 1px solid var(--button-disabled-border, transparent);
   cursor: not-allowed;
+  opacity: 1;
+  box-shadow: none;
   transform: none;
   pointer-events: none;
+}
+
+.button:is([disabled], [aria-disabled="true"]):focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 3px;
+}
+
+.button--primary:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-primary-disabled-bg, #3478bc);
+  color: var(--button-primary-disabled-text, #ffffff);
+  border: none;
+}
+
+.button--ghost:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-ghost-disabled-bg, #f4f7fc);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border-color: var(--button-ghost-disabled-border, #c9d4e6);
+}
+
+.button--subtle:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-subtle-disabled-bg, #edf4ff);
+  color: var(--button-disabled-text, var(--text-secondary));
+  border-color: transparent;
+}
+
+.button--gold:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-gold-disabled-bg, #e6d098);
+  color: #3b2f0b;
+  border: 1px solid var(--button-gold-disabled-border, rgba(185, 141, 35, 0.45));
   box-shadow: none;
 }
 
-.button[disabled]:hover,
-.button[disabled]:focus-visible,
-.button[aria-disabled="true"]:hover {
-  background: inherit;
-}
-
-.button[aria-disabled="true"]:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-400) 35%, transparent);
-}
-
-.button.is-loading {
-  cursor: progress;
-  pointer-events: none;
-  padding-inline-end: calc(1.05rem + 1.2rem);
-}
-
-.button.is-loading::after {
-  content: "";
-  position: absolute;
-  inset-inline-end: 0.85rem;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  border: 2px solid color-mix(in srgb, currentColor 85%, transparent 15%);
-  border-top-color: transparent;
-  animation: button-spinner 0.8s linear infinite;
-}
-
-@keyframes button-spinner {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.button--danger:is([disabled], [aria-disabled="true"]) {
+  background: var(--button-danger-disabled-bg, #b44a4a);
+  color: #ffffff;
+  border-color: var(--button-danger-disabled-border, #a43f3f);
 }
 
 .button--primary {
@@ -872,15 +882,6 @@ main {
   color: var(--text-inverted);
   box-shadow: 0 10px 24px rgba(15, 77, 158, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
-}
-.button--primary[disabled],
-.button--primary[aria-disabled="true"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--brand-400) 35%, var(--surface) 65%) 0%,
-    color-mix(in srgb, var(--brand-500) 40%, var(--surface) 60%) 100%
-  );
-  color: color-mix(in srgb, var(--text-inverted) 75%, rgba(255, 255, 255, 0.45) 25%);
 }
 .button--primary:hover {
   background: linear-gradient(180deg, #2c78ca 0%, #1b5ca6 100%);
@@ -892,17 +893,6 @@ main {
   box-shadow: 0 10px 24px rgba(233, 185, 73, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.38);
   border: 1px solid rgba(185, 141, 35, 0.35);
-}
-.button--gold[disabled],
-.button--gold[aria-disabled="true"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #f7d774 45%, #f4e8c5 55%) 0%,
-    color-mix(in srgb, #e9b949 50%, #e2d0a0 50%) 100%
-  );
-  color: color-mix(in srgb, #3b2f0b 65%, rgba(59, 47, 11, 0.5) 35%);
-  border-color: color-mix(in srgb, rgba(185, 141, 35, 0.35) 45%, rgba(185, 141, 35, 0.08) 55%);
-  box-shadow: none;
 }
 .button--gold:hover {
   background: linear-gradient(180deg, #f4cd5d 0%, #dca53a 100%);
@@ -1550,7 +1540,7 @@ footer {
   text-decoration: underline;
 }
 .link-button:disabled {
-  color: var(--text-tertiary, #5e6a86);
+  color: var(--text-muted, #666);
   cursor: not-allowed;
   text-decoration: none;
   opacity: 0.7;
