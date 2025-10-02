@@ -2,6 +2,9 @@
 // * DECISIÓN: El panel lateral admite redimensionado horizontal con límites
 //   seguros para acomodar formularios extensos sin comprometer la lectura del
 //   listado principal.
+// * DECISIÓN: El ancho preferido se persiste en almacenamiento seguro para
+//   respetar la preferencia del usuario entre sesiones sin afectar contextos
+//   móviles.
 
 import {
   useMemo,
@@ -29,6 +32,33 @@ const DRAWER_DEFAULT_WIDTH = 680;
 const DRAWER_VIEWPORT_PADDING = 120;
 const RESIZE_KEYBOARD_STEP = 24;
 const RESIZE_KEYBOARD_LARGE_STEP = 72;
+export const MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY =
+  "admin.manageRaffles.drawerWidth";
+
+const clampWidthToBounds = (value, maxCandidate) => {
+  const safeMax = Math.max(
+    DRAWER_MIN_WIDTH,
+    Math.min(DRAWER_MAX_WIDTH, maxCandidate)
+  );
+  return Math.min(Math.max(value, DRAWER_MIN_WIDTH), safeMax);
+};
+
+const readStoredDrawerWidth = (maxCandidate) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const storage = window.localStorage;
+    if (!storage) return null;
+    const rawValue = storage.getItem(MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY);
+    if (!rawValue) return null;
+    const parsed = Number.parseInt(rawValue, 10);
+    if (!Number.isFinite(parsed)) return null;
+    return clampWidthToBounds(parsed, maxCandidate);
+  } catch {
+    return null;
+  }
+};
 
 const computeViewportMaxWidth = () => {
   if (typeof window === "undefined" || typeof window.innerWidth !== "number") {
@@ -282,23 +312,25 @@ const ManageRaffles = ({
   const [maxDrawerWidth, setMaxDrawerWidth] = useState(() =>
     computeViewportMaxWidth()
   );
-  const [drawerWidth, setDrawerWidth] = useState(() =>
-    Math.min(
+  const [drawerWidth, setDrawerWidth] = useState(() => {
+    const initialMax = Math.max(
+      DRAWER_MIN_WIDTH,
+      Math.min(DRAWER_MAX_WIDTH, computeViewportMaxWidth())
+    );
+    const stored = readStoredDrawerWidth(initialMax);
+    if (stored !== null) {
+      return stored;
+    }
+    return clampWidthToBounds(
       Math.max(DRAWER_DEFAULT_WIDTH, DRAWER_MIN_WIDTH),
-      computeViewportMaxWidth()
-    )
-  );
+      initialMax
+    );
+  });
   const [isResizing, setIsResizing] = useState(false);
   const resizingStateRef = useRef(null);
 
   const clampDrawerWidth = useCallback(
-    (value) => {
-      const max = Math.max(
-        DRAWER_MIN_WIDTH,
-        Math.min(DRAWER_MAX_WIDTH, maxDrawerWidth)
-      );
-      return Math.min(Math.max(value, DRAWER_MIN_WIDTH), max);
-    },
+    (value) => clampWidthToBounds(value, maxDrawerWidth),
     [maxDrawerWidth]
   );
 
@@ -410,6 +442,33 @@ const ManageRaffles = ({
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+    try {
+      const storage = window.localStorage;
+      if (!storage) {
+        return undefined;
+      }
+      const effectiveMax = Math.max(
+        DRAWER_MIN_WIDTH,
+        Math.min(DRAWER_MAX_WIDTH, maxDrawerWidth)
+      );
+      if (effectiveMax <= DRAWER_MIN_WIDTH) {
+        storage.removeItem(MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY);
+        return undefined;
+      }
+      storage.setItem(
+        MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY,
+        String(Math.round(clampDrawerWidth(drawerWidth)))
+      );
+    } catch {
+      // -*- Se ignoran errores de almacenamiento para no bloquear la edición.
+    }
+    return undefined;
+  }, [drawerWidth, clampDrawerWidth, maxDrawerWidth]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;

@@ -11,6 +11,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import ManageRaffles, {
   UNSAVED_CHANGES_BEFORE_UNLOAD_MESSAGE,
+  MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY,
 } from "../ManageRaffles";
 import { ToastProvider } from "../../../context/ToastContext";
 
@@ -38,6 +39,10 @@ const sampleRaffles = [
 ];
 
 describe("ManageRaffles", () => {
+  beforeEach(() => {
+    window.localStorage?.clear();
+  });
+
   test("abre el modal de edición con los datos cargados", async () => {
     const user = createUser();
     renderWithToast(
@@ -496,6 +501,51 @@ describe("ManageRaffles", () => {
     fireEvent.keyDown(handle, { key: "Home" });
     const maxWidth = Number.parseInt(handle.getAttribute("aria-valuemax"), 10);
     expect(readWidth()).toBe(maxWidth);
+  });
+
+  test("restaura y guarda el ancho personalizado del panel", async () => {
+    window.localStorage.setItem(
+      MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY,
+      "812"
+    );
+    const user = createUser();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={jest.fn()}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+    const handle = within(dialog).getByRole("separator", {
+      name: /modificar ancho del panel/i,
+    });
+
+    expect(handle).toHaveAttribute("aria-valuenow", "812");
+
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+
+    await waitFor(() =>
+      expect(
+        window.localStorage.getItem(
+          MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY
+        )
+      ).not.toBe("812")
+    );
+
+    const stored = window.localStorage.getItem(
+      MANAGE_RAFFLES_DRAWER_WIDTH_STORAGE_KEY
+    );
+    expect(Number.parseInt(stored || "0", 10)).toBe(
+      Number.parseInt(handle.getAttribute("aria-valuenow") || "0", 10)
+    );
   });
 
   test("restaura el foco en el disparador al cerrar el panel sin cambios", async () => {
