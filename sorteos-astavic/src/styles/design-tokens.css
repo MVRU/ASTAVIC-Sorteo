@@ -38,12 +38,14 @@
   /* Estados */
   --color-success: #1f9d5a;
   --color-success-bg: #e8f8ef;
+  --color-success-border: color-mix(in srgb, var(--color-success) 32%, transparent);
   --color-danger: #c03434;
   --color-danger-bg: #fdecec;
   --color-warning: #b45309;
   --color-warning-bg: #fff4df;
   --color-info: #1d4ed8;
   --color-info-bg: #eaf4ff;
+  --color-info-border: color-mix(in srgb, var(--color-info) 28%, transparent);
 
   /* Botones deshabilitados */
   --button-disabled-bg: #e3e9f3;

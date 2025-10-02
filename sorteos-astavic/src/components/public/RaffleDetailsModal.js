@@ -373,10 +373,13 @@ const stateBadgeStyle = (kind) => ({
   fontSize: "0.75rem",
   border:
     kind === "ok"
-      ? "1px solid rgba(33, 150, 83, 0.35)"
-      : "1px solid rgba(13, 71, 161, 0.25)",
-  background: kind === "ok" ? "rgba(33,150,83,0.08)" : "rgba(13,71,161,0.06)",
-  color: kind === "ok" ? "#1f9d5a" : "var(--brand-700)",
+      ? "1px solid var(--color-success-border)"
+      : "1px solid var(--color-info-border)",
+  background:
+    kind === "ok"
+      ? "var(--color-success-bg)"
+      : "var(--color-info-bg)",
+  color: kind === "ok" ? "var(--color-success)" : "var(--color-info)",
   whiteSpace: "nowrap",
 });
 
