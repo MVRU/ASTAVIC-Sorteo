@@ -4,6 +4,8 @@
 //   y adaptabilidad mobile sin duplicar estilos.
 // -*- DECISIÓN: Incorporamos una etiqueta singular opcional para alinear la
 //    semántica visual y accesible sin sacrificar encabezados descriptivos.
+// -*- DECISIÓN: Contextualizamos el contador para informar el tipo de recurso
+//    administrado y mejorar la retroalimentación asistiva.
 
 import { useId, useMemo, useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
@@ -361,6 +363,19 @@ const coerceString = (value) => {
 const normalizeValues = (values) =>
   values.map((item) => coerceString(item).replace(/\r?\n/g, " "));
 
+const FALLBACK_SINGULAR = "Elemento";
+const FALLBACK_PLURAL = "Elementos";
+
+const sanitizeToken = (value, fallback) => {
+  const trimmed = coerceString(value).trim();
+  return trimmed || fallback;
+};
+
+const toAccessibleLowerCase = (value, fallback) => {
+  const sanitized = sanitizeToken(value, fallback);
+  return sanitized.toLocaleLowerCase("es-ES");
+};
+
 const EditableList = ({
   id,
   label,
@@ -388,8 +403,17 @@ const EditableList = ({
     if (itemLabel && itemLabel.trim()) {
       return itemLabel.trim();
     }
-    return sanitizedLabel;
+    return sanitizeToken(sanitizedLabel, FALLBACK_SINGULAR);
   }, [itemLabel, sanitizedLabel]);
+  const pluralLabel = useMemo(() => {
+    return sanitizeToken(sanitizedLabel, FALLBACK_PLURAL);
+  }, [sanitizedLabel]);
+  const accessibleSingular = useMemo(() => {
+    return toAccessibleLowerCase(singularLabel, FALLBACK_SINGULAR);
+  }, [singularLabel]);
+  const accessiblePlural = useMemo(() => {
+    return toAccessibleLowerCase(pluralLabel, FALLBACK_PLURAL);
+  }, [pluralLabel]);
   const inputRefs = useRef([]);
   const [pendingFocusIndex, setPendingFocusIndex] = useState(null);
 
@@ -451,9 +475,17 @@ const EditableList = ({
   };
 
   const summaryLabel = useMemo(() => {
-    if (values.length === 0) return "Sin elementos";
-    return values.length === 1 ? "1 elemento" : `${values.length} elementos`;
-  }, [values.length]);
+    if (values.length === 0) {
+      return `0 ${accessiblePlural}`;
+    }
+    if (values.length === 1) {
+      return `1 ${accessibleSingular}`;
+    }
+    return `${values.length} ${accessiblePlural}`;
+  }, [accessiblePlural, accessibleSingular, values.length]);
+  const badgeAriaLabel = useMemo(() => {
+    return `Total de ${accessiblePlural}: ${summaryLabel}`;
+  }, [accessiblePlural, summaryLabel]);
 
   return (
     <div
@@ -479,7 +511,7 @@ const EditableList = ({
             className="editable-list__count"
             role="status"
             aria-live="polite"
-            aria-label={`Elementos en ${label}`}
+            aria-label={badgeAriaLabel}
           >
             {summaryLabel}
           </span>
@@ -543,7 +575,7 @@ const EditableList = ({
         })}
         {values.length === 0 ? (
           <li className="editable-list__empty" aria-live="polite">
-            Aún no agregaste elementos.
+            {`Aún no agregaste ${accessiblePlural}.`}
           </li>
         ) : null}
       </ul>

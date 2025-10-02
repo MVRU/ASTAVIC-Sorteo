@@ -115,7 +115,9 @@ describe("EditableList", () => {
       screen.getByRole("button", { name: /eliminar participante 1/i })
     );
     expect(onChange).toHaveBeenLastCalledWith([]);
-    expect(screen.getByText(/aún no agregaste elementos/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/aún no agregaste participantes\./i)
+    ).toBeInTheDocument();
   });
 
   test("actualiza el contador visible con cada modificación", async () => {
@@ -133,22 +135,37 @@ describe("EditableList", () => {
     );
 
     const counter = screen.getByRole("status", {
-      name: /elementos en premio/i,
+      name: /total de premios/i,
     });
-    expect(counter).toHaveTextContent("1 elemento");
+    expect(counter).toHaveTextContent("1 premio");
 
     await user.click(screen.getByRole("button", { name: /agregar premio/i }));
-    await waitFor(() => expect(counter).toHaveTextContent("2 elementos"));
+    await waitFor(() => expect(counter).toHaveTextContent("2 premios"));
 
     await user.click(
       screen.getByRole("button", { name: /eliminar premio 2/i })
     );
-    await waitFor(() => expect(counter).toHaveTextContent("1 elemento"));
+    await waitFor(() => expect(counter).toHaveTextContent("1 premio"));
 
     await user.click(
       screen.getByRole("button", { name: /eliminar premio 1/i })
     );
-    await waitFor(() => expect(counter).toHaveTextContent("Sin elementos"));
+    await waitFor(() => expect(counter).toHaveTextContent("0 premios"));
+  });
+
+  test("sin etiqueta singular explícita mantiene la pluralización contextual", () => {
+    render(
+      <EditableList
+        label="Condiciones"
+        values={[]}
+        onChange={jest.fn()}
+      />
+    );
+
+    const counter = screen.getByRole("status", {
+      name: /total de condiciones/i,
+    });
+    expect(counter).toHaveTextContent("0 condiciones");
   });
 
   test("usa la etiqueta singular personalizada cuando está disponible", () => {
