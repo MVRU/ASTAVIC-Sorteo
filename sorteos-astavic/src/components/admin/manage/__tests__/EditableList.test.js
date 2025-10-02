@@ -1,4 +1,6 @@
 // src/components/admin/manage/__tests__/EditableList.test.js
+// * DECISIÓN: Verificamos tanto la experiencia de edición como los nuevos
+//   elementos de feedback visual del rediseño (contador reactivo).
 
 import React from "react";
 import { render, screen, within, waitFor } from "@testing-library/react";
@@ -110,5 +112,37 @@ describe("EditableList", () => {
     );
     expect(onChange).toHaveBeenLastCalledWith([]);
     expect(screen.getByText(/aún no agregaste elementos/i)).toBeInTheDocument();
+  });
+
+  test("actualiza el contador visible con cada modificación", async () => {
+    const user = createUser();
+    const onChange = jest.fn();
+
+    render(
+      <ControlledList
+        initialValues={["Voucher"]}
+        onChangeSpy={onChange}
+        label="Premio"
+        addButtonLabel="Agregar premio"
+      />
+    );
+
+    const counter = screen.getByRole("status", {
+      name: /elementos en premio/i,
+    });
+    expect(counter).toHaveTextContent("1 elemento");
+
+    await user.click(screen.getByRole("button", { name: /agregar premio/i }));
+    await waitFor(() => expect(counter).toHaveTextContent("2 elementos"));
+
+    await user.click(
+      screen.getByRole("button", { name: /eliminar premio 2/i })
+    );
+    await waitFor(() => expect(counter).toHaveTextContent("1 elemento"));
+
+    await user.click(
+      screen.getByRole("button", { name: /eliminar premio 1/i })
+    );
+    await waitFor(() => expect(counter).toHaveTextContent("Sin elementos"));
   });
 });
