@@ -2,6 +2,8 @@
 
 import PropTypes from "prop-types";
 
+// ! DECISIÓN DE DISEÑO: Este componente usa tokens neutrales para alinear iconografía y textos secundarios con la nueva guía de contraste.
+
 const AdminHome = ({ onLogout }) => {
   return (
     <section className="section-gap" aria-labelledby="admin-home">
@@ -116,7 +118,7 @@ function LocalStyles() {
 
       .admin-subtitle {
         margin: .25rem 0 0 0;
-        color: var(--text-muted, #6b7280);
+        color: var(--text-secondary, #6b7280);
         font-size: .95rem;
       }
 
@@ -198,7 +200,7 @@ function LocalStyles() {
         height: 48px;
         border-radius: 12px;
         background: #f3f4f6;
-        color: #4b5563;
+        color: var(--icon-muted, #4b5563);
       }
       .admin-action__icon--primary {
         background: rgba(59,130,246,.1);

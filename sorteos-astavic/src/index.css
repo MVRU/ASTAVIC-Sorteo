@@ -23,8 +23,13 @@
   --surface: #f7fafc;
   --surface-elevated: #ffffff;
   --border: #d6e0ef;
-  --text-primary: #16213c;
-  --text-secondary: #5b6475;
+  /* ! DECISIÓN DE DISEÑO: Los tokens neutrales se sincronizan con App.css para mantener contraste consistente en todo el árbol. */
+  --text-primary: #0a1630;
+  --text-secondary: #51607a;
+  --text-tertiary: #5e6a86;
+  --text-3: var(--text-tertiary);
+  --text-inverted: #ffffff;
+  --icon-muted: #4b5563;
   --success: #1aa368;
   --danger: #cc3a3a;
   --safe-area-top: env(safe-area-inset-top, 0px);

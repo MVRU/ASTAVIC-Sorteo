@@ -26,7 +26,11 @@
 
   --text-primary: #0a1630;
   --text-secondary: #51607a;
-  --text-3: #6b7a94;
+  --text-tertiary: #5e6a86;
+  --text-3: var(--text-tertiary);
+  --text-inverted: #ffffff;
+  --icon-muted: #4b5563;
+  --text-muted: var(--text-secondary);
 
   --danger: #c03434;
   --success: #1f9d5a;
@@ -124,7 +128,7 @@ a {
   top: 0.5rem;
   transform: translate(-50%, -150%);
   background: var(--brand-600);
-  color: #ffffff;
+  color: var(--text-inverted);
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -138,7 +142,7 @@ a {
 .skip-link:focus-visible {
   transform: translate(-50%, 0);
   opacity: 1;
-  outline: 3px solid #ffffff;
+  outline: 3px solid var(--text-inverted);
   outline-offset: 4px;
 }
 
@@ -318,13 +322,13 @@ main {
 /* Hover */
 .app-header--brand .app-nav .nav-link:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--text-inverted);
   transform: translateY(-1px);
 }
 /* Focus accesible */
 .app-header--brand .app-nav .nav-link:focus-visible {
   outline: none;
-  color: #fff;
+  color: var(--text-inverted);
   background: rgba(255, 255, 255, 0.14);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35) inset,
     0 0 0 3px rgba(255, 255, 255, 0.18);
@@ -332,7 +336,7 @@ main {
 /* Activo */
 .app-header--brand .app-nav .nav-link[aria-current="page"],
 .app-header--brand .app-nav .nav-link.is-active {
-  color: #fff;
+  color: var(--text-inverted);
   font-weight: 600;
   background: rgba(255, 255, 255, 0.14);
 }
@@ -356,12 +360,12 @@ main {
 .app-header--brand .button--ghost:hover,
 .app-header--brand .button--ghost:focus-visible {
   background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--text-inverted);
 }
 .app-header__admin-link.is-active {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
+  color: var(--text-inverted);
 }
 
 /* Icon button */
@@ -440,13 +444,13 @@ main {
 .app-header__mobile-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-inverted);
   margin: 0;
 }
 .app-header__mobile-close {
   border: 1px solid rgba(255, 255, 255, 0.4);
   background: transparent;
-  color: #ffffff;
+  color: var(--text-inverted);
   padding: 0.4rem 0.75rem;
   border-radius: 999px;
   font-size: 0.85rem;
@@ -475,7 +479,7 @@ main {
 }
 .app-header__mobile-link:hover,
 .app-header__mobile-link:focus-visible {
-  color: #ffffff;
+  color: var(--text-inverted);
   background: rgba(255, 255, 255, 0.12);
   outline: 2px solid rgba(255, 255, 255, 0.55);
   outline-offset: 2px;
@@ -816,7 +820,7 @@ main {
 
 .button--primary {
   background: linear-gradient(180deg, var(--brand-600) 0%, #1e66b7 100%);
-  color: #fff;
+  color: var(--text-inverted);
   box-shadow: 0 10px 24px rgba(15, 77, 158, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
@@ -1465,7 +1469,7 @@ footer {
   text-decoration: underline;
 }
 .link-button:disabled {
-  color: var(--text-3, #666);
+  color: var(--text-tertiary, #5e6a86);
   cursor: not-allowed;
   text-decoration: none;
   opacity: 0.7;
@@ -1697,7 +1701,7 @@ footer {
 }
 .button--primary {
   background: linear-gradient(180deg, var(--brand-600) 0%, #1e66b7 100%);
-  color: #fff;
+  color: var(--text-inverted);
   box-shadow: 0 10px 24px rgba(15, 77, 158, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
@@ -1768,7 +1772,7 @@ footer {
 .app-footer__brand-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-inverted);
 }
 .app-footer__brand-subtitle {
   font-size: 0.8rem;
@@ -1809,7 +1813,7 @@ footer {
 }
 .app-footer__links a:hover,
 .app-footer__links a:focus-visible {
-  color: #fff;
+  color: var(--text-inverted);
   background: rgba(255, 255, 255, 0.1);
   outline: none;
 }
@@ -2659,7 +2663,7 @@ footer {
 /* Ajustes de botones comunes por si no existen */
 .button--danger {
   background: #e53935;
-  color: #fff;
+  color: var(--text-inverted);
   border: 1px solid #d32f2f;
 }
 .button--danger:hover {
