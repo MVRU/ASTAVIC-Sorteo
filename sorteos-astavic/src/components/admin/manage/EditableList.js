@@ -98,19 +98,20 @@ export const EditableListStyles = () => (
       .editable-list__count {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
-        padding: 0.45rem 0.75rem;
+        gap: 0.25rem;
+        padding: 0.2rem 0.55rem;
         border-radius: 999px;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 600;
+        line-height: 1.4;
         color: var(--brand-700, #0f4d9e);
-        background: rgba(78, 164, 234, 0.14);
-        border: 1px solid rgba(78, 164, 234, 0.24);
+        background: rgba(78, 164, 234, 0.12);
+        border: 1px solid rgba(78, 164, 234, 0.22);
       }
 
       .editable-list__count::before {
         content: "•";
-        font-size: 1.2em;
+        font-size: 0.95em;
       }
 
       .editable-list[data-length="0"] .editable-list__count {

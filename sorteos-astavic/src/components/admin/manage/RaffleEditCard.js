@@ -1,4 +1,6 @@
 // src/components/admin/manage/RaffleEditCard.js
+// * DECISIÓN: Apilamos las listas de premios y participantes para priorizar
+//   la lectura vertical en desktop y evitar competencia visual entre columnas.
 
 import PropTypes from "prop-types";
 import EditableList from "./EditableList";
@@ -61,6 +63,16 @@ export const RaffleEditCardStyles = () => (
       .form-row--3{
         grid-template-columns: 2fr 1fr auto;
         align-items: end;
+      }
+
+      .manage-edit__lists{
+        display: flex;
+        flex-direction: column;
+        gap: clamp(1rem, 2.4vw, 1.6rem);
+      }
+
+      .manage-edit__lists-item{
+        min-width: 0;
       }
 
       .form-group--checkbox{
@@ -214,29 +226,33 @@ const RaffleEditCard = ({
         </div>
       </div>
 
-      <div className="form-row form-row--2">
-        <EditableList
-          id={`${formId}-prizes`}
-          label="Premio"
-          values={form.prizes}
-          onChange={onPrizesChange}
-          addButtonLabel="Agregar premio"
-          placeholder="Ej.: Gift card, remera edición limitada"
-          helperText="Los premios se mostrarán en el orden indicado."
-          invalidIndexes={prizesInvalidIndexes}
-          describedBy={alert?.field === "prizes" ? alertId : undefined}
-        />
-        <EditableList
-          id={`${formId}-participants`}
-          label="Participante"
-          values={form.participants}
-          onChange={onParticipantsChange}
-          addButtonLabel="Agregar participante"
-          placeholder="Ej.: Ana Gómez"
-          helperText="Podés repetir participantes si corresponden a varios cupones."
-          invalidIndexes={participantsInvalidIndexes}
-          describedBy={alert?.field === "participants" ? alertId : undefined}
-        />
+      <div className="manage-edit__lists">
+        <div className="manage-edit__lists-item">
+          <EditableList
+            id={`${formId}-prizes`}
+            label="Premio"
+            values={form.prizes}
+            onChange={onPrizesChange}
+            addButtonLabel="Agregar premio"
+            placeholder="Ej.: Gift card, remera edición limitada"
+            helperText="Los premios se mostrarán en el orden indicado."
+            invalidIndexes={prizesInvalidIndexes}
+            describedBy={alert?.field === "prizes" ? alertId : undefined}
+          />
+        </div>
+        <div className="manage-edit__lists-item">
+          <EditableList
+            id={`${formId}-participants`}
+            label="Participante"
+            values={form.participants}
+            onChange={onParticipantsChange}
+            addButtonLabel="Agregar participante"
+            placeholder="Ej.: Ana Gómez"
+            helperText="Podés repetir participantes si corresponden a varios cupones."
+            invalidIndexes={participantsInvalidIndexes}
+            describedBy={alert?.field === "participants" ? alertId : undefined}
+          />
+        </div>
       </div>
     </form>
   );
