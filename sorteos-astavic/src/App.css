@@ -1499,10 +1499,6 @@ footer {
   line-height: 1;
 }
 
-.raffle-modal {
-  width: min(640px, 100%);
-  padding: 1.25rem 1.5rem;
-}
 .modal__section {
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;

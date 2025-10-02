@@ -34,6 +34,7 @@
   /* Bordes */
   --color-border: rgba(15, 40, 105, 0.16);
   --color-border-strong: rgba(15, 40, 105, 0.22);
+  --color-border-subtle: rgba(15, 40, 105, 0.08);
 
   /* Estados */
   --color-success: #1f9d5a;
@@ -136,6 +137,32 @@
     in srgb,
     #ffffff 70%,
     transparent
+  );
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    var(--color-info) 12%,
+    var(--color-bg-surface) 88%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    var(--color-info) 18%,
+    var(--color-bg-surface) 82%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 94%, transparent) 100%
+  );
+  --color-highlight-info-border: color-mix(
+    in srgb,
+    var(--color-info) 24%,
+    transparent
+  );
+  --color-highlight-info-fg: color-mix(
+    in srgb,
+    var(--color-info) 70%,
+    var(--color-fg-primary) 30%
   );
 
   /* Overlay */
@@ -265,6 +292,33 @@
   --color-gold-strong: #d5a742;
   --color-gold-muted: #a97c27;
 
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    var(--color-info) 22%,
+    var(--color-bg-surface) 78%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    var(--color-info) 30%,
+    var(--color-bg-surface) 70%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 88%, transparent) 100%
+  );
+  --color-highlight-info-border: color-mix(
+    in srgb,
+    var(--color-info) 32%,
+    transparent
+  );
+  --color-highlight-info-fg: color-mix(
+    in srgb,
+    var(--color-info) 86%,
+    #ffffff 14%
+  );
+
   --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 10px 24px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 18px 42px rgba(0, 0, 0, 0.55);
@@ -274,6 +328,7 @@
   --color-link: #0046ff;
   --color-link-hover: #002fb7;
   --color-border-strong: #1a5cff;
+  --color-border-subtle: #1a5cff;
   --color-bg-brand: #002b7a;
   --color-bg-brand-elevated: #003699;
   --color-fg-on-brand: #ffffff;
@@ -290,4 +345,23 @@
   --color-gold-contrast: #000000;
   --color-gold-strong: #ffbf00;
   --color-gold-muted: #b87333;
+
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    #0046ff 25%,
+    var(--color-bg-surface) 75%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    #0046ff 35%,
+    var(--color-bg-surface) 65%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 85%, transparent) 100%
+  );
+  --color-highlight-info-border: #1a5cff;
+  --color-highlight-info-fg: #002b7a;
 }
