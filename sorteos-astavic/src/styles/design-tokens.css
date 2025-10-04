@@ -138,7 +138,7 @@
     #ffffff 70%,
     transparent
   );
-  /* Realces informativos */
+  /* -*- Realces informativos: centralizamos superficies y sombras para mantener consistencia temática. */
   --color-highlight-info-surface: color-mix(
     in srgb,
     var(--color-info) 12%,
@@ -159,6 +159,8 @@
     var(--color-info) 24%,
     transparent
   );
+  --shadow-highlight-info-inset: inset 0 1px 0
+    color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-info) 10%);
   --color-highlight-info-fg: color-mix(
     in srgb,
     var(--color-info) 70%,
@@ -385,7 +387,7 @@
   --color-gold-strong: #d5a742;
   --color-gold-muted: #a97c27;
 
-  /* Realces informativos */
+  /* -*- Realces informativos: ajustes oscuros sincronizados con superficies base. */
   --color-highlight-info-surface: color-mix(
     in srgb,
     var(--color-info) 22%,
@@ -406,6 +408,8 @@
     var(--color-info) 32%,
     transparent
   );
+  --shadow-highlight-info-inset: inset 0 1px 0
+    color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-info) 28%);
   --color-highlight-info-fg: color-mix(
     in srgb,
     var(--color-info) 86%,
@@ -439,7 +443,7 @@
   --color-gold-strong: #ffbf00;
   --color-gold-muted: #b87333;
 
-  /* Realces informativos */
+  /* -*- Realces informativos: priorizamos contraste neto en alto contraste sin romper tokens existentes. */
   --color-highlight-info-surface: color-mix(
     in srgb,
     #0046ff 25%,
@@ -456,6 +460,8 @@
     color-mix(in srgb, var(--color-bg-surface) 85%, transparent) 100%
   );
   --color-highlight-info-border: #1a5cff;
+  --shadow-highlight-info-inset: inset 0 1px 0
+    color-mix(in srgb, var(--color-bg-surface) 65%, var(--color-highlight-info-border) 35%);
   --color-highlight-info-fg: #002b7a;
   --color-segmented-surface: color-mix(
     in srgb,
