@@ -6,23 +6,21 @@
   gap: clamp(var(--space-4), 2vw, var(--space-5));
   padding: clamp(var(--space-4), 2.4vw, var(--space-5));
   border-radius: var(--radius-xl);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border-subtle);
   background: color-mix(
     in srgb,
-    var(--color-bg-surface-elevated) 94%,
-    var(--brand-50) 6%
+    var(--color-bg-surface-elevated) 98%,
+    var(--brand-50) 2%
   );
-  box-shadow: var(--shadow-1);
   transition:
-    box-shadow var(--dur-base) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-base) var(--ease-standard),
     background-color var(--dur-base) var(--ease-standard);
 }
 
 .editable-list:focus-within {
-  box-shadow: var(--shadow-2),
-    0 0 0 1px color-mix(in srgb, var(--brand-400) 45%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand-400) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--brand-200) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .editable-list__header {
@@ -33,7 +31,7 @@
   justify-content: space-between;
   padding-bottom: clamp(var(--space-2), 1.2vw, var(--space-3));
   margin-bottom: clamp(var(--space-3), 1.6vw, var(--space-4));
-  box-shadow: inset 0 -1px 0 var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .editable-list__heading {
@@ -80,11 +78,7 @@
     var(--brand-50) 72%,
     var(--color-bg-surface) 28%
   );
-  box-shadow: inset 0 0 0 1px color-mix(
-      in srgb,
-      var(--brand-200) 40%,
-      transparent
-    );
+  border: 1px solid color-mix(in srgb, var(--brand-200) 40%, transparent);
 }
 
 .editable-list__count::before {
@@ -99,7 +93,7 @@
     var(--color-bg-muted) 85%,
     var(--color-bg-surface) 15%
   );
-  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  border-color: var(--color-border-subtle);
 }
 
 .editable-list__add {
@@ -109,22 +103,18 @@
   gap: var(--space-2);
   padding: calc(var(--space-2) + 2px) calc(var(--space-4) + 6px);
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 1px solid color-mix(in srgb, var(--brand-200) 36%, transparent);
   color: var(--brand-700);
   background: color-mix(
     in srgb,
     var(--brand-50) 70%,
     var(--color-bg-surface) 30%
   );
-  box-shadow:
-    var(--shadow-elevated-inset),
-    0 2px 4px color-mix(in srgb, var(--brand-500) 12%, transparent);
   font-weight: 600;
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     border-color var(--dur-fast) var(--ease-standard),
-    color var(--dur-fast) var(--ease-standard),
-    box-shadow var(--dur-base) var(--ease-standard);
+    color var(--dur-fast) var(--ease-standard);
 }
 
 .editable-list__add:hover,
@@ -136,7 +126,6 @@
   );
   color: var(--brand-600);
   border-color: color-mix(in srgb, var(--brand-300) 46%, transparent);
-  box-shadow: var(--shadow-accent-hover);
   outline: none;
 }
 
@@ -156,25 +145,22 @@
     var(--brand-50) 5%
   );
   border-radius: var(--radius-lg);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border-subtle);
   padding: clamp(var(--space-3), 1.6vw, var(--space-4));
-  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
   transition:
-    box-shadow var(--dur-base) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-base) var(--ease-standard),
     background-color var(--dur-base) var(--ease-standard);
 }
 
 .editable-list__item:focus-within {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--brand-300) 55%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--brand-200) 55%, transparent);
+  border-color: color-mix(in srgb, var(--brand-300) 55%, transparent);
   background: color-mix(
     in srgb,
     var(--brand-50) 55%,
     var(--color-bg-surface) 45%
   );
-  transform: translateY(-1px);
+  outline: 2px solid color-mix(in srgb, var(--brand-200) 55%, transparent);
+  outline-offset: 2px;
 }
 
 .editable-list__item-grid {
@@ -199,11 +185,7 @@
     var(--brand-50) 68%,
     var(--color-bg-surface) 32%
   );
-  box-shadow: inset 0 0 0 1px color-mix(
-      in srgb,
-      var(--brand-200) 42%,
-      transparent
-    );
+  border: 1px solid color-mix(in srgb, var(--brand-200) 42%, transparent);
 }
 
 .editable-list__field {
@@ -228,19 +210,19 @@
   background: var(--color-bg-surface);
   color: var(--color-fg-primary);
   transition:
-    border-color var(--dur-fast) var(--ease-standard),
-    box-shadow var(--dur-fast) var(--ease-standard);
+    border-color var(--dur-fast) var(--ease-standard);
 }
 
 .editable-list__input:focus-visible {
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-400) 30%, transparent);
-  outline: none;
+  outline: 2px solid color-mix(in srgb, var(--brand-400) 35%, transparent);
+  outline-offset: 2px;
 }
 
 .editable-list__input--invalid {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 25%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  outline-offset: 2px;
   background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-card));
 }
 

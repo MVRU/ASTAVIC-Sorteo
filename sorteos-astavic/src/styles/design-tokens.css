@@ -167,12 +167,6 @@
     var(--color-fg-primary) 30%
   );
 
-  /* -*- Sombras contextuales: tokens reutilizables para acciones elevadas según DESIGN.md. */
-  --shadow-elevated-inset: inset 0 1px 0
-    color-mix(in srgb, var(--color-fg-inverted) 70%, transparent);
-  --shadow-accent-hover: 0 12px 28px
-    color-mix(in srgb, var(--brand-500) 25%, transparent);
-
   /* Overlay */
   --color-overlay: rgba(11, 25, 54, 0.5);
   --color-header-translucent: rgba(255, 255, 255, 0.92);
@@ -422,12 +416,6 @@
     #ffffff 14%
   );
 
-  /* -*- Sombras contextuales: adaptamos elevación y hover para mantener contraste en modo oscuro. */
-  --shadow-elevated-inset: inset 0 1px 0
-    color-mix(in srgb, var(--color-fg-primary) 26%, transparent);
-  --shadow-accent-hover: 0 12px 28px
-    color-mix(in srgb, var(--brand-400) 32%, transparent);
-
   --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 10px 24px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 18px 42px rgba(0, 0, 0, 0.55);
@@ -475,10 +463,6 @@
   --shadow-highlight-info-inset: inset 0 1px 0
     color-mix(in srgb, var(--color-bg-surface) 65%, var(--color-highlight-info-border) 35%);
   --color-highlight-info-fg: #002b7a;
-  --shadow-elevated-inset: inset 0 1px 0
-    color-mix(in srgb, #ffffff 70%, transparent);
-  --shadow-accent-hover: 0 12px 28px
-    color-mix(in srgb, #1a5cff 40%, transparent);
   --color-segmented-surface: color-mix(
     in srgb,
     var(--color-bg-surface) 70%,
