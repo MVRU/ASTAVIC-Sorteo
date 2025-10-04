@@ -1,4 +1,6 @@
 // src/components/admin/__tests__/ManageRaffles.test.js
+// * DECISIÓN: Garantizamos que la edición preserve las mismas reglas que el
+//   alta, verificando mensajes y focos accesibles ante errores de validación.
 
 import {
   render,
@@ -166,6 +168,43 @@ describe("ManageRaffles", () => {
     ).toBeInTheDocument();
   });
 
+  test("rechaza guardar cuando el título tiene menos de tres caracteres", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    const titleInput = within(dialog).getByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, "ab");
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent("El título debe tener al menos 3 caracteres.");
+    expect(titleInput).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getByRole("dialog", { name: /editar sorteo/i })
+    ).toBeInTheDocument();
+  });
+
   test("muestra los índices correspondientes cuando hay premios vacíos", async () => {
     const user = createUser();
     const onUpdate = jest.fn();
@@ -208,6 +247,44 @@ describe("ManageRaffles", () => {
     });
     expect(prizeInputs[0]).toHaveAttribute("aria-invalid", "true");
     expect(prizeInputs[1]).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("impide guardar si queda un único participante", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /eliminar participante 2/i })
+    );
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent(/al menos 2 participantes distintos/i);
+
+    const participantInput = within(dialog).getByLabelText(/participante 1/i, {
+      selector: "input",
+    });
+    expect(participantInput).toHaveAttribute("aria-invalid", "true");
   });
 
   test("permite gestionar listas con altas, bajas y duplicados", async () => {

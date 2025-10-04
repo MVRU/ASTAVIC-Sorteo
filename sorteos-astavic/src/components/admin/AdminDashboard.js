@@ -11,6 +11,10 @@ import {
 } from "react";
 import PropTypes from "prop-types";
 import { ensureId, parseParticipants } from "../../utils/raffleUtils";
+import {
+  MIN_PARTICIPANTS,
+  MIN_PARTICIPANTS_ERROR_MESSAGE,
+} from "../../utils/raffleValidation";
 import RaffleCard from "../public/RaffleCard";
 import rafflePropType from "../public/rafflePropType";
 import { useToast } from "../../context/ToastContext";
@@ -675,25 +679,33 @@ const AdminDashboard = ({ onLogout, onCreateRaffle, raffles }) => {
     const participants = Array.isArray(payload.participants)
       ? payload.participants
       : [];
+    const manualIndexes = Array.isArray(payload.manualEntries)
+      ? payload.manualEntries.map((_, index) => index)
+      : [0];
     if (participants.length === 0) {
       const message = "No se detectaron participantes (archivo o texto).";
       generalErrors.push(message);
       fieldErrors.manual = {
         message,
-        indexes: Array.isArray(payload.manualEntries)
-          ? payload.manualEntries.map((_, index) => index)
-          : [0],
+        indexes: manualIndexes,
       };
-    } else if (participants.length < winnersNum) {
+    } else {
+      const uniqueParticipants = new Set(
+        participants.map((participant) => participant.toLowerCase())
+      );
+      if (uniqueParticipants.size < MIN_PARTICIPANTS) {
+        const message = MIN_PARTICIPANTS_ERROR_MESSAGE;
+        generalErrors.push(message);
+        fieldErrors.manual = { message, indexes: manualIndexes };
+      } else if (participants.length < winnersNum) {
       const message =
         "La cantidad de participantes debe ser mayor o igual a la de ganadores.";
       generalErrors.push(message);
       fieldErrors.manual = {
         message,
-        indexes: Array.isArray(payload.manualEntries)
-          ? payload.manualEntries.map((_, index) => index)
-          : [0],
+        indexes: manualIndexes,
       };
+      }
     }
 
     if (fieldErrors.prizes && fieldErrors.prizes.every((value) => !value)) {

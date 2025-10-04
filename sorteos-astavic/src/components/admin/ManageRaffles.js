@@ -7,6 +7,8 @@
 //   móviles.
 // * DECISIÓN: El asa de redimensionado provee instrucciones auditivas para
 //   favorecer el descubrimiento y accesibilidad de la interacción.
+// * DECISIÓN: Las validaciones del editor reutilizan los mismos criterios del
+//   alta para evitar estados inconsistentes entre ambos flujos.
 
 import {
   useMemo,
@@ -23,6 +25,10 @@ import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
 import RaffleEditCard from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
+import {
+  MIN_PARTICIPANTS,
+  MIN_PARTICIPANTS_ERROR_MESSAGE,
+} from "../../utils/raffleValidation";
 import { createPortal } from "react-dom";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
@@ -178,11 +184,11 @@ const formatIndexes = (indexes) =>
   indexes.map((index) => `#${index + 1}`).join(", ");
 
 function buildPayloadFromForm(form) {
-  const title = form.title.trim();
-  if (!title) {
+  const title = String(form.title ?? "").trim();
+  if (title.length < 3) {
     return {
       ok: false,
-      error: "El título no puede quedar vacío.",
+      error: "El título debe tener al menos 3 caracteres.",
       field: "title",
     };
   }
@@ -226,6 +232,18 @@ function buildPayloadFromForm(form) {
       )}: no pueden quedar vacíos.`,
       field: "participants",
       indexes: emptyParticipantIndexes,
+    };
+  }
+
+  const uniqueParticipants = new Set(
+    normalizedParticipants.map((value) => value.toLowerCase())
+  );
+  if (uniqueParticipants.size < MIN_PARTICIPANTS) {
+    return {
+      ok: false,
+      error: MIN_PARTICIPANTS_ERROR_MESSAGE,
+      field: "participants",
+      indexes: normalizedParticipants.map((_, index) => index),
     };
   }
 

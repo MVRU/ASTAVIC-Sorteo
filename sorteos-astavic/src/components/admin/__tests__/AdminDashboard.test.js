@@ -1,6 +1,6 @@
 // src/components/admin/__tests__/AdminDashboard.test.js
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AdminDashboard from "../AdminDashboard";
 import { ToastProvider } from "../../../context/ToastContext";
@@ -69,6 +69,50 @@ describe("AdminDashboard", () => {
     await waitFor(() => {
       expect(titleInput).toHaveFocus();
     });
+  });
+
+  test("rechaza sorteos con un único participante", async () => {
+    const onCreateRaffle = jest.fn();
+    renderWithProviders(
+      <AdminDashboard
+        onLogout={jest.fn()}
+        onCreateRaffle={onCreateRaffle}
+        raffles={[]}
+      />
+    );
+
+    const user = setupUser();
+    const titleInput = screen.getByRole("textbox", {
+      name: /título del sorteo/i,
+    });
+    await user.type(titleInput, "Sorteo robusto");
+
+    const datetimeInput = screen.getByLabelText(/fecha y hora/i, {
+      selector: "input",
+    });
+    const futureValue = new Date(Date.now() + 86400000)
+      .toISOString()
+      .slice(0, 16);
+    fireEvent.change(datetimeInput, { target: { value: futureValue } });
+
+    const prizeInput = screen.getByRole("textbox", { name: /premio 1/i });
+    await user.type(prizeInput, "Pack de bienvenida");
+
+    const participantInput = screen.getByRole("textbox", {
+      name: /participante manual 1/i,
+    });
+    await user.type(participantInput, "ana@example.com");
+
+    await user.click(screen.getByRole("button", { name: /crear sorteo/i }));
+
+    const manualError = await screen.findByText(
+      /al menos 2 participantes distintos/i,
+      {
+        selector: "#create-manual-error",
+      }
+    );
+    expect(manualError).toBeInTheDocument();
+    expect(onCreateRaffle).not.toHaveBeenCalled();
   });
 
   test("deshabilita la interacción en la tarjeta de vista previa", () => {
