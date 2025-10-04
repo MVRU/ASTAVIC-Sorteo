@@ -1,4 +1,6 @@
 // src/App.js
+// ! DECISIÓN DE DISEÑO: Evitamos remontar la vista pública al alternar segmentos compartidos
+// ! para conservar estado local y no recalcular tarjetas innecesarias.
 
 import { useCallback, useRef } from "react";
 import Header from "./components/Header";
@@ -66,6 +68,8 @@ const App = () => {
     }
   }, []);
 
+  const mainContentKey = route === "admin" ? "admin" : "public";
+
   return (
     <div className="app-shell">
       <a
@@ -78,7 +82,7 @@ const App = () => {
       <Header currentRoute={route} onNavigate={navigate} isAdmin={isAdmin} />
       <main
         id={MAIN_CONTENT_ID}
-        key={route}
+        key={mainContentKey}
         className="anim-fade-in"
         ref={mainContentRef}
         tabIndex={-1}

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 import { ADMIN_CREDENTIALS, ADMIN_DEMO_MESSAGE } from './config/adminCredentials';
@@ -98,4 +98,50 @@ test('muestra un toast de éxito al iniciar sesión y otro informativo al cerrar
   expect(
     await screen.findByText(/Sesión cerrada correctamente\./i)
   ).toBeInTheDocument();
+});
+
+test('conserva el correo ingresado al alternar segmentos públicos', async () => {
+  const user = createUser();
+  window.location.hash = '#/';
+
+  renderWithToast(<App />);
+
+  const reminderButton = screen.getByRole('button', {
+    name: /Recordatorios por email/i,
+  });
+  await user.click(reminderButton);
+
+  const emailInput = await screen.findByLabelText(/correo electrónico/i, {
+    selector: 'input',
+  });
+  await user.type(emailInput, 'persona@example.com');
+
+  const closeDialogButton = screen.getByRole('button', {
+    name: /cerrar recordatorio/i,
+  });
+  await user.click(closeDialogButton);
+
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { hidden: true })).not.toBeInTheDocument()
+  );
+
+  const finishedTab = screen.getByRole('button', { name: /Finalizados/i });
+  await user.click(finishedTab);
+
+  fireEvent(window, new Event('hashchange'));
+
+  await screen.findByRole('heading', {
+    level: 1,
+    name: /sorteos finalizados/i,
+  });
+
+  const reminderButtonAgain = screen.getByRole('button', {
+    name: /Recordatorios por email/i,
+  });
+  await user.click(reminderButtonAgain);
+
+  const persistedEmailInput = await screen.findByLabelText(/correo electrónico/i, {
+    selector: 'input',
+  });
+  expect(persistedEmailInput).toHaveValue('persona@example.com');
 });
