@@ -7,6 +7,8 @@
 //   móviles.
 // * DECISIÓN: El asa de redimensionado provee instrucciones auditivas para
 //   favorecer el descubrimiento y accesibilidad de la interacción.
+// * DECISIÓN: Las validaciones del editor reutilizan los mismos criterios del
+//   alta para evitar estados inconsistentes entre ambos flujos.
 
 import {
   useMemo,
@@ -182,11 +184,11 @@ const formatIndexes = (indexes) =>
   indexes.map((index) => `#${index + 1}`).join(", ");
 
 function buildPayloadFromForm(form) {
-  const title = form.title.trim();
-  if (!title) {
+  const title = String(form.title ?? "").trim();
+  if (title.length < 3) {
     return {
       ok: false,
-      error: "El título no puede quedar vacío.",
+      error: "El título debe tener al menos 3 caracteres.",
       field: "title",
     };
   }

@@ -1,4 +1,6 @@
 // src/components/admin/__tests__/ManageRaffles.test.js
+// * DECISIÓN: Garantizamos que la edición preserve las mismas reglas que el
+//   alta, verificando mensajes y focos accesibles ante errores de validación.
 
 import {
   render,
@@ -161,6 +163,43 @@ describe("ManageRaffles", () => {
       node.textContent?.toLowerCase().includes("ingresá una fecha válida")
     );
     expect(feedback).toBeDefined();
+    expect(
+      screen.getByRole("dialog", { name: /editar sorteo/i })
+    ).toBeInTheDocument();
+  });
+
+  test("rechaza guardar cuando el título tiene menos de tres caracteres", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    const titleInput = within(dialog).getByLabelText(/título/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, "ab");
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent("El título debe tener al menos 3 caracteres.");
+    expect(titleInput).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByRole("dialog", { name: /editar sorteo/i })
     ).toBeInTheDocument();
