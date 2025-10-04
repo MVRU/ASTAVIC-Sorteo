@@ -23,6 +23,10 @@ import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
 import RaffleEditCard from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
+import {
+  MIN_PARTICIPANTS,
+  MIN_PARTICIPANTS_ERROR_MESSAGE,
+} from "../../utils/raffleValidation";
 import { createPortal } from "react-dom";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
@@ -226,6 +230,18 @@ function buildPayloadFromForm(form) {
       )}: no pueden quedar vacíos.`,
       field: "participants",
       indexes: emptyParticipantIndexes,
+    };
+  }
+
+  const uniqueParticipants = new Set(
+    normalizedParticipants.map((value) => value.toLowerCase())
+  );
+  if (uniqueParticipants.size < MIN_PARTICIPANTS) {
+    return {
+      ok: false,
+      error: MIN_PARTICIPANTS_ERROR_MESSAGE,
+      field: "participants",
+      indexes: normalizedParticipants.map((_, index) => index),
     };
   }
 

@@ -1,7 +1,12 @@
 // src/utils/raffleValidation.js
+// ! DECISIÓN: Centralizamos mensajes y umbrales para mantener coherencia
+//   entre formularios públicos y administrativos al validar sorteos.
 
 const MIN_TITLE_LENGTH = 3;
 const MIN_WINNERS = 1;
+export const MIN_PARTICIPANTS = 2;
+export const MIN_PARTICIPANTS_ERROR_MESSAGE =
+  "Necesitás al menos 2 participantes distintos para el sorteo.";
 
 const sanitizeTitle = (value) => String(value ?? "").trim();
 
@@ -78,10 +83,15 @@ export const validateRaffleDraft = ({
   const normalizedParticipants = normalizeParticipants(participants);
   if (normalizedParticipants.length === 0) {
     errors.push("No se detectaron participantes (archivo o texto).");
-  } else if (normalizedParticipants.length < winners) {
-    errors.push(
-      "La cantidad de participantes debe ser mayor o igual a la de ganadores."
-    );
+  } else {
+    if (normalizedParticipants.length < MIN_PARTICIPANTS) {
+      errors.push(MIN_PARTICIPANTS_ERROR_MESSAGE);
+    }
+    if (normalizedParticipants.length < winners) {
+      errors.push(
+        "La cantidad de participantes debe ser mayor o igual a la de ganadores."
+      );
+    }
   }
 
   const seenParticipants = new Set();

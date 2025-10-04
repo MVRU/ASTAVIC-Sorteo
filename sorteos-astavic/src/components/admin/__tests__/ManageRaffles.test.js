@@ -210,6 +210,44 @@ describe("ManageRaffles", () => {
     expect(prizeInputs[1]).toHaveAttribute("aria-invalid", "true");
   });
 
+  test("impide guardar si queda un único participante", async () => {
+    const user = createUser();
+    const onUpdate = jest.fn();
+
+    renderWithToast(
+      <ManageRaffles
+        raffles={sampleRaffles}
+        onUpdateRaffle={onUpdate}
+        onDeleteRaffle={jest.fn()}
+        onMarkFinished={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /editar/i }));
+    const dialog = await screen.findByRole("dialog", {
+      name: /editar sorteo/i,
+    });
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /eliminar participante 2/i })
+    );
+
+    await act(async () => {
+      await user.click(
+        within(dialog).getByRole("button", { name: /guardar cambios/i })
+      );
+    });
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent(/al menos 2 participantes distintos/i);
+
+    const participantInput = within(dialog).getByLabelText(/participante 1/i, {
+      selector: "input",
+    });
+    expect(participantInput).toHaveAttribute("aria-invalid", "true");
+  });
+
   test("permite gestionar listas con altas, bajas y duplicados", async () => {
     const user = createUser();
     const onUpdate = jest.fn().mockResolvedValue({ ok: true });

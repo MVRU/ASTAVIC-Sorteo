@@ -66,6 +66,14 @@ describe("RaffleForm", () => {
       screen.getByPlaceholderText(/ana@correo.com/i),
       "ana@example.com"
     );
+    await user.click(
+      screen.getByRole("button", { name: /\+ agregar participante/i })
+    );
+    const secondParticipantInput = await screen.findByLabelText(
+      /participante manual 2/i,
+      { selector: "input" }
+    );
+    await user.type(secondParticipantInput, "ben@example.com");
 
     await user.click(screen.getByRole("button", { name: /crear sorteo/i }));
 
@@ -85,7 +93,10 @@ describe("RaffleForm", () => {
       prizes: [{ title: "Primer premio" }],
       finished: false,
     });
-    expect(createdRaffle.participants).toEqual(["ana@example.com"]);
+    expect(createdRaffle.participants).toEqual([
+      "ana@example.com",
+      "ben@example.com",
+    ]);
 
     expect(onStatusChange).toHaveBeenCalledWith({ ok: true, message: "Listo" });
   });
