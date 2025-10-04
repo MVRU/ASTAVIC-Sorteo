@@ -1,4 +1,5 @@
 // src/components/public/RaffleDetailsModal.js
+// ! DECISIÓN DE DISEÑO: El modal reutiliza tokens de overlay, foco y tipografía para ofrecer detalle accesible del sorteo.
 
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,72 +9,9 @@ import rafflePropType from "./rafflePropType";
 import Icon from "../ui/Icon";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+import "./RaffleDetailsModal.css";
 
 const DEFAULT_COMPACT_COUNT = 24;
-const MODAL_CONTENT_STYLE = {
-  width: "min(720px, 100%)",
-  maxHeight: "90vh",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-  overscrollBehavior: "contain",
-};
-const STICKY_HEADER_STYLE = {
-  position: "sticky",
-  top: 0,
-  zIndex: 2,
-  background: "var(--surface, #fff)",
-  borderBottom: "1px solid rgba(15,40,105,0.08)",
-};
-const STICKY_FOOTER_STYLE = {
-  position: "sticky",
-  bottom: 0,
-  zIndex: 2,
-  background: "var(--surface, #fff)",
-  borderTop: "1px solid rgba(15,40,105,0.08)",
-};
-const MODAL_SCROLL_STYLE = {
-  flex: 1,
-  overflow: "auto",
-  paddingRight: "2px",
-  overscrollBehavior: "contain",
-};
-const HEADER_INFO_STYLE = {
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "0.5rem",
-  alignItems: "center",
-};
-const PARTICIPANTS_SCROLL_STYLE = {
-  maxHeight: "260px",
-  overflow: "auto",
-  paddingRight: "0.25rem",
-  borderRadius: "0.65rem",
-  border: "1px solid var(--border)",
-  background: "var(--surface)",
-  overscrollBehavior: "contain",
-};
-const WINNERS_LIST_STYLE = { display: "grid", gap: "0.5rem" };
-const WINNER_CARD_STYLE = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "0.5rem",
-  padding: "0.6rem 0.75rem",
-  borderRadius: "0.75rem",
-  background:
-    "linear-gradient(180deg, rgba(234,244,255,0.7) 0%, rgba(255,255,255,1) 100%)",
-  border: "1px solid rgba(13,71,161,0.12)",
-};
-const PRIZE_PILL_STYLE = {
-  fontSize: "0.75rem",
-  padding: "0.25rem 0.5rem",
-  borderRadius: "999px",
-  background: "var(--brand-50)",
-  color: "var(--brand-700)",
-  border: "1px solid rgba(13,71,161,0.18)",
-  whiteSpace: "nowrap",
-};
 
 const RaffleDetailsModal = ({
   raffle,
@@ -154,6 +92,8 @@ const RaffleDetailsModal = ({
     return null;
   }
 
+  const statusKind = isFinal ? "ok" : "info";
+
   return createPortal(
     <div
       className="modal"
@@ -169,46 +109,32 @@ const RaffleDetailsModal = ({
         role="document"
         ref={panelRef}
         onClick={(event) => event.stopPropagation()}
-        style={MODAL_CONTENT_STYLE}
       >
-        <header
-          className="modal__header"
-          style={{ ...STICKY_HEADER_STYLE, alignItems: "center" }}
-        >
-          <div style={{ display: "grid", gap: "0.25rem" }}>
-            <h3 id={titleId} className="modal__title" style={{ margin: 0 }}>
+        <header className="modal__header raffle-modal__header">
+          <div className="raffle-modal__title-block">
+            <h3 id={titleId} className="modal__title">
               {raffle.title}
             </h3>
-            <div style={HEADER_INFO_STYLE}>
+            <div className="raffle-modal__meta">
               <span
                 aria-hidden="true"
-                style={stateBadgeStyle(isFinal ? "ok" : "info")}
+                className={`raffle-modal__status raffle-modal__status--${statusKind}`}
               >
                 {isFinal ? "Finalizado" : "Activo"}
               </span>
-              <span
-                className="legend"
-                style={{
-                  color: "var(--text-secondary)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                }}
-              >
+              <span className="legend raffle-modal__meta-item">
                 <Icon
                   name="calendarCheck"
                   decorative
                   size={18}
                   strokeWidth={1.9}
+                  className="raffle-modal__meta-icon"
                 />
                 <time dateTime={new Date(raffle.datetime).toISOString()}>
                   {formatDateEs(raffle.datetime)}
                 </time>
               </span>
-              <span
-                className="legend"
-                style={{ color: "var(--text-secondary)" }}
-              >
+              <span className="legend raffle-modal__meta-item">
                 Participantes: {participantsCount}
               </span>
             </div>
@@ -224,18 +150,9 @@ const RaffleDetailsModal = ({
           </button>
         </header>
 
-        <div
-          className="modal__body"
-          id={descId}
-          style={{
-            display: "grid",
-            gap: "0.9rem",
-            paddingTop: "0.75rem",
-            ...MODAL_SCROLL_STYLE,
-          }}
-        >
+        <div className="modal__body raffle-modal__body" id={descId}>
           <section className="modal__section">
-            <h4 style={{ marginTop: 0 }}>Descripción</h4>
+            <h4 className="raffle-modal__section-title">Descripción</h4>
             <p className="modal__text">
               {raffle.description || "Sin descripción disponible."}
             </p>
@@ -243,21 +160,26 @@ const RaffleDetailsModal = ({
 
           {hasWinners && (
             <section className="modal__section">
-              <h4 style={{ marginTop: 0 }}>Ganadores</h4>
-              <div style={WINNERS_LIST_STYLE}>
+              <h4 className="raffle-modal__section-title">Ganadores</h4>
+              <div className="raffle-modal__winners-list">
                 {raffle.winners.map((winner, index) => {
                   const prize = Array.isArray(raffle.prizes)
                     ? raffle.prizes[index]
                     : null;
                   const prizeTitle = prize && prize.title ? prize.title : null;
                   return (
-                    <div key={`${winner}-${index}`} style={WINNER_CARD_STYLE}>
-                      <div style={{ display: "grid", gap: "0.2rem" }}>
-                        <strong style={{ fontSize: "0.95rem" }}>
+                    <div
+                      key={`${winner}-${index}`}
+                      className="raffle-modal__winner-card"
+                    >
+                      <div className="raffle-modal__winner-content">
+                        <strong className="raffle-modal__winner-name">
                           {index + 1}. {winner}
                         </strong>
                         {prizeTitle && (
-                          <span style={PRIZE_PILL_STYLE}>{prizeTitle}</span>
+                          <span className="raffle-modal__prize-pill">
+                            {prizeTitle}
+                          </span>
                         )}
                       </div>
                       <Icon
@@ -265,6 +187,7 @@ const RaffleDetailsModal = ({
                         decorative
                         size={22}
                         strokeWidth={1.6}
+                        className="raffle-modal__winner-icon"
                       />
                     </div>
                   );
@@ -274,28 +197,17 @@ const RaffleDetailsModal = ({
           )}
 
           <section className="modal__section">
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "0.6rem",
-              }}
-            >
-              <h4 style={{ margin: 0 }}>
+            <div className="raffle-modal__participants-header">
+              <h4 className="raffle-modal__participants-title">
                 Participantes ({filteredParticipants.length})
               </h4>
-              <div
-                style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
-              >
+              <div className="raffle-modal__participants-actions">
                 <input
-                  className="input"
+                  className="input raffle-modal__search"
                   type="search"
                   placeholder="Buscar participante…"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  style={{ width: "220px" }}
                   aria-label="Buscar participante"
                 />
                 {filteredParticipants.length > DEFAULT_COMPACT_COUNT && (
@@ -318,26 +230,15 @@ const RaffleDetailsModal = ({
               </div>
             </div>
 
-            <div style={{ marginTop: "0.6rem", ...PARTICIPANTS_SCROLL_STYLE }}>
+            <div className="raffle-modal__participants-shell">
               {visibleParticipants.length > 0 ? (
-                <ul
-                  className="modal__list"
-                  style={{
-                    margin: 0,
-                    padding: "0.5rem 0.6rem",
-                    display: "grid",
-                    gap: "0.35rem",
-                  }}
-                >
+                <ul className="modal__list raffle-modal__participants-list">
                   {visibleParticipants.map((participant) => (
                     <li key={participant}>{participant}</li>
                   ))}
                 </ul>
               ) : (
-                <p
-                  className="modal__text modal__text--muted"
-                  style={{ padding: "0.5rem 0.6rem" }}
-                >
+                <p className="modal__text modal__text--muted raffle-modal__empty">
                   {query ? "No hay coincidencias." : "Sin participantes aún."}
                 </p>
               )}
@@ -345,10 +246,7 @@ const RaffleDetailsModal = ({
           </section>
         </div>
 
-        <div
-          className="modal__footer"
-          style={{ ...STICKY_FOOTER_STYLE, justifyContent: "flex-end" }}
-        >
+        <div className="modal__footer raffle-modal__footer">
           <button
             type="button"
             className="button button--primary"
@@ -362,22 +260,6 @@ const RaffleDetailsModal = ({
     document.body
   );
 };
-
-const stateBadgeStyle = (kind) => ({
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "0.4rem",
-  padding: "0.25rem 0.6rem",
-  borderRadius: "999px",
-  fontSize: "0.75rem",
-  border:
-    kind === "ok"
-      ? "1px solid rgba(33, 150, 83, 0.35)"
-      : "1px solid rgba(13, 71, 161, 0.25)",
-  background: kind === "ok" ? "rgba(33,150,83,0.08)" : "rgba(13,71,161,0.06)",
-  color: kind === "ok" ? "#1f9d5a" : "var(--brand-700)",
-  whiteSpace: "nowrap",
-});
 
 RaffleDetailsModal.propTypes = {
   raffle: rafflePropType.isRequired,

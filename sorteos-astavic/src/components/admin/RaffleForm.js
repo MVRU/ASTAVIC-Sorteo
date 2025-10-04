@@ -1,4 +1,5 @@
 // src/components/admin/RaffleForm.js
+// ! DECISIÓN DE DISEÑO: El formulario crea sorteos empleando tokens de superficie, foco y feedback definidos en DESIGN.md.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
@@ -7,7 +8,7 @@ import { ensureId, parseParticipants } from "../../utils/raffleUtils";
 import { validateRaffleDraft } from "../../utils/raffleValidation";
 import { PREVIEW_DEFAULT_MESSAGE } from "./adminConstants";
 import { useToast } from "../../context/ToastContext";
-import EditableList, { EditableListStyles } from "./manage/EditableList";
+import EditableList from "./manage/EditableList";
 
 const noop = () => {};
 
@@ -278,7 +279,6 @@ const RaffleForm = ({
 
   return (
     <>
-      <EditableListStyles />
       <form className="card anim-scale-in" onSubmit={handleSubmit} noValidate>
         <fieldset
           disabled={loading}
@@ -417,7 +417,7 @@ const RaffleForm = ({
               gap: "1rem",
               flexWrap: "wrap",
               paddingTop: "0.5rem",
-              borderTop: "1px solid var(--border)",
+              borderTop: "1px solid var(--color-border)",
             }}
           >
             <button

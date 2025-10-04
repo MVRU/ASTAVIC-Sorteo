@@ -1,10 +1,12 @@
 // src/components/Header.js
+// ! DECISIÓN DE DISEÑO: El header reutiliza iconografía coherente con Lucide y tokens para garantizar accesibilidad en modo responsive.
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
+import Icon from "./ui/Icon";
 
 const MOBILE_NAV_ITEMS = [
   { target: "public", href: "#/", label: "Inicio" },
@@ -227,7 +229,12 @@ const Header = ({
               onClick={() => setMenuOpen((p) => !p)}
               ref={burgerButtonRef}
             >
-              <BurgerIcon open={menuOpen} />
+              <Icon
+                name={menuOpen ? "close" : "menu"}
+                decorative
+                size={20}
+                strokeWidth={1.75}
+              />
             </button>
           )}
         </div>
@@ -236,35 +243,6 @@ const Header = ({
     </header>
   );
 };
-
-const BurgerIcon = ({ open }) => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-  >
-    {open ? (
-      <path
-        d="M6 6l12 12M18 6L6 18"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    ) : (
-      <path
-        d="M4 6h16M4 12h16M4 18h16"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    )}
-  </svg>
-);
-
-BurgerIcon.propTypes = { open: PropTypes.bool };
-BurgerIcon.defaultProps = { open: false };
 
 Header.propTypes = {
   currentRoute: PropTypes.oneOf(["public", "finished", "admin", "all"])

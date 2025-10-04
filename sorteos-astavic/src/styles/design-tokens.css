@@ -1,0 +1,485 @@
+/* ! DECISIÓN DE DISEÑO: Fuente única de tokens de diseño siguiendo DESIGN.md. Actualizar aquí antes de tocar componentes. */
+:root {
+  color-scheme: light;
+
+  /* Superficies */
+  --color-bg-app: #f3f6fb;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-elevated: #ffffff;
+  --color-bg-card: #ffffff;
+  --color-bg-muted: #f5f8fc;
+
+  /* Marca base */
+  --brand-25: #f5faff;
+  --brand-50: #eaf4ff;
+  --brand-100: #d7eaff;
+  --brand-200: #b6d7ff;
+  --brand-300: #8fbefa;
+  --brand-400: #68a7ef;
+  --brand-500: #4ea4ea;
+  --brand-600: #2d7ed1;
+  --brand-700: #0f4d9e;
+  --brand-800: #0a3a85;
+  --brand-900: #072b63;
+
+  /* Tinta (texto/iconos) */
+  --color-fg-primary: #0a1b33; /* ratio >= 7:1 sobre bg-surface */
+  --color-fg-secondary: #3b4a63; /* ratio >= 4.5:1 */
+  --color-fg-muted: #5b6b85;
+  --color-fg-inverted: #ffffff;
+  --color-icon-muted: #4b5563;
+  --color-link: var(--brand-600);
+  --color-link-hover: var(--brand-700);
+
+  /* Bordes */
+  --color-border: rgba(15, 40, 105, 0.16);
+  --color-border-strong: rgba(15, 40, 105, 0.22);
+  --color-border-subtle: rgba(15, 40, 105, 0.08);
+
+  /* Estados */
+  --color-success: #1f9d5a;
+  --color-success-bg: #e8f8ef;
+  --color-success-border: color-mix(in srgb, var(--color-success) 32%, transparent);
+  --color-danger: #c03434;
+  --color-danger-bg: #fdecec;
+  --color-warning: #b45309;
+  --color-warning-bg: #fff4df;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eaf4ff;
+  --color-info-border: color-mix(in srgb, var(--color-info) 28%, transparent);
+
+  /* Botones deshabilitados */
+  --button-disabled-bg: #e3e9f3;
+  --button-disabled-border: #c8d3e5;
+  --button-disabled-text: #51607a;
+  --button-primary-disabled-bg: #3478bc;
+  --button-primary-disabled-text: #ffffff;
+  --button-ghost-disabled-bg: #f4f7fc;
+  --button-ghost-disabled-border: #c9d4e6;
+  --button-subtle-disabled-bg: #edf4ff;
+  --button-gold-disabled-bg: #e6d098;
+  --button-gold-disabled-border: rgba(185, 141, 35, 0.45);
+  --button-danger-disabled-bg: #b44a4a;
+  --button-danger-disabled-border: #a43f3f;
+
+  /* Botón primario */
+  --color-btn-primary: var(--brand-600);
+  --color-btn-primary-hover: #1e66b7;
+  --color-btn-primary-contrast: #ffffff;
+
+  /* Gradientes y efectos */
+  --gradient-primary: linear-gradient(
+    180deg,
+    var(--brand-600) 0%,
+    #1e66b7 100%
+  );
+  --gradient-gold: linear-gradient(180deg, #f7d774 0%, #e9b949 100%);
+  --color-gold-contrast: #3b2f0b;
+  --color-accent-amber: #e59b2f;
+  --color-gold-strong: #8a6d1d;
+  --color-gold-muted: #5a4212;
+  --color-gold-border: color-mix(
+    in srgb,
+    var(--color-gold-strong) 32%,
+    transparent
+  );
+  --color-gold-border-subtle: color-mix(
+    in srgb,
+    var(--color-gold-strong) 22%,
+    transparent
+  );
+  --color-gold-border-dashed: color-mix(
+    in srgb,
+    var(--color-gold-strong) 26%,
+    transparent
+  );
+  --color-gold-border-focus: color-mix(
+    in srgb,
+    var(--color-gold-strong) 42%,
+    transparent
+  );
+  --color-gold-surface-strong: color-mix(
+    in srgb,
+    var(--color-gold-strong) 20%,
+    var(--color-bg-surface) 80%
+  );
+  --color-gold-surface-soft: color-mix(
+    in srgb,
+    var(--color-gold-strong) 12%,
+    var(--color-bg-surface) 88%
+  );
+  --gradient-gold-subtle: linear-gradient(
+    180deg,
+    var(--color-gold-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 92%, transparent) 100%
+  );
+  --gradient-gold-muted: linear-gradient(
+    180deg,
+    var(--color-gold-surface-soft) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 96%, transparent) 100%
+  );
+  --gradient-gold-horizontal: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold-strong) 14%, var(--color-bg-surface) 86%) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 95%, transparent) 100%
+  );
+  --shadow-gold-shell: 0 4px 12px color-mix(
+    in srgb,
+    #020c1b 14%,
+    transparent
+  );
+  --shadow-gold-item: 0 3px 10px color-mix(
+    in srgb,
+    #020c1b 12%,
+    transparent
+  );
+  --shadow-gold-inset: inset 0 1px 0 color-mix(
+    in srgb,
+    #ffffff 70%,
+    transparent
+  );
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    var(--color-info) 12%,
+    var(--color-bg-surface) 88%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    var(--color-info) 18%,
+    var(--color-bg-surface) 82%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 94%, transparent) 100%
+  );
+  --color-highlight-info-border: color-mix(
+    in srgb,
+    var(--color-info) 24%,
+    transparent
+  );
+  --color-highlight-info-fg: color-mix(
+    in srgb,
+    var(--color-info) 70%,
+    var(--color-fg-primary) 30%
+  );
+
+  /* Overlay */
+  --color-overlay: rgba(11, 25, 54, 0.5);
+  --color-header-translucent: rgba(255, 255, 255, 0.92);
+
+  /* ! DECISIÓN DE DISEÑO: Los controles segmentados usan tokens dedicados para mantener consistencia entre temas y variantes de accesibilidad. */
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 88%,
+    var(--color-btn-primary) 12%
+  );
+  --color-segmented-border: color-mix(
+    in srgb,
+    var(--color-btn-primary) 28%,
+    transparent
+  );
+  --shadow-segmented-inset: inset 0 1px 1px color-mix(
+    in srgb,
+    var(--color-btn-primary) 24%,
+    transparent
+  );
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 86%,
+    var(--color-btn-primary) 14%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 90%,
+    var(--color-btn-primary) 10%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 82%,
+    var(--color-btn-primary) 18%
+  );
+  --shadow-segmented-active: 0 2px 6px color-mix(
+    in srgb,
+    #020c1b 18%,
+    transparent
+  );
+  --color-outline-interactive: color-mix(
+    in srgb,
+    var(--color-btn-primary) 52%,
+    transparent
+  );
+  --color-fg-accent: color-mix(
+    in srgb,
+    var(--color-btn-primary) 82%,
+    var(--color-fg-primary) 18%
+  );
+
+  /* Superficies invertidas (header brand) */
+  --color-bg-brand: var(--brand-900);
+  --color-bg-brand-elevated: color-mix(
+    in srgb,
+    var(--brand-800) 82%,
+    #020c1b 18%
+  );
+  --color-fg-on-brand: var(--color-fg-inverted);
+  --color-fg-on-brand-soft: color-mix(in srgb, #f0f6ff 88%, transparent);
+  --color-fg-on-brand-muted: color-mix(in srgb, #f0f6ff 72%, transparent);
+  --color-border-on-brand: color-mix(in srgb, #ffffff 18%, transparent);
+  --color-border-on-brand-strong: color-mix(in srgb, #ffffff 30%, transparent);
+  --color-bg-on-brand-hover: color-mix(in srgb, #ffffff 12%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #ffffff 16%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #ffffff 20%, transparent);
+  --color-outline-on-brand: color-mix(in srgb, #ffffff 45%, transparent);
+  --color-overlay-on-brand: color-mix(
+    in srgb,
+    var(--brand-900) 68%,
+    rgba(2, 12, 27, 0.88) 32%
+  );
+
+  /* Elevación */
+  --shadow-1: 0 12px 30px rgba(2, 12, 27, 0.08);
+  --shadow-2: 0 16px 34px rgba(2, 12, 27, 0.12);
+  --shadow-3: 0 24px 60px rgba(2, 12, 27, 0.22);
+
+  /* Tipografía base */
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-size-300: 0.875rem; /* 14px */
+  --font-size-400: 1rem; /* 16px */
+  --font-size-500: 1.125rem; /* 18px */
+  --font-size-600: 1.25rem; /* 20px */
+  --font-size-700: 1.5rem; /* 24px */
+  --font-size-800: 1.875rem; /* 30px */
+  --line-height-tight: 1.25;
+  --line-height-base: 1.5;
+  --line-height-loose: 1.65;
+
+  /* Espaciado (sistema 4px) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+
+  /* Radio (sistema 4px) */
+  --radius-sm: 0.5rem; /* 8px */
+  --radius-md: 0.75rem; /* 12px */
+  --radius-lg: 1rem; /* 16px */
+  --radius-xl: 1.25rem; /* 20px */
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 0.9);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* Layout */
+  --container-max: 1120px;
+
+  /* Layers */
+  --z-nav: 900;
+  --z-overlay: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg-app: #0b1424;
+  --color-bg-surface: #0f1b2e;
+  --color-bg-surface-elevated: #122239;
+  --color-bg-card: #122239;
+  --color-bg-muted: #0e192a;
+
+  --color-fg-primary: #eaf1ff;
+  --color-fg-secondary: #c3d2ea;
+  --color-fg-muted: #9fb1cc;
+  --color-fg-inverted: #0b1424;
+  --color-link: var(--brand-500);
+  --color-link-hover: var(--brand-400);
+
+  --color-border: rgba(234, 244, 255, 0.12);
+  --color-border-strong: rgba(234, 244, 255, 0.18);
+
+  --color-btn-primary: var(--brand-500);
+  --color-btn-primary-hover: var(--brand-600);
+
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 76%,
+    var(--color-btn-primary) 24%
+  );
+  --color-segmented-border: color-mix(
+    in srgb,
+    var(--color-btn-primary) 34%,
+    transparent
+  );
+  --shadow-segmented-inset: inset 0 1px 1px color-mix(
+    in srgb,
+    var(--color-btn-primary) 30%,
+    transparent
+  );
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 68%,
+    var(--color-btn-primary) 32%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 72%,
+    var(--color-btn-primary) 28%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 64%,
+    var(--color-btn-primary) 36%
+  );
+  --shadow-segmented-active: 0 2px 6px color-mix(
+    in srgb,
+    rgba(0, 0, 0, 0.8) 28%,
+    transparent
+  );
+  --color-outline-interactive: color-mix(
+    in srgb,
+    var(--color-btn-primary) 58%,
+    transparent
+  );
+  --color-fg-accent: color-mix(
+    in srgb,
+    var(--color-btn-primary) 72%,
+    #ffffff 28%
+  );
+
+  --color-bg-brand: #061738;
+  --color-bg-brand-elevated: color-mix(
+    in srgb,
+    #0a2149 78%,
+    #000000 22%
+  );
+  --color-fg-on-brand: #f9fbff;
+  --color-fg-on-brand-soft: color-mix(in srgb, #f9fbff 90%, transparent);
+  --color-fg-on-brand-muted: color-mix(in srgb, #f9fbff 74%, transparent);
+  --color-border-on-brand: color-mix(in srgb, #f9fbff 24%, transparent);
+  --color-border-on-brand-strong: color-mix(in srgb, #f9fbff 38%, transparent);
+  --color-bg-on-brand-hover: color-mix(in srgb, #f9fbff 18%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #f9fbff 22%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #f9fbff 26%, transparent);
+  --color-outline-on-brand: color-mix(in srgb, #f9fbff 52%, transparent);
+  --color-overlay-on-brand: color-mix(
+    in srgb,
+    rgba(2, 12, 27, 0.92) 60%,
+    rgba(0, 0, 0, 0.8) 40%
+  );
+
+  --gradient-gold: linear-gradient(180deg, #f3d26a 0%, #c8922d 100%);
+  --color-gold-contrast: #120a02;
+  --color-gold-strong: #d5a742;
+  --color-gold-muted: #a97c27;
+
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    var(--color-info) 22%,
+    var(--color-bg-surface) 78%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    var(--color-info) 30%,
+    var(--color-bg-surface) 70%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 88%, transparent) 100%
+  );
+  --color-highlight-info-border: color-mix(
+    in srgb,
+    var(--color-info) 32%,
+    transparent
+  );
+  --color-highlight-info-fg: color-mix(
+    in srgb,
+    var(--color-info) 86%,
+    #ffffff 14%
+  );
+
+  --shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 10px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 18px 42px rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="hc"] {
+  --color-link: #0046ff;
+  --color-link-hover: #002fb7;
+  --color-border-strong: #1a5cff;
+  --color-border-subtle: #1a5cff;
+  --color-bg-brand: #002b7a;
+  --color-bg-brand-elevated: #003699;
+  --color-fg-on-brand: #ffffff;
+  --color-fg-on-brand-soft: #ffffff;
+  --color-fg-on-brand-muted: #d6e4ff;
+  --color-border-on-brand: #ffffff;
+  --color-border-on-brand-strong: #ffffff;
+  --color-bg-on-brand-hover: color-mix(in srgb, #ffffff 28%, transparent);
+  --color-bg-on-brand-active: color-mix(in srgb, #ffffff 36%, transparent);
+  --color-bg-on-brand-focus: color-mix(in srgb, #ffffff 42%, transparent);
+  --color-outline-on-brand: #ffffff;
+  --color-overlay-on-brand: color-mix(in srgb, #001a66 65%, #000000 35%);
+  --gradient-gold: linear-gradient(180deg, #ffbf00 0%, #b87333 100%);
+  --color-gold-contrast: #000000;
+  --color-gold-strong: #ffbf00;
+  --color-gold-muted: #b87333;
+
+  /* Realces informativos */
+  --color-highlight-info-surface: color-mix(
+    in srgb,
+    #0046ff 25%,
+    var(--color-bg-surface) 75%
+  );
+  --color-highlight-info-surface-strong: color-mix(
+    in srgb,
+    #0046ff 35%,
+    var(--color-bg-surface) 65%
+  );
+  --gradient-highlight-info: linear-gradient(
+    180deg,
+    var(--color-highlight-info-surface-strong) 0%,
+    color-mix(in srgb, var(--color-bg-surface) 85%, transparent) 100%
+  );
+  --color-highlight-info-border: #1a5cff;
+  --color-highlight-info-fg: #002b7a;
+  --color-segmented-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 70%,
+    #0046ff 30%
+  );
+  --color-segmented-border: #1a5cff;
+  --shadow-segmented-inset: inset 0 0 0 1px #1a5cff;
+  --color-segmented-item-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 55%,
+    #0046ff 45%
+  );
+  --color-segmented-item-active: color-mix(
+    in srgb,
+    var(--color-bg-surface) 50%,
+    #0046ff 50%
+  );
+  --color-segmented-item-active-hover: color-mix(
+    in srgb,
+    var(--color-bg-surface) 45%,
+    #0046ff 55%
+  );
+  --shadow-segmented-active: 0 0 0 2px #1a5cff;
+  --color-outline-interactive: #1a5cff;
+  --color-fg-accent: #001c5f;
+}

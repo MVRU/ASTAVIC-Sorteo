@@ -1,0 +1,318 @@
+/* ! DECISIÓN DE DISEÑO: Lista editable alineada a tokens semánticos para cumplir accesibilidad y consistencia visual. */
+
+.editable-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-4), 2vw, var(--space-5));
+  padding: clamp(var(--space-4), 2.6vw, var(--space-5));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface-elevated);
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.editable-list:focus-within {
+  border-color: var(--brand-400);
+  border-color: color-mix(in srgb, var(--brand-400) 75%, transparent);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.editable-list__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: calc(var(--space-2) / 1.5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.editable-list__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: min(16rem, 100%);
+  flex: 1 1 auto;
+}
+
+.editable-list__label {
+  font-size: clamp(var(--font-size-500), 1.2vw + 0.9rem, var(--font-size-600));
+  font-weight: 600;
+  color: var(--color-fg-primary);
+}
+
+.editable-list__helper {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-fg-secondary);
+  line-height: var(--line-height-base);
+}
+
+.editable-list__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.editable-list__count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: calc(var(--space-1) + 2px) calc(var(--space-2) + 2px);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+}
+
+.editable-list__count::before {
+  content: "•";
+  font-size: 0.9em;
+}
+
+.editable-list[data-length="0"] .editable-list__count {
+  color: var(--color-fg-secondary);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border);
+}
+
+.editable-list__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + 2px) calc(var(--space-4) + 4px);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--brand-700);
+  background: var(--brand-50);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard);
+}
+
+.editable-list__add:hover,
+.editable-list__add:focus-visible {
+  background: var(--brand-100);
+  color: var(--brand-600);
+  border-color: var(--brand-300);
+  box-shadow: 0 12px 28px rgba(78, 164, 234, 0.25);
+  outline: none;
+}
+
+.editable-list__items {
+  display: grid;
+  gap: clamp(var(--space-3), 1.8vw, var(--space-4));
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.editable-list__item {
+  position: relative;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: clamp(var(--space-3), 1.6vw, calc(var(--space-4) - 0.1rem));
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.editable-list__item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--brand-50);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-300) 18%, transparent) 0%, transparent 70%);
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.editable-list__item:focus-within {
+  border-color: var(--brand-400);
+  border-color: color-mix(in srgb, var(--brand-400) 70%, transparent);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.editable-list__item:focus-within::after {
+  opacity: 1;
+}
+
+.editable-list__item-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(var(--space-2), 1.4vw, var(--space-3));
+  align-items: center;
+}
+
+.editable-list__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--brand-700);
+  background: var(--brand-100);
+  border: 1px solid var(--brand-200);
+}
+
+.editable-list__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.editable-list__item-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fg-secondary);
+}
+
+.editable-list__input {
+  width: 100%;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: calc(var(--space-2) + 2px) calc(var(--space-3) + 2px);
+  background: var(--color-bg-surface);
+  color: var(--color-fg-primary);
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.editable-list__input:focus-visible {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-400) 30%, transparent);
+  outline: none;
+}
+
+.editable-list__input--invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 25%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-card));
+}
+
+.editable-list__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.editable-list__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.editable-list__remove:hover,
+.editable-list__remove:focus-visible {
+  background: color-mix(in srgb, var(--color-danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--color-danger) 25%, transparent);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.editable-list__empty {
+  font-size: 0.95rem;
+  padding: var(--space-4);
+  color: var(--color-fg-secondary);
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-md);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+}
+
+@media (max-width: 680px) {
+  .editable-list {
+    padding: clamp(var(--space-3), 4vw, var(--space-4));
+  }
+
+  .editable-list__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editable-list__cta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .editable-list__count {
+    order: 1;
+  }
+
+  .editable-list__item-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editable-list__index {
+    justify-self: flex-start;
+  }
+
+  .editable-list__actions {
+    justify-content: flex-start;
+  }
+
+  .editable-list__remove {
+    inline-size: 100%;
+    block-size: 2.75rem;
+    border-radius: var(--radius-md);
+  }
+
+  .editable-list__add {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editable-list,
+  .editable-list:focus-within,
+  .editable-list__item,
+  .editable-list__item:focus-within,
+  .editable-list__add,
+  .editable-list__remove,
+  .editable-list__item::after {
+    transition: none;
+    transform: none;
+  }
+}

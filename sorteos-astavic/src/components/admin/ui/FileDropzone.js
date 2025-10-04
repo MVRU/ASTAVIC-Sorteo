@@ -1,4 +1,5 @@
 // src/components/admin/ui/FileDropzone.js
+// ! DECISIÓN DE DISEÑO: La dropzone aplica tokens de superficie, borde y estado activo para ofrecer feedback accesible.
 
 import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
@@ -64,9 +65,9 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
       onDrop={handleDrop}
       style={{
         padding: "1.25rem",
-        border: "2px dashed var(--border)",
+        border: "2px dashed var(--color-border)",
         borderRadius: "12px",
-        background: "var(--surface-elevated)",
+        background: "var(--color-bg-surface-elevated)",
         cursor: disabled ? "not-allowed" : "pointer",
         display: "flex",
         alignItems: "center",
@@ -81,7 +82,7 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "var(--surface)",
+          background: "var(--color-bg-surface)",
           color: "var(--brand-700)",
           boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         }}
@@ -92,13 +93,13 @@ const FileDropzone = ({ onFile, disabled, fileToken }) => {
         <div
           style={{
             fontWeight: 700,
-            color: "var(--text-primary)",
+            color: "var(--color-fg-primary)",
             fontSize: "1rem",
           }}
         >
           Soltá tu archivo (.csv, .tsv, .txt)
         </div>
-        <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+        <div style={{ fontSize: "0.875rem", color: "var(--color-fg-secondary)" }}>
           También podés hacer clic o presionar Enter para buscarlo.
         </div>
       </div>

@@ -36,7 +36,7 @@ const RaffleGrid = ({
         style={emptyStateStyles}
       >
         <p style={{ margin: 0 }}>{emptyState.title}</p>
-        <p style={{ margin: 0, color: "var(--text-muted,#666)" }}>
+        <p style={{ margin: 0, color: "var(--color-fg-muted)" }}>
           {emptyState.subtitle}
         </p>
       </div>

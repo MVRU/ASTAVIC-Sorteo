@@ -21,8 +21,7 @@ import AdminModal from "./AdminModal";
 import ManageRafflesToolbar from "./manage/ManageRafflesToolbar";
 import EmptyHint from "./manage/EmptyHint";
 import RaffleAdminCard from "./manage/RaffleAdminCard";
-import RaffleEditCard, { RaffleEditCardStyles } from "./manage/RaffleEditCard";
-import { EditableListStyles } from "./manage/EditableList";
+import RaffleEditCard from "./manage/RaffleEditCard";
 import { useToast } from "../../context/ToastContext";
 import { createPortal } from "react-dom";
 import useFocusTrap from "../../hooks/useFocusTrap";
@@ -849,9 +848,6 @@ const ManageRaffles = ({
 
   return (
     <section className="section-gap admin-manage">
-      <RaffleEditCardStyles />
-      <EditableListStyles />
-
       <div className="container">
         <ManageRafflesToolbar
           tab={tab}

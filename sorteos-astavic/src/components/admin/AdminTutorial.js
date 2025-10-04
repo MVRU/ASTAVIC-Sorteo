@@ -1,4 +1,5 @@
 // src/components/admin/AdminTutorial.js
+// ! DECISIÓN DE DISEÑO: La guía rápida se apoya en tokens tipográficos y de superficie para respetar accesibilidad en modo claro/oscuro.
 
 import { TUTORIAL_STEPS } from "./adminConstants";
 import Icon from "../ui/Icon";
@@ -35,8 +36,8 @@ const AdminTutorial = () => (
             gap: "1rem",
             padding: "0.875rem",
             borderRadius: "12px",
-            border: "1px solid var(--border)",
-            background: "var(--surface)",
+            border: "1px solid var(--color-border)",
+            background: "var(--color-bg-surface)",
           }}
         >
           <div
@@ -67,7 +68,7 @@ const AdminTutorial = () => (
             <span
               style={{
                 fontSize: "0.925rem",
-                color: "var(--text-secondary)",
+                color: "var(--color-fg-secondary)",
               }}
             >
               {step.description}
